@@ -1,0 +1,24 @@
+{
+  "screen.screenshot_viewer.manage_screenshots": "Manage Screenshots...",
+  "screen.screenshot_viewer.screenshot_manager.zoom": "Zoom Mode (Hold CTRL)",
+  "screen.screenshot_viewer.screenshot_manager.no_screenshots": "Looks like you have not taken any screenshot yet!",
+  "screen.screenshot_viewer.button.refresh": "Refresh Screenshots",
+  "screen.screenshot_viewer.button.config": "Configure...",
+  "screen.screenshot_viewer.button.order": "Sorting Order",
+  "screen.screenshot_viewer.button.order.ascending": "Sorting by Ascending Order",
+  "screen.screenshot_viewer.button.order.descending": "Sorting by Descending Order",
+
+  "screen.screenshot_viewer.config": "Screenshot Viewer Config",
+  "config.screenshot_viewer.show_button_in_game_pause_menu": "Show Button In Pause Menu",
+  "config.screenshot_viewer.show_button_in_game_pause_menu.desc": "Shows a button to access screenshots directly in the pause menu.",
+  "config.screenshot_viewer.show_button_on_title_screen": "Show Button On Title Screen",
+  "config.screenshot_viewer.show_button_on_title_screen.desc": "Shows a button to access screenshots directly on the title screen.",
+  "config.screenshot_viewer.enable_screenshot_enlargement_animation": "Enable Screenshot Enlargement Animation",
+  "config.screenshot_viewer.enable_screenshot_enlargement_animation.desc": "Whether a growing animation should play when a screenshot on the screen is clicked to be enlarged.",
+  "config.screenshot_viewer.initial_screenshot_amount_per_row": "Initial Screenshot Amount Per Row",
+  "config.screenshot_viewer.initial_screenshot_amount_per_row.desc": "Number of screenshots to be displayed per row when the screen is opened.",
+  "config.screenshot_viewer.screen_scroll_speed": "Scroll speed",
+  "config.screenshot_viewer.screen_scroll_speed.desc": "Scroll speed of the screen.",
+
+  "key.screenshot_viewer.open_screenshots_screen": "Open Screenshot Manager"
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "screenshot_viewer",
+  "version": "${version}",
+  "name": "Screenshot Viewer",
+  "description": "A mod that allows you to see and manage your screenshots in game!",
+  "authors": [
+    "LGatodu47"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/screenshot_viewer/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "io.github.lgatodu47.screenshot_viewer.ScreenshotViewer"
+    ],
+    "modmenu": [
+      "io.github.lgatodu47.screenshot_viewer.ScreenshotViewerModMenuApi"
+    ]
+  },
+  "mixins": [
+    "screenshot_viewer.mixins.json"
+  ],
+  "depends": {
+    "fabric": "*",
+    "minecraft": "1.19.2"
+  }
+}
