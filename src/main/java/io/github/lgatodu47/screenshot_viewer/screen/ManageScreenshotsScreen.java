@@ -1,7 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer.screen;
 
-import com.google.common.hash.Hashing;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.catconfig.CatConfig;
 import io.github.lgatodu47.catconfigmc.screen.ConfigListener;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
@@ -28,6 +28,7 @@ import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
 import java.util.function.ToIntFunction;
 
@@ -46,6 +48,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     private static final Identifier REFRESH_BUTTON_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/refresh_button.png");
     private static final Identifier ASCENDING_ORDER_BUTTON_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/ascending_order_button.png");
     private static final Identifier DESCENDING_ORDER_BUTTON_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/descending_order_button.png");
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final Screen parent;
     private final SelectedScreenshotScreen selectedScreenshot;
@@ -249,6 +252,11 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     }
 
     @Override
+    public void removed() {
+        list.close(); // Free textures
+    }
+
+    @Override
     public void configUpdated() {
         this.list.onConfigUpdate();
     }
@@ -311,9 +319,10 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
                 int childY = y + spacing;
                 int xOff = 0;
 
+                ScreenshotWidget.Context context = ScreenshotWidget.Context.create(() -> screenshotsPerRow, screenshotWidgets::indexOf);
                 for(File file : files) {
                     if(file.isFile() && file.getName().endsWith(".png")) {
-                        ScreenshotWidget widget = new ScreenshotWidget(parent, childX, childY, childWidth, childHeight, ScreenshotWidget.Context.create(() -> screenshotsPerRow, screenshotWidgets::indexOf), file);
+                        ScreenshotWidget widget = new ScreenshotWidget(parent, childX, childY, childWidth, childHeight, context, file);
                         this.screenshotWidgets.add(widget);
                         this.elements.add(widget);
 
@@ -331,6 +340,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         private void clearChildren() {
+            close();
             screenshotWidgets.clear();
             elements.clear();
         }
@@ -380,6 +390,10 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             if(canScroll()) {
                 renderScrollbar(matrices);
             }
+        }
+
+        public void close() {
+            screenshotWidgets.forEach(ScreenshotWidget::close);
         }
 
         private void renderScrollbar(MatrixStack matrices) {
@@ -487,18 +501,18 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         private final ManageScreenshotsScreen parent;
         private final MinecraftClient client;
         private final Context ctx;
-        private final Identifier imageId;
+        private final File screenshotFile;
+        private CompletableFuture<NativeImage> image;
         @Nullable
-        private final NativeImageBackedTexture image;
+        private NativeImageBackedTexture texture;
 
-        @SuppressWarnings({"deprecation"})
         public ScreenshotWidget(ManageScreenshotsScreen parent, int x, int y, int width, int height, Context ctx, File screenshotFile) {
             super(x, y, width, height, Text.literal(screenshotFile.getName()));
             this.parent = parent;
             this.client = parent.client;
             this.baseY = y;
             this.ctx = ctx;
-            this.imageId = new Identifier(ScreenshotViewer.MODID, "screenshots/" + Util.replaceInvalidChars(screenshotFile.getName(), Identifier::isPathCharacterValid) + "/" + Hashing.sha1().hashUnencodedChars(screenshotFile.getName()));
+            this.screenshotFile = screenshotFile;
             this.image = getImage(screenshotFile);
         }
 
@@ -515,10 +529,11 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             renderBackground(matrices, client, mouseX, mouseY, viewportY, viewportBottom);
             final int spacing = 2;
 
+            NativeImageBackedTexture image = texture();
             if(image != null && image.getImage() != null) {
                 RenderSystem.setShader(GameRenderer::getPositionTexShader);
                 RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                RenderSystem.setShaderTexture(0, imageId);
+                RenderSystem.setShaderTexture(0, image.getGlId());
                 RenderSystem.enableBlend();
                 int renderY = Math.max(y + spacing, viewportY);
                 int imgHeight = (int) (height / 1.08 - spacing * 3);
@@ -571,32 +586,15 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             DrawableHelper.fill(matrices, x, renderY, x + width, renderHeight, ColorHelper.Argb.getArgb((int) (bgOpacity * 255), 255, 255, 255));
         }
 
-        private NativeImageBackedTexture getImage(File file) {
-            InputStream inputStream = null;
-            try {
-                inputStream = new FileInputStream(file);
-                NativeImage nativeImage = NativeImage.read(inputStream);
-                NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
-                this.client.getTextureManager().registerTexture(this.imageId, texture);
-                inputStream.close();
-                return texture;
-            }
-            catch (Throwable t) {
-                try {
-                    if (inputStream != null) {
-                        try {
-                            inputStream.close();
-                        }
-                        catch (Throwable closing) {
-                            t.addSuppressed(closing);
-                        }
-                    }
-                    throw t;
+        private CompletableFuture<NativeImage> getImage(File file) {
+            return CompletableFuture.supplyAsync(() -> {
+                try (InputStream inputStream = new FileInputStream(file)) {
+                    return NativeImage.read(inputStream);
+                } catch (Exception e) {
+                    LOGGER.error("Failed to load screenshot: {}", file.getName(), e);
                 }
-                catch (Throwable ignored) {
-                }
-            }
-            return null;
+                return null;
+            }, Util.getMainWorkerExecutor());
         }
 
         private void onClick() {
@@ -612,16 +610,24 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         @Override
-        public void close() throws Exception {
-            if(image != null) {
-                image.close();
+        public void close() {
+            if (texture != null) {
+                texture.close(); // Also closes the image
+            } else if(image != null) {
+                image.thenAcceptAsync(image -> {
+                    if (image != null) {
+                        image.close();
+                    }
+                }, this.client);
             }
+            image = null;
+            texture = null;
         }
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if(isHovered()) {
-                playDownSound(MinecraftClient.getInstance().getSoundManager(), button);
+                playDownSound(this.client.getSoundManager(), button);
                 if(button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                     onClick();
                 }
@@ -662,13 +668,32 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         @Override
-        public Identifier imageId() {
-            return imageId;
+        public int imageId() {
+            NativeImageBackedTexture texture = texture();
+            return texture != null ? texture.getGlId() : 0;
         }
 
+        @Nullable
         @Override
-        public NativeImageBackedTexture image() {
-            return image;
+        public NativeImage image() {
+            if (image == null) {
+                image = getImage(screenshotFile);
+            }
+            return image.getNow(null);
+        }
+
+        @Nullable
+        public NativeImageBackedTexture texture() {
+            if (texture != null) {
+                return texture;
+            }
+            if (image == null) {
+                image = getImage(screenshotFile);
+            }
+            if (image.isDone()) {
+                return texture = new NativeImageBackedTexture(image.join());
+            }
+            return null;
         }
 
         interface Context {
@@ -767,7 +792,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             if(showing != null) {
                 final int spacing = 8;
 
-                NativeImage image = showing.image().getImage();
+                NativeImage image = showing.image();
                 if(image != null) {
                     RenderSystem.setShader(GameRenderer::getPositionTexShader);
                     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -926,8 +951,9 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     private interface ScreenshotImageHolder {
         int indexInList();
 
-        Identifier imageId();
+        int imageId();
 
-        NativeImageBackedTexture image();
+        @Nullable
+        NativeImage image();
     }
 }
