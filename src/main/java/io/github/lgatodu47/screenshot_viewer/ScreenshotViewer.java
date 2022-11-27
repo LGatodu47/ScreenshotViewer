@@ -1,7 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer;
 
 import io.github.lgatodu47.catconfig.CatConfig;
-import io.github.lgatodu47.screenshot_viewer.screen.ManageScreenshotsScreen;
+import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import net.fabricmc.api.ClientModInitializer;

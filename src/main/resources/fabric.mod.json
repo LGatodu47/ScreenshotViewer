@@ -7,7 +7,13 @@
   "authors": [
     "LGatodu47"
   ],
-  "contact": {},
+  "contributors": [
+    "Ocelot5836"
+  ],
+  "contact": {
+    "sources": "https://github.com/LGatodu47/ScreenshotViewer",
+    "issues": "https://github.com/LGatodu47/ScreenshotViewer/issues"
+  },
   "license": "MIT",
   "icon": "assets/screenshot_viewer/icon.png",
   "environment": "client",
@@ -24,6 +30,6 @@
   ],
   "depends": {
     "fabric": "*",
-    "minecraft": "1.19.2"
+    "minecraft": ">=1.19"
   }
 }
