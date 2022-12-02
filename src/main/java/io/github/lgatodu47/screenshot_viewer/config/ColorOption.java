@@ -4,6 +4,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import io.github.lgatodu47.catconfig.ConfigAccess;
 import io.github.lgatodu47.catconfig.ConfigOption;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.MappingResolver;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
@@ -16,11 +18,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.Locale;
 
 public record ColorOption(String name, @Nullable TextColor defaultValue) implements ConfigOption<TextColor> {
     @Override
     public void write(JsonWriter writer, @NotNull TextColor value) throws IOException {
-        writer.value(value.getHexCode());
+        writer.value(getHexCode(value));
     }
 
     @Override
@@ -31,7 +35,7 @@ public record ColorOption(String name, @Nullable TextColor defaultValue) impleme
     public static ClickableWidget createWidget(ConfigAccess config, ConfigOption<TextColor> option) {
         ColorTextField widget = new ColorTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 60, 20, Text.empty());
         widget.setMaxLength(7);
-        widget.setText(config.get(option).map(TextColor::getHexCode).orElse("#"));
+        widget.setText(config.get(option).map(ColorOption::getHexCode).orElse("#"));
         widget.setTextPredicate(s -> s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parse(s) != null));
         widget.setChangedListener(s -> {
             if(s.isEmpty() || s.substring(1).isEmpty()) {
@@ -44,6 +48,20 @@ public record ColorOption(String name, @Nullable TextColor defaultValue) impleme
             }
         });
         return widget;
+    }
+
+    private static String getHexCode(TextColor textColor) {
+        if (FabricLoader.getInstance().isModLoaded("fabric-transitive-access-wideners-v1")) {
+            MappingResolver resolver = FabricLoader.getInstance().getMappingResolver();
+            try {
+                Method getHexCode = TextColor.class.getDeclaredMethod(resolver.mapMethodName(resolver.getCurrentRuntimeNamespace(), "net.minecraft.class_5251", "method_27723", "()Ljava/lang/String;"));
+                if(getHexCode.canAccess(textColor)) {
+                    return (String) getHexCode.invoke(textColor);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return String.format(Locale.ROOT, "#%06X", textColor.getRgb());
     }
 
     public static class ColorTextField extends TextFieldWidget {
