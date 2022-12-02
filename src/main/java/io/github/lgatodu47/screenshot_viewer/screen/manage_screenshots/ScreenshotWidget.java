@@ -1,6 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -13,6 +14,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
 import java.util.function.ToIntFunction;
 
+import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.CONFIG;
 import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.LOGGER;
 
 final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, ScreenshotImageHolder {
@@ -76,16 +79,28 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         image = getImage(screenshotFile);
     }
 
-
     File getScreenshotFile() {
         return screenshotFile;
     }
 
+    void updateHoverState(int mouseX, int mouseY, int viewportY, int viewportBottom, boolean updateHoverState) {
+        this.hovered = updateHoverState && (mouseX >= this.x && mouseY >= Math.max(this.y, viewportY) && mouseX < this.x + this.width && mouseY < Math.min(this.y + this.height, viewportBottom));
+        int maxOpacity = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_BACKGROUND_OPACITY, 100);
+        if (maxOpacity > 0 && hovered) {
+            if (bgOpacity < maxOpacity / 100f) {
+                bgOpacity = Math.min(maxOpacity / 100f, bgOpacity + 0.05F);
+            }
+        } else {
+            if (bgOpacity > 0) {
+                bgOpacity = Math.max(0, bgOpacity - 0.05F);
+            }
+        }
+    }
+
     /// Rendering Methods ///
 
-    void render(MatrixStack matrices, int mouseX, int mouseY, float delta, int viewportY, int viewportBottom, boolean updateHoverState) {
-        this.hovered = updateHoverState && (mouseX >= this.x && mouseY >= Math.max(this.y, viewportY) && mouseX < this.x + this.width && mouseY < Math.min(this.y + this.height, viewportBottom));
-        renderBackground(matrices, client, mouseX, mouseY, viewportY, viewportBottom);
+    void render(MatrixStack matrices, int mouseX, int mouseY, float delta, int viewportY, int viewportBottom) {
+        renderBackground(matrices, mouseX, mouseY, viewportY, viewportBottom);
         final int spacing = 2;
 
         NativeImageBackedTexture image = texture();
@@ -114,13 +129,20 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             );
             RenderSystem.disableBlend();
         }
+        float scaleFactor = (float) (client.getWindow().getScaledHeight() / 96) / ctx.screenshotsPerRow();
         int textY = y + (int) (height / 1.08) - spacing;
-        if (textY > viewportY && textY + 8 < viewportBottom) {
+        if (textY > viewportY && (float) textY + scaleFactor * (client.textRenderer.fontHeight) < viewportBottom) {
             matrices.push();
             matrices.translate(x + width / 2f, textY, 0);
-            float scaleFactor = (float) (client.getWindow().getScaledHeight() / 96) / ctx.screenshotsPerRow();
             matrices.scale(scaleFactor, scaleFactor, scaleFactor);
-            drawCenteredText(matrices, client.textRenderer, getMessage(), 0, 0, 0xFFFFFF);
+            Text message = getMessage();
+            float centerX = (float) (-client.textRenderer.getWidth(getMessage()) / 2);
+            int textColor = CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR).map(TextColor::getRgb).orElse(0xFFFFFF);
+            if(CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW, true)) {
+                client.textRenderer.drawWithShadow(matrices, message, centerX, 0, textColor);
+            } else {
+                client.textRenderer.draw(matrices, message, centerX, 0, textColor);
+            }
             matrices.pop();
         }
     }
@@ -129,16 +151,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
     }
 
-    private void renderBackground(MatrixStack matrices, MinecraftClient client, int mouseX, int mouseY, int viewportY, int viewportBottom) {
-        if (hovered) {
-            if (bgOpacity < 1) {
-                bgOpacity = Math.min(1, bgOpacity + 0.05F);
-            }
-        } else {
-            if (bgOpacity > 0) {
-                bgOpacity = Math.max(0, bgOpacity - 0.05F);
-            }
-        }
+    private void renderBackground(MatrixStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
         int renderY = Math.max(y, viewportY);
         int renderHeight = Math.min(y + height, viewportBottom);
         DrawableHelper.fill(matrices, x, renderY, x + width, renderHeight, ColorHelper.Argb.getArgb((int) (bgOpacity * 255), 255, 255, 255));

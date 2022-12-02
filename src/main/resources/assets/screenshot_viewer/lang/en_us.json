@@ -27,9 +27,15 @@
   "config.screenshot_viewer.prompt_when_deleting_screenshot": "Prompt When Deleting Screenshot",
   "config.screenshot_viewer.prompt_when_deleting_screenshot.desc": "Warns you with a confirmation screen when trying to delete a screenshot.",
   "config.screenshot_viewer.initial_screenshot_amount_per_row": "Initial Screenshot Amount Per Row",
-  "config.screenshot_viewer.initial_screenshot_amount_per_row.desc": "Number of screenshots to be displayed per row when the screen is opened.",
+  "config.screenshot_viewer.initial_screenshot_amount_per_row.desc": "Number of screenshots to be displayed per row when the screen is opened (from 2 to 8).",
   "config.screenshot_viewer.screen_scroll_speed": "Scroll speed",
-  "config.screenshot_viewer.screen_scroll_speed.desc": "Scroll speed of the screen.",
+  "config.screenshot_viewer.screen_scroll_speed.desc": "Scroll speed of the screen (from 1 to 50).",
+  "config.screenshot_viewer.screenshot_element_background_opacity": "Background Opacity of the Screenshot Elements",
+  "config.screenshot_viewer.screenshot_element_background_opacity.desc": "Opacity of the background that appears when the screenshot elements are hovered (from 0 to 100).",
+  "config.screenshot_viewer.render_screenshot_element_font_shadow": "Render Screenshot Element Font Shadow",
+  "config.screenshot_viewer.render_screenshot_element_font_shadow.desc": "If a font shadow should be rendered under the screenshot elements text.",
+  "config.screenshot_viewer.screenshot_element_text_color": "Screenshot Elements Text Color",
+  "config.screenshot_viewer.screenshot_element_text_color.desc": "Color of the texts describing the screenshots elements.",
 
   "key.screenshot_viewer.open_screenshots_screen": "Open Screenshot Manager"
 }

@@ -252,7 +252,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         @Override
         protected void init() {
             super.init();
-            this.textField = new TextFieldWidget(this.client.textRenderer, (this.width - 150) / 2, (this.height + 20) / 2, 150, 20, ScreenshotViewer.translatable("screen", "field.screenshot_name"));
+            this.textField = new TextFieldWidget(this.textRenderer, (this.width - 150) / 2, (this.height - 20) / 2, 150, 20, ScreenshotViewer.translatable("screen", "field.screenshot_name"));
             textField.setMaxLength(128);
             textField.setTextPredicate(RenameScreen::checkInvalidCharacters);
             this.doneBtn = new ButtonWidget(this.width / 2 - 4 - 150, this.height / 2 + 50, 150, 20, ScreenTexts.DONE, btn -> {
