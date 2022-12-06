@@ -3,13 +3,13 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
 import org.jetbrains.annotations.Nullable;
 
 class EnlargedScreenshotScreen extends Screen {
@@ -20,10 +20,10 @@ class EnlargedScreenshotScreen extends Screen {
     private final ButtonWidget doneBtn, nextBtn, prevBtn;
 
     EnlargedScreenshotScreen() {
-        super(Text.empty());
+        super(LiteralText.EMPTY);
         this.doneBtn = new ButtonWidget(0, 0, 52, 20, ScreenTexts.DONE, btn -> close());
-        this.prevBtn = new ButtonWidget(0, 0, 20, 20, Text.literal("<"), btn -> previousScreenshot());
-        this.nextBtn = new ButtonWidget(0, 0, 20, 20, Text.literal(">"), btn -> nextScreenshot());
+        this.prevBtn = new ButtonWidget(0, 0, 20, 20, new LiteralText("<"), btn -> previousScreenshot());
+        this.nextBtn = new ButtonWidget(0, 0, 20, 20, new LiteralText(">"), btn -> nextScreenshot());
     }
 
     // Package-private allows the main screen to show this child screen

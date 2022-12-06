@@ -1,9 +1,9 @@
 package io.github.lgatodu47.screenshot_viewer;
 
 import io.github.lgatodu47.catconfig.CatConfig;
-import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
+import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -19,6 +19,7 @@ import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
@@ -72,7 +73,7 @@ public class ScreenshotViewer implements ClientModInitializer {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
                 Optional<ClickableWidget> accessibilityWidgetOpt = buttons.stream()
                         .filter(TexturedButtonWidget.class::isInstance)
-                        .filter(widget -> widget.getMessage().equals(Text.translatable("narrator.button.accessibility")))
+                        .filter(widget -> widget.getMessage().equals(new TranslatableText("narrator.button.accessibility")))
                         .findFirst();
 
                 int x = accessibilityWidgetOpt.map(widget -> widget.x).orElse(screen.width / 2 + 104);
@@ -111,6 +112,6 @@ public class ScreenshotViewer implements ClientModInitializer {
     }
 
     public static Text translatable(String prefix, String suffix) {
-        return Text.translatable(translation(prefix, suffix));
+        return new TranslatableText(translation(prefix, suffix));
     }
 }

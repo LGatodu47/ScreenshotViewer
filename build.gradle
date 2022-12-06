@@ -1,3 +1,5 @@
+import java.nio.file.Paths
+
 plugins {
     id 'fabric-loom' version '1.0-SNAPSHOT'
     id 'maven-publish'
@@ -25,7 +27,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
-    def catConfigMc = 'io.github.lgatodu47:catconfig-mc-1.19.2:0.1.1'
+    def catConfigMc = "io.github.lgatodu47:catconfig-mc:${project.minecraft_version}-0.1.1"
     modImplementation catConfigMc
     include catConfigMc
 }
@@ -52,7 +54,9 @@ java {
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
+    libsDirName = Paths.get(libsDirName).resolve("${project.compatible_mc_version}").toString()
     archivesBaseName = project.archives_base_name
+    version = version.concat("-${project.mod_loader}-mc${project.compatible_mc_version}")
     withSourcesJar()
 }
 

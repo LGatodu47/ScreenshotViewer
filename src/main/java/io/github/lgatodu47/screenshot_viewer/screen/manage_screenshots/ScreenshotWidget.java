@@ -13,6 +13,7 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Util;
@@ -43,7 +44,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     private int baseY;
 
     public ScreenshotWidget(ManageScreenshotsScreen mainScreen, int x, int y, int width, int height, Context ctx, File screenshotFile) {
-        super(x, y, width, height, Text.literal(screenshotFile.getName()));
+        super(x, y, width, height, new LiteralText(screenshotFile.getName()));
         this.mainScreen = mainScreen;
         this.client = mainScreen.client();
         this.baseY = y;
@@ -218,7 +219,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
     @Override
     public Text getMessage() {
-        return this.screenshotFile == null ? super.getMessage() : Text.literal(this.screenshotFile.getName());
+        return this.screenshotFile == null ? super.getMessage() : new LiteralText(this.screenshotFile.getName());
     }
 
     @Override
