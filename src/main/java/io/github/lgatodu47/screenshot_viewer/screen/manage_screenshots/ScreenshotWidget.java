@@ -4,9 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.hud.BackgroundHelper;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.texture.NativeImage;
@@ -17,13 +16,12 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
 import java.util.function.ToIntFunction;
@@ -106,9 +104,8 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
         NativeImageBackedTexture image = texture();
         if (image != null && image.getImage() != null) {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-            RenderSystem.setShaderTexture(0, image.getGlId());
+            RenderSystem.color4f(1.0f, 1.0f, 1.0f, 1.0f);
+            RenderSystem.bindTexture(image.getGlId());
             RenderSystem.enableBlend();
             int renderY = Math.max(y + spacing, viewportY);
             int imgHeight = (int) (height / 1.08 - spacing * 3);
@@ -155,7 +152,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     private void renderBackground(MatrixStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
         int renderY = Math.max(y, viewportY);
         int renderHeight = Math.min(y + height, viewportBottom);
-        DrawableHelper.fill(matrices, x, renderY, x + width, renderHeight, ColorHelper.Argb.getArgb((int) (bgOpacity * 255), 255, 255, 255));
+        DrawableHelper.fill(matrices, x, renderY, x + width, renderHeight, BackgroundHelper.ColorMixer.getArgb((int) (bgOpacity * 255), 255, 255, 255));
     }
 
     /// Utility methods ///
@@ -170,7 +167,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
     private CompletableFuture<NativeImage> getImage(File file) {
         return CompletableFuture.supplyAsync(() -> {
-            try (InputStream inputStream = new FileInputStream(file)) {
+            try (InputStream inputStream = Files.newInputStream(file.toPath())) {
                 return NativeImage.read(inputStream);
             } catch (Exception e) {
                 LOGGER.error("Failed to load screenshot: {}", file.getName(), e);
@@ -255,10 +252,6 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         return isHovered();
-    }
-
-    @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
     }
 
     @Override

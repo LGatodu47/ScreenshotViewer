@@ -1,7 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.catconfig.CatConfig;
 import io.github.lgatodu47.catconfigmc.screen.ConfigListener;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
@@ -14,14 +13,14 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-import org.slf4j.Logger;
 
 import java.io.File;
 import java.util.Optional;
@@ -29,7 +28,7 @@ import java.util.Optional;
 public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     // Package-private config instance accessible in all the package classes
     static final CatConfig CONFIG = ScreenshotViewer.getInstance().getConfig();
-    static final Logger LOGGER = LogUtils.getLogger();
+    static final Logger LOGGER = LogManager.getLogger();
 
     private static final Identifier CONFIG_BUTTON_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/config_button.png");
     private static final Identifier REFRESH_BUTTON_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/refresh_button.png");
@@ -86,7 +85,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             list.updateChildren();
         }
         // Adds it to the 'children' list which makes 'mouseClicked' and other methods work with it.
-        addSelectableChild(list);
+        addChild(list);
 
         // Button stuff
         final int btnY = height - spacing - btnHeight;
@@ -94,13 +93,13 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         final int bigBtnWidth = 200;
 
         // Config Button
-        addDrawableChild(new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, 0, 0, btnSize, CONFIG_BUTTON_TEXTURE, 32, 64, button -> {
-            client.setScreen(new ScreenshotViewerConfigScreen(this));
+        addButton(new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, 0, 0, btnSize, CONFIG_BUTTON_TEXTURE, 32, 64, button -> {
+            client.openScreen(new ScreenshotViewerConfigScreen(this));
         }, (button, matrices, x, y) -> {
             renderOrderedTooltip(matrices, client.textRenderer.wrapLines(ScreenshotViewer.translatable("screen", "button.config"), Math.max(width / 2 - 43, 170)), x, y + btnSize);
         }, ScreenshotViewer.translatable("screen", "button.config")));
         // Order Button
-        addDrawableChild(new ExtendedTexturedButtonWidget(spacing, btnY, btnSize, btnSize, 0, 0, btnSize, null, 32, 64, button -> {
+        addButton(new ExtendedTexturedButtonWidget(spacing, btnY, btnSize, btnSize, 0, 0, btnSize, null, 32, 64, button -> {
             if(list != null) {
                 list.invertOrder();
             }
@@ -115,15 +114,15 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             }
         });
         // Screenshot Folder Button
-        addDrawableChild(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, OPEN_FOLDER_BUTTON_TEXTURE, 32, 64, btn -> {
+        addButton(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, OPEN_FOLDER_BUTTON_TEXTURE, 32, 64, btn -> {
             Util.getOperatingSystem().open(new File(this.client.runDirectory, "screenshots"));
         }, (button, matrices, x, y) -> {
             renderOrderedTooltip(matrices, client.textRenderer.wrapLines(ScreenshotViewer.translatable("screen", "button.screenshot_folder"), Math.max(width / 2 - 43, 170)), x, y);
         }, ScreenshotViewer.translatable("screen", "button.screenshot_folder")));
         // Done Button
-        addDrawableChild(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, ScreenTexts.DONE, button -> close()));
+        addButton(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, ScreenTexts.DONE, button -> onClose()));
         // Refresh Button
-        addDrawableChild(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, REFRESH_BUTTON_TEXTURE, 32, 64, button -> {
+        addButton(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, REFRESH_BUTTON_TEXTURE, 32, 64, button -> {
             list.init();
         }, (btn, matrices, x, y) -> {
             renderOrderedTooltip(matrices, client.textRenderer.wrapLines(ScreenshotViewer.translatable("screen", "button.refresh"), Math.max(width / 2 - 43, 170)), x, y);
@@ -175,8 +174,8 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
 
             if(!screenshotProperties.renders()) {
                 for (Element element : this.children()) {
-                    if (element instanceof CustomHoverState hover) {
-                        hover.updateHoveredState(mouseX, mouseY);
+                    if (element instanceof CustomHoverState) {
+                        ((CustomHoverState) element).updateHoveredState(mouseX, mouseY);
                     }
                 }
             }
@@ -300,9 +299,9 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     /// Other Methods ///
 
     @Override
-    public void close() {
+    public void onClose() {
         if(client != null) {
-            this.client.setScreen(parent);
+            this.client.openScreen(parent);
         }
     }
 
@@ -373,18 +372,15 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             if(texture == null) {
                 DrawableHelper.fill(matrices, x, y, x + width, y + height, 0xFFFFFF);
             } else {
-                RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                RenderSystem.setShaderTexture(0, texture);
+                MinecraftClient.getInstance().getTextureManager().bindTexture(texture);
                 int vOffset = this.v;
-                if (!this.isNarratable()) {
-                    vOffset += this.hoveredVOffset * 2;
-                } else if (this.isHovered()) {
+                if (this.isHovered()) {
                     vOffset += this.hoveredVOffset;
                 }
                 RenderSystem.enableDepthTest();
                 DrawableHelper.drawTexture(matrices, this.x, this.y, this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
                 if (this.hovered) {
-                    this.renderTooltip(matrices, mouseX, mouseY);
+                    this.renderToolTip(matrices, mouseX, mouseY);
                 }
             }
         }

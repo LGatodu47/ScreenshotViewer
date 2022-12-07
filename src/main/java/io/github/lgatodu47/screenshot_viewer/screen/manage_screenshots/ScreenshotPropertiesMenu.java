@@ -1,5 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
@@ -15,16 +16,16 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,7 +81,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
             hide();
         };
         // List of info about the buttons that are included in the widget.
-        List<Triple<Integer, Text, ButtonWidget.PressAction>> buttonInfo = List.of(
+        List<Triple<Integer, Text, ButtonWidget.PressAction>> buttonInfo = Lists.newArrayList(
                 Triple.of(0, ScreenshotViewer.translatable("screen", "button.delete_screenshot"), btn -> {
                     if (ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.PROMPT_WHEN_DELETING_SCREENSHOT, true)) {
                         childScreen = new ConfirmScreen(deleteAction, screenshotFile.getName());
@@ -96,7 +97,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
                             Path moved = Files.move(screenshotFile.toPath(), screenshotFile.toPath().resolveSibling(s));
                             fileUpdater.accept(moved.toFile());
                         } catch (IOException e) {
-                            LOGGER.error("Failed to rename 'screenshot' file at '" + screenshotFile.toPath().toAbsolutePath() + "' from '" + screenshotFile.getName() + "' to '" + s + "'" , e);
+                            LOGGER.error("Failed to rename 'screenshot' file at '" + screenshotFile.toPath().toAbsolutePath() + "' from '" + screenshotFile.getName() + "' to '" + s + "'", e);
                         }
                     }, this::hide);
                     childScreen.init(this.mcSupplier.get(), parentWidth.getAsInt(), parentHeight.getAsInt());
@@ -180,7 +181,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == InputUtil.GLFW_KEY_ESCAPE) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             hide();
             return true;
         }
@@ -210,8 +211,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
 
         @Override
         public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.setShaderTexture(0, TEXTURE);
+            MinecraftClient.getInstance().getTextureManager().bindTexture(TEXTURE);
             RenderSystem.enableDepthTest();
             TexturedButtonWidget.drawTexture(matrices, this.x, this.y, isHovered() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
             TexturedButtonWidget.drawTexture(matrices, this.x, this.y, this.imgU, this.imgV, this.width, this.height, 128, 128);
@@ -261,11 +261,11 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
                 this.closeAction.run();
             });
             doneBtn.active = false;
-            textField.setChangedListener(s -> doneBtn.active = !(s.isBlank() || s.trim().equals(previousName) || s.endsWith(".")));
+            textField.setChangedListener(s -> doneBtn.active = !(StringUtils.isBlank(s) || s.trim().equals(previousName) || s.endsWith(".")));
             textField.setText(previousName);
-            this.addDrawableChild(textField);
-            this.addDrawableChild(doneBtn);
-            this.addDrawableChild(new ButtonWidget(this.width / 2 + 4, this.height / 2 + 50, 150, 20, ScreenTexts.BACK, btn -> closeAction.run()));
+            addButton(textField);
+            addButton(doneBtn);
+            addButton(new ButtonWidget(this.width / 2 + 4, this.height / 2 + 50, 150, 20, ScreenTexts.BACK, btn -> closeAction.run()));
         }
 
         @Override
@@ -277,7 +277,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (keyCode == InputUtil.GLFW_KEY_ENTER && doneBtn != null && doneBtn.active) {
+            if (keyCode == GLFW.GLFW_KEY_ENTER && doneBtn != null && doneBtn.active) {
                 doneBtn.onPress();
                 return true;
             }
@@ -285,7 +285,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void close() {
+        public void onClose() {
             this.closeAction.run();
         }
 

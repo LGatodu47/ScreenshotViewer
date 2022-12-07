@@ -45,7 +45,7 @@ public class ScreenshotViewer implements ClientModInitializer {
     }
 
     private void initKeyBindings() {
-        openScreenshotsScreenKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(translation("key", "open_screenshots_screen"), InputUtil.UNKNOWN_KEY.getCode(), KeyBinding.MISC_CATEGORY));
+        openScreenshotsScreenKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(translation("key", "open_screenshots_screen"), InputUtil.UNKNOWN_KEY.getCode(), "key.categories.misc"));
     }
 
     private static final Identifier DELAYED_PHASE = new Identifier(MODID, "delayed");
@@ -55,7 +55,7 @@ public class ScreenshotViewer implements ClientModInitializer {
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if(client.world != null && client.currentScreen == null && openScreenshotsScreenKey != null && !openScreenshotsScreenKey.isUnbound()) {
                 if(openScreenshotsScreenKey.isPressed()) {
-                    client.setScreen(new ManageScreenshotsScreen(null));
+                    client.openScreen(new ManageScreenshotsScreen(null));
                 }
             }
         });
@@ -64,7 +64,7 @@ public class ScreenshotViewer implements ClientModInitializer {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
                 ClickableWidget topButton = buttons.get(0);
                 buttons.add(new TexturedButtonWidget(topButton.x + topButton.getWidth() + 8, topButton.y, topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
-                    client.setScreen(new ManageScreenshotsScreen(screen));
+                    client.openScreen(new ManageScreenshotsScreen(screen));
                 }, (button, matrices, mouseX, mouseY) -> {
                     screen.renderOrderedTooltip(matrices, Screens.getTextRenderer(screen).wrapLines(translatable("screen", "manage_screenshots"), Math.max(screen.width / 2 - 43, 170)), mouseX, mouseY);
                 }, translatable("screen", "manage_screenshots")));
@@ -81,7 +81,7 @@ public class ScreenshotViewer implements ClientModInitializer {
                 int width = accessibilityWidgetOpt.map(ClickableWidget::getWidth).orElse(20);
                 int height = accessibilityWidgetOpt.map(ClickableWidget::getHeight).orElse(20);
                 buttons.add(new TexturedButtonWidget(x + width + 4, y, width, height, 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
-                    client.setScreen(new ManageScreenshotsScreen(screen));
+                    client.openScreen(new ManageScreenshotsScreen(screen));
                 }, (button, matrices, mouseX, mouseY) -> {
                     screen.renderOrderedTooltip(matrices, Screens.getTextRenderer(screen).wrapLines(translatable("screen", "manage_screenshots"), Math.max(screen.width / 2 - 43, 170)), mouseX, mouseY);
                 }, translatable("screen", "manage_screenshots")));

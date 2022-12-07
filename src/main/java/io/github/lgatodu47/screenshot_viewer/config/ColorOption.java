@@ -19,7 +19,26 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.Locale;
 
-public record ColorOption(String name, @Nullable TextColor defaultValue) implements ConfigOption<TextColor> {
+public class ColorOption implements ConfigOption<TextColor> {
+    private final String name;
+    @Nullable
+    private final TextColor defaultValue;
+
+    public ColorOption(String name, @Nullable TextColor defaultValue) {
+        this.name = name;
+        this.defaultValue = defaultValue;
+    }
+
+    @Override
+    public String name() {
+        return this.name;
+    }
+
+    @Override
+    public @Nullable TextColor defaultValue() {
+        return this.defaultValue;
+    }
+
     @Override
     public void write(JsonWriter writer, @NotNull TextColor value) throws IOException {
         writer.value(getHexCode(value));

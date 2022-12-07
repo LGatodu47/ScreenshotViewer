@@ -5,12 +5,11 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 class EnlargedScreenshotScreen extends Screen {
     @Nullable
@@ -21,7 +20,7 @@ class EnlargedScreenshotScreen extends Screen {
 
     EnlargedScreenshotScreen() {
         super(LiteralText.EMPTY);
-        this.doneBtn = new ButtonWidget(0, 0, 52, 20, ScreenTexts.DONE, btn -> close());
+        this.doneBtn = new ButtonWidget(0, 0, 52, 20, ScreenTexts.DONE, btn -> onClose());
         this.prevBtn = new ButtonWidget(0, 0, 20, 20, new LiteralText("<"), btn -> previousScreenshot());
         this.nextBtn = new ButtonWidget(0, 0, 20, 20, new LiteralText(">"), btn -> nextScreenshot());
     }
@@ -36,7 +35,8 @@ class EnlargedScreenshotScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        clearChildren();
+        children.clear();
+        buttons.clear();
         addUpdatedButton(doneBtn, (width - 52) / 2, height - 20 - 8);
         addUpdatedButton(prevBtn, 8, (height - 20) / 2);
         addUpdatedButton(nextBtn, width - 8 - 20, (height - 20) / 2);
@@ -45,7 +45,7 @@ class EnlargedScreenshotScreen extends Screen {
     private void addUpdatedButton(ButtonWidget button, int x, int y) {
         button.x = x;
         button.y = y;
-        addDrawableChild(button);
+        addButton(button);
     }
 
     private void nextScreenshot() {
@@ -96,9 +96,8 @@ class EnlargedScreenshotScreen extends Screen {
 
             NativeImage image = showing.image();
             if (image != null) {
-                RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                RenderSystem.setShaderTexture(0, showing.imageId());
+                RenderSystem.color4f(1.0f, 1.0f, 1.0f, 1.0f);
+                RenderSystem.bindTexture(showing.imageId());
                 RenderSystem.enableBlend();
                 float imgRatio = (float) image.getWidth() / image.getHeight();
                 int texHeight = height - spacing * 3 - 20;
@@ -124,11 +123,11 @@ class EnlargedScreenshotScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == InputUtil.GLFW_KEY_LEFT) {
+        if (keyCode == GLFW.GLFW_KEY_LEFT) {
             previousScreenshot();
             return true;
         }
-        if (keyCode == InputUtil.GLFW_KEY_RIGHT) {
+        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
             nextScreenshot();
             return true;
         }
@@ -136,7 +135,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         showing = null;
         imageList = null;
     }

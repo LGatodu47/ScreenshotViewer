@@ -3,10 +3,12 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.AbstractParentElement;
+import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.hud.BackgroundHelper;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 
 import java.io.File;
@@ -15,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.IntUnaryOperator;
 
-final class ScreenshotList extends AbstractParentElement implements Drawable, Selectable, ScreenshotImageList {
+final class ScreenshotList extends AbstractParentElement implements Drawable, ScreenshotImageList {
     private final ManageScreenshotsScreen mainScreen;
     private final MinecraftClient client;
     private final int x, y;
@@ -175,7 +177,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
 
     // The boolean added controls whether the screenshot widgets should update its `hovered` state.
     void render(MatrixStack matrices, int mouseX, int mouseY, float delta, boolean updateHoverState) {
-        fill(matrices, x, y, x + width, y + height, ColorHelper.Argb.getArgb((int) (0.7f * 255), 0, 0, 0));
+        fill(matrices, x, y, x + width, y + height, BackgroundHelper.ColorMixer.getArgb((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
             drawCenteredText(matrices, client.textRenderer, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }
@@ -305,17 +307,6 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }*/
-
-    /// Random implementation methods ///
-
-    @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
-    }
-
-    @Override
-    public SelectionType getType() {
-        return SelectionType.NONE;
-    }
 
     private static class Scrollbar {
         private final int spacing = 2;
