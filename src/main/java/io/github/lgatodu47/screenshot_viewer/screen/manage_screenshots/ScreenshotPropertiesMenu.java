@@ -202,7 +202,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         private final int imgU, imgV;
 
         public Button(int x, int y, int imgU, int imgV, Text title, PressAction pressAction) {
-            super(x, y, BUTTON_SIZE, BUTTON_SIZE, 0, 0, 0, null, 128, 128, pressAction, title);
+            super(x, y, BUTTON_SIZE, BUTTON_SIZE, 0, 0, 0, ButtonWidget.WIDGETS_TEXTURE, 128, 128, pressAction, title);
             this.imgU = imgU;
             this.imgV = imgV;
         }

@@ -345,7 +345,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         private final int textureHeight;
 
         ExtendedTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, @Nullable Identifier texture, int textureWidth, int textureHeight, PressAction pressAction, TooltipSupplier tooltipSupplier, Text text) {
-            super(x, y, width, height, u, v, hoveredVOffset, texture, textureWidth, textureHeight, pressAction, tooltipSupplier, text);
+            super(x, y, width, height, u, v, hoveredVOffset, ButtonWidget.WIDGETS_TEXTURE, textureWidth, textureHeight, pressAction, tooltipSupplier, text);
             this.textureWidth = textureWidth;
             this.textureHeight = textureHeight;
             this.u = u;
