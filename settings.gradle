@@ -1,9 +1,14 @@
 pluginManagement {
     repositories {
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
         gradlePluginPortal()
+        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (it.requested.id.namespace == 'org.spongepowered') {
+                it.useModule('org.spongepowered:mixingradle:0.7-SNAPSHOT')
+            }
+        }
     }
 }

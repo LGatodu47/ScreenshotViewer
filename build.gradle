@@ -1,67 +1,86 @@
 import java.nio.file.Paths
 
 plugins {
-    id 'fabric-loom' version '1.0-SNAPSHOT'
+    id 'eclipse'
     id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
 version = project.mod_version
 group = project.maven_group
+archivesBaseName = project.modid
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
+minecraft {
+    mappings channel: 'official', version: project.minecraft_version
+
+    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            arg "-mixin.config=${project.modid}.mixins.json"
+            property 'forge.logging.console.level', 'debug'
+            property 'terminal.ansi', 'true'
+
+            mods {
+                screenshot_viewer {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
 
 repositories {
     maven {
-        name "Sonatype Maven"
-        url "https://s01.oss.sonatype.org/content/repositories/releases"
-    }
-    maven {
-        name "Mod Menu Maven Repo"
-        url "https://maven.terraformersmc.com/releases"
+        url = "https://www.cursemaven.com"
     }
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
 
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+    runtimeOnly fg.deobf("curse.maven:configured-457570:${project.configured_release_id}")
 
-    def catConfigMc = "io.github.lgatodu47:catconfig-mc:${project.minecraft_version}-0.1.1"
-    modImplementation catConfigMc
-    include catConfigMc
-}
-
-processResources {
-    inputs.property "version", project.version
-    filteringCharset "UTF-8"
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
-}
-
-def targetJavaVersion = 17
-tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = "UTF-8"
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-        it.options.release = targetJavaVersion
-    }
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 java {
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
     libsDirName = Paths.get(libsDirName).resolve("${project.compatible_mc_version}").toString()
-    archivesBaseName = project.archives_base_name
+    archivesBaseName = project.modid
     version = version.concat("-${project.mod_loader}-mc${project.compatible_mc_version}")
     withSourcesJar()
 }
 
 jar {
+    manifest {
+        attributes([
+                "Specification-Title"     : project.modid,
+                "Specification-Vendor"    : "LGatodu47",
+                "Specification-Version"   : "1",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : project.jar.archiveVersion,
+                "Implementation-Vendor"   : "LGatodu47",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "MixinConfigs": "${project.modid}.mixins.json"
+        ])
+    }
+
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}" }
     }
+}
+
+mixin {
+    add sourceSets.main, "${project.modid}.refmap.json"
+}
+
+jar.finalizedBy('reobfJar')
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }

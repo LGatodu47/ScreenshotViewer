@@ -3,6 +3,7 @@
   "screen.screenshot_viewer.screenshot_manager.zoom": "Zoom Mode (Hold CTRL)",
   "screen.screenshot_viewer.screenshot_manager.no_screenshots": "Looks like you have not taken any screenshot yet!",
   "screen.screenshot_viewer.button.refresh": "Refresh Screenshots",
+  "screen.screenshot_viewer.no_config": "In-game configuration is not supported. Consider installing the 'Configured' mod.",
   "screen.screenshot_viewer.button.config": "Configure...",
   "screen.screenshot_viewer.button.order": "Sorting Order",
   "screen.screenshot_viewer.button.order.ascending": "Sorting by Ascending Order",

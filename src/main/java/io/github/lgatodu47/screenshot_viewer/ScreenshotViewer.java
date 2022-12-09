@@ -1,106 +1,138 @@
 package io.github.lgatodu47.screenshot_viewer;
 
-import io.github.lgatodu47.catconfig.CatConfig;
-import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
-import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
-import net.fabricmc.fabric.api.client.screen.v1.Screens;
-import net.fabricmc.fabric.api.event.Event;
-import net.minecraft.client.gui.screen.GameMenuScreen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfigListener;
+import io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen;
+import net.minecraft.Util;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.forgespi.language.IModInfo;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.BiFunction;
 
-@Environment(EnvType.CLIENT)
-public class ScreenshotViewer implements ClientModInitializer {
+@Mod(ScreenshotViewer.MODID)
+public class ScreenshotViewer {
     public static final String MODID = "screenshot_viewer";
-
     private static ScreenshotViewer instance;
 
-    private CatConfig config;
-    private KeyBinding openScreenshotsScreenKey;
+    private final List<ScreenshotViewerConfigListener> configListeners = new ArrayList<>();
+    private final ScreenshotViewerConfig config;
+    private final IModInfo modInfo;
+    private KeyMapping openScreenshotsScreenKey;
 
-    @Override
-    public void onInitializeClient() {
-        config = new ScreenshotViewerConfig();
+    public ScreenshotViewer() {
+        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        bus.addListener(this::registerKeyMappings);
+        bus.addListener(this::onConfigReloaded);
 
-        initKeyBindings();
-        registerEvents();
+        ModLoadingContext mlc = ModLoadingContext.get();
+        this.config = ScreenshotViewerConfig.registerConfig(mlc);
+        this.modInfo = mlc.getActiveContainer().getModInfo();
+
+        MinecraftForge.EVENT_BUS.register(this);
         instance = this;
     }
 
-    private void initKeyBindings() {
-        openScreenshotsScreenKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(translation("key", "open_screenshots_screen"), InputUtil.UNKNOWN_KEY.getCode(), KeyBinding.MISC_CATEGORY));
+    private void registerKeyMappings(RegisterKeyMappingsEvent event) {
+        openScreenshotsScreenKey = Util.make(new KeyMapping(translation("key", "open_screenshots_screen"), KeyConflictContext.IN_GAME, InputConstants.UNKNOWN, KeyMapping.CATEGORY_MISC), event::register);
     }
 
-    private static final Identifier DELAYED_PHASE = new Identifier(MODID, "delayed");
-    private static final Identifier MANAGE_SCREENSHOTS_BUTTON_TEXTURE = new Identifier(MODID, "textures/gui/screenshots_button.png");
-
-    private void registerEvents() {
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if(client.world != null && client.currentScreen == null && openScreenshotsScreenKey != null && !openScreenshotsScreenKey.isUnbound()) {
-                if(openScreenshotsScreenKey.isPressed()) {
-                    client.setScreen(new ManageScreenshotsScreen(null));
-                }
-            }
-        });
-        ScreenEvents.AFTER_INIT.register(DELAYED_PHASE, (client, screen, scaledWidth, scaledHeight) -> {
-            if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && screen instanceof GameMenuScreen) {
-                List<ClickableWidget> buttons = Screens.getButtons(screen);
-                ClickableWidget topButton = buttons.get(0);
-                buttons.add(new TexturedButtonWidget(topButton.x + topButton.getWidth() + 8, topButton.y, topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
-                    client.setScreen(new ManageScreenshotsScreen(screen));
-                }, (button, matrices, mouseX, mouseY) -> {
-                    screen.renderOrderedTooltip(matrices, Screens.getTextRenderer(screen).wrapLines(translatable("screen", "manage_screenshots"), Math.max(screen.width / 2 - 43, 170)), mouseX, mouseY);
-                }, translatable("screen", "manage_screenshots")));
-            }
-            if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_ON_TITLE_SCREEN, true) && screen instanceof TitleScreen) {
-                List<ClickableWidget> buttons = Screens.getButtons(screen);
-                Optional<ClickableWidget> accessibilityWidgetOpt = buttons.stream()
-                        .filter(TexturedButtonWidget.class::isInstance)
-                        .filter(widget -> widget.getMessage().equals(Text.translatable("narrator.button.accessibility")))
-                        .findFirst();
-
-                int x = accessibilityWidgetOpt.map(widget -> widget.x).orElse(screen.width / 2 + 104);
-                int y = accessibilityWidgetOpt.map(widget -> widget.y).orElse(screen.height / 4 + 132);
-                int width = accessibilityWidgetOpt.map(ClickableWidget::getWidth).orElse(20);
-                int height = accessibilityWidgetOpt.map(ClickableWidget::getHeight).orElse(20);
-                buttons.add(new TexturedButtonWidget(x + width + 4, y, width, height, 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
-                    client.setScreen(new ManageScreenshotsScreen(screen));
-                }, (button, matrices, mouseX, mouseY) -> {
-                    screen.renderOrderedTooltip(matrices, Screens.getTextRenderer(screen).wrapLines(translatable("screen", "manage_screenshots"), Math.max(screen.width / 2 - 43, 170)), mouseX, mouseY);
-                }, translatable("screen", "manage_screenshots")));
-            }
-        });
-        ScreenEvents.AFTER_INIT.addPhaseOrdering(Event.DEFAULT_PHASE, DELAYED_PHASE);
+    private void onConfigReloaded(ModConfigEvent.Reloading event) {
+        this.configListeners.forEach(ScreenshotViewerConfigListener::onConfigReloaded);
     }
 
-    public CatConfig getConfig() {
+    @SubscribeEvent
+    public void onKeyInput(InputEvent.Key event) {
+        Minecraft client = Minecraft.getInstance();
+        KeyMapping openScreenshotsScreenKey = getInstance().getOpenScreenshotsScreenKey();
+        if(client.level != null && client.screen == null && event.getAction() == InputConstants.PRESS && openScreenshotsScreenKey != null && openScreenshotsScreenKey.getKey().getValue() == event.getKey()) {
+            client.setScreen(new ManageScreenshotsScreen(null));
+        }
+    }
+
+    private static final ResourceLocation MANAGE_SCREENSHOTS_BUTTON_TEXTURE = new ResourceLocation(MODID, "textures/gui/screenshots_button.png");
+
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public void onScreenPostInit(ScreenEvent.Init.Post event) {
+        Screen screen = event.getScreen();
+        Minecraft client = screen.getMinecraft();
+        List<GuiEventListener> buttons = event.getListenersList();
+
+        if(config.showButtonInGamePauseMenu.get() && screen instanceof PauseScreen) {
+            AbstractWidget topButton = buttons.stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).toList().get(0);
+            event.addListener(new ImageButton(topButton.x + topButton.getWidth() + 8, topButton.y, topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+                client.setScreen(new ManageScreenshotsScreen(screen));
+            }, (button, matrices, mouseX, mouseY) -> {
+                screen.renderTooltip(matrices, client.font.split(translatable("screen", "manage_screenshots"), Math.max(screen.width / 2 - 43, 170)), mouseX, mouseY);
+            }, translatable("screen", "manage_screenshots")));
+        }
+        if(config.showButtonOnTitleScreen.get() && screen instanceof TitleScreen) {
+            Optional<ImageButton> accessibilityWidgetOpt = buttons.stream()
+                    .filter(ImageButton.class::isInstance)
+                    .map(ImageButton.class::cast)
+                    .filter(widget -> widget.getMessage().equals(Component.translatable("narrator.button.accessibility")))
+                    .findFirst();
+
+            int x = accessibilityWidgetOpt.map(widget -> widget.x).orElse(screen.width / 2 + 104);
+            int y = accessibilityWidgetOpt.map(widget -> widget.y).orElse(screen.height / 4 + 132);
+            int width = accessibilityWidgetOpt.map(ImageButton::getWidth).orElse(20);
+            int height = accessibilityWidgetOpt.map(ImageButton::getHeight).orElse(20);
+            event.addListener(new ImageButton(x + width + 4, y, width, height, 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+                client.setScreen(new ManageScreenshotsScreen(screen));
+            }, (button, matrices, mouseX, mouseY) -> {
+                screen.renderTooltip(matrices, client.font.split(translatable("screen", "manage_screenshots"), Math.max(screen.width / 2 - 43, 170)), mouseX, mouseY);
+            }, translatable("screen", "manage_screenshots")));
+        }
+    }
+
+    public ScreenshotViewerConfig getConfig() {
         return config;
     }
 
-    public KeyBinding getOpenScreenshotsScreenKey() {
+    public KeyMapping getOpenScreenshotsScreenKey() {
         return openScreenshotsScreenKey;
+    }
+
+    public Optional<BiFunction<Minecraft, Screen, Screen>> getConfigScreenFactory() {
+        return ConfigScreenHandler.getScreenFactoryFor(this.modInfo);
+    }
+
+    public void registerConfigListener(ScreenshotViewerConfigListener listener) {
+        this.configListeners.add(listener);
+    }
+
+    public void unregisterConfigListener(ScreenshotViewerConfigListener listener) {
+        this.configListeners.remove(listener);
     }
 
     @NotNull
     public static ScreenshotViewer getInstance() {
         if(instance == null) {
-            throw new IllegalStateException("Screenshot Viewer Client is not yet loaded!");
+            throw new IllegalStateException("Screenshot Viewer is not loaded yet!");
         }
 
         return instance;
@@ -110,7 +142,7 @@ public class ScreenshotViewer implements ClientModInitializer {
         return prefix + '.' + MODID + '.' + suffix;
     }
 
-    public static Text translatable(String prefix, String suffix) {
-        return Text.translatable(translation(prefix, suffix));
+    public static Component translatable(String prefix, String suffix) {
+        return Component.translatable(translation(prefix, suffix));
     }
 }

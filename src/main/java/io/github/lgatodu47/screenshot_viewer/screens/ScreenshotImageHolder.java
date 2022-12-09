@@ -1,6 +1,6 @@
-package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
+package io.github.lgatodu47.screenshot_viewer.screens;
 
-import net.minecraft.client.texture.NativeImage;
+import com.mojang.blaze3d.platform.NativeImage;
 import org.jetbrains.annotations.Nullable;
 
 interface ScreenshotImageHolder {

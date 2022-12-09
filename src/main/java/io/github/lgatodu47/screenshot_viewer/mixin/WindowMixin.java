@@ -1,6 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.mixin;
 
-import net.minecraft.client.util.Window;
+import com.mojang.blaze3d.platform.Window;
 import org.lwjgl.PointerBuffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

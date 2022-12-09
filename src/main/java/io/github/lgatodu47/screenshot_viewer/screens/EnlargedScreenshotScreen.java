@@ -1,15 +1,15 @@
-package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
+package io.github.lgatodu47.screenshot_viewer.screens;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 class EnlargedScreenshotScreen extends Screen {
@@ -17,13 +17,13 @@ class EnlargedScreenshotScreen extends Screen {
     private ScreenshotImageHolder showing;
     @Nullable
     private ScreenshotImageList imageList;
-    private final ButtonWidget doneBtn, nextBtn, prevBtn;
+    private final Button doneBtn, nextBtn, prevBtn;
 
     EnlargedScreenshotScreen() {
-        super(Text.empty());
-        this.doneBtn = new ButtonWidget(0, 0, 52, 20, ScreenTexts.DONE, btn -> close());
-        this.prevBtn = new ButtonWidget(0, 0, 20, 20, Text.literal("<"), btn -> previousScreenshot());
-        this.nextBtn = new ButtonWidget(0, 0, 20, 20, Text.literal(">"), btn -> nextScreenshot());
+        super(Component.empty());
+        this.doneBtn = new Button(0, 0, 52, 20, CommonComponents.GUI_DONE, btn -> onClose());
+        this.prevBtn = new Button(0, 0, 20, 20, Component.literal("<"), btn -> previousScreenshot());
+        this.nextBtn = new Button(0, 0, 20, 20, Component.literal(">"), btn -> nextScreenshot());
     }
 
     // Package-private allows the main screen to show this child screen
@@ -36,16 +36,16 @@ class EnlargedScreenshotScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        clearChildren();
+        clearWidgets();
         addUpdatedButton(doneBtn, (width - 52) / 2, height - 20 - 8);
         addUpdatedButton(prevBtn, 8, (height - 20) / 2);
         addUpdatedButton(nextBtn, width - 8 - 20, (height - 20) / 2);
     }
 
-    private void addUpdatedButton(ButtonWidget button, int x, int y) {
+    private void addUpdatedButton(Button button, int x, int y) {
         button.x = x;
         button.y = y;
-        addDrawableChild(button);
+        addRenderableWidget(button);
     }
 
     private void nextScreenshot() {
@@ -85,12 +85,12 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(MatrixStack matrices) {
+    public void renderBackground(PoseStack matrices) {
         this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
         if (showing != null) {
             final int spacing = 8;
 
@@ -103,7 +103,7 @@ class EnlargedScreenshotScreen extends Screen {
                 float imgRatio = (float) image.getWidth() / image.getHeight();
                 int texHeight = height - spacing * 3 - 20;
                 int texWidth = (int) (texHeight * imgRatio);
-                DrawableHelper.drawTexture(matrices, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
+                GuiComponent.blit(matrices, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
                 RenderSystem.disableBlend();
             }
 
@@ -124,11 +124,11 @@ class EnlargedScreenshotScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == InputUtil.GLFW_KEY_LEFT) {
+        if (keyCode == InputConstants.KEY_LEFT) {
             previousScreenshot();
             return true;
         }
-        if (keyCode == InputUtil.GLFW_KEY_RIGHT) {
+        if (keyCode == InputConstants.KEY_RIGHT) {
             nextScreenshot();
             return true;
         }
@@ -136,7 +136,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         showing = null;
         imageList = null;
     }

@@ -1,6 +1,6 @@
 # Screenshot Viewer
 
-A Fabric mod that adds a gui to see your screenshots in game!
+The forge version of the mod that adds a gui to see your screenshots in game!
 
 ***
 
