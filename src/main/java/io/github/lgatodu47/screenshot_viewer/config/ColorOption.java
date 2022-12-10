@@ -90,7 +90,7 @@ public record ColorOption(String name, @Nullable TextColor defaultValue) impleme
                 if(!text.isEmpty()) {
                     try {
                         int color = Integer.parseInt(text.substring(1), 16);
-                        fill(matrices, this.x, this.y, this.x + 3, this.y + this.height, 0xFF000000 | color);
+                        fill(matrices, this.getX(), this.getY(), this.getX() + 3, this.getY() + this.height, 0xFF000000 | color);
                     } catch (NumberFormatException ignored) {
                     }
                 }

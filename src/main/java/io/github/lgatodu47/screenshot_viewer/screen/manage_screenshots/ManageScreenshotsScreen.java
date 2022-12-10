@@ -11,6 +11,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.tooltip.TooltipPositioner;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.render.GameRenderer;
@@ -25,6 +27,7 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     // Package-private config instance accessible in all the package classes
@@ -96,19 +99,13 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         // Config Button
         addDrawableChild(new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, 0, 0, btnSize, CONFIG_BUTTON_TEXTURE, 32, 64, button -> {
             client.setScreen(new ScreenshotViewerConfigScreen(this));
-        }, (button, matrices, x, y) -> {
-            renderOrderedTooltip(matrices, client.textRenderer.wrapLines(ScreenshotViewer.translatable("screen", "button.config"), Math.max(width / 2 - 43, 170)), x, y + btnSize);
-        }, ScreenshotViewer.translatable("screen", "button.config")));
+        }, ScreenshotViewer.translatable("screen", "button.config"), ScreenshotViewer.translatable("screen", "button.config")).offsetTooltip());
         // Order Button
         addDrawableChild(new ExtendedTexturedButtonWidget(spacing, btnY, btnSize, btnSize, 0, 0, btnSize, null, 32, 64, button -> {
             if(list != null) {
                 list.invertOrder();
             }
-        }, (button, matrices, x, y) -> {
-            if(list != null) {
-                renderOrderedTooltip(matrices, client.textRenderer.wrapLines(ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending"), Math.max(width / 2 - 43, 170)), x, y);
-            }
-        }, ScreenshotViewer.translatable("screen", "button.order")) {
+        }, list == null ? null : ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending"), ScreenshotViewer.translatable("screen", "button.order")) {
             @Override
             public @Nullable Identifier getTexture() {
                 return list == null ? null : list.isInvertedOrder() ? DESCENDING_ORDER_BUTTON_TEXTURE : ASCENDING_ORDER_BUTTON_TEXTURE;
@@ -117,17 +114,13 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         // Screenshot Folder Button
         addDrawableChild(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, OPEN_FOLDER_BUTTON_TEXTURE, 32, 64, btn -> {
             Util.getOperatingSystem().open(new File(this.client.runDirectory, "screenshots"));
-        }, (button, matrices, x, y) -> {
-            renderOrderedTooltip(matrices, client.textRenderer.wrapLines(ScreenshotViewer.translatable("screen", "button.screenshot_folder"), Math.max(width / 2 - 43, 170)), x, y);
-        }, ScreenshotViewer.translatable("screen", "button.screenshot_folder")));
+        }, ScreenshotViewer.translatable("screen", "button.screenshot_folder"), ScreenshotViewer.translatable("screen", "button.screenshot_folder")));
         // Done Button
         addDrawableChild(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, ScreenTexts.DONE, button -> close()));
         // Refresh Button
         addDrawableChild(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, REFRESH_BUTTON_TEXTURE, 32, 64, button -> {
             list.init();
-        }, (btn, matrices, x, y) -> {
-            renderOrderedTooltip(matrices, client.textRenderer.wrapLines(ScreenshotViewer.translatable("screen", "button.refresh"), Math.max(width / 2 - 43, 170)), x, y);
-        }, ScreenshotViewer.translatable("screen", "button.refresh")));
+        }, ScreenshotViewer.translatable("screen", "button.refresh"), ScreenshotViewer.translatable("screen", "button.refresh")));
     }
 
     @Override
@@ -318,7 +311,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
 
     private static final class ExtendedButtonWidget extends ButtonWidget implements CustomHoverState {
         ExtendedButtonWidget(int x, int y, int width, int height, Text message, PressAction onPress) {
-            super(x, y, width, height, message, onPress);
+            super(x, y, width, height, message, onPress, Supplier::get);
         }
 
         @Override
@@ -331,7 +324,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
 
         @Override
         public void updateHoveredState(int mouseX, int mouseY) {
-            this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+            this.hovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
         }
     }
 
@@ -343,15 +336,25 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         private final int hoveredVOffset;
         private final int textureWidth;
         private final int textureHeight;
+        @Nullable
+        private final Text tooltip;
+        private boolean offsetTooltip;
 
-        ExtendedTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, @Nullable Identifier texture, int textureWidth, int textureHeight, PressAction pressAction, TooltipSupplier tooltipSupplier, Text text) {
-            super(x, y, width, height, u, v, hoveredVOffset, ButtonWidget.WIDGETS_TEXTURE, textureWidth, textureHeight, pressAction, tooltipSupplier, text);
+        ExtendedTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, @Nullable Identifier texture, int textureWidth, int textureHeight, PressAction pressAction, @Nullable Text tooltip, Text text) {
+            super(x, y, width, height, u, v, hoveredVOffset, ButtonWidget.WIDGETS_TEXTURE, textureWidth, textureHeight, pressAction, text);
             this.textureWidth = textureWidth;
             this.textureHeight = textureHeight;
             this.u = u;
             this.v = v;
             this.hoveredVOffset = hoveredVOffset;
             this.texture = texture;
+            this.tooltip = tooltip;
+            setTooltip(Tooltip.of(tooltip));
+        }
+
+        ExtendedTexturedButtonWidget offsetTooltip() {
+            this.offsetTooltip = true;
+            return this;
         }
 
         @Override
@@ -360,6 +363,23 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
                 return;
             }
             this.renderButton(matrices, mouseX, mouseY, delta);
+            applyTooltip();
+        }
+
+        private void applyTooltip() {
+            if (this.tooltip != null) {
+                if (isHovered()) {
+                    Screen screen = MinecraftClient.getInstance().currentScreen;
+                    if (screen != null) {
+                        screen.setTooltip(Tooltip.of(tooltip), getTooltipPositioner(), isFocused());
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected TooltipPositioner getTooltipPositioner() {
+            return offsetTooltip ? (screen, x, y, w, h) -> super.getTooltipPositioner().getPosition(screen, x, y + height, w, h) : super.getTooltipPositioner();
         }
 
         @Nullable
@@ -371,9 +391,9 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
             Identifier texture = getTexture();
             if(texture == null) {
-                DrawableHelper.fill(matrices, x, y, x + width, y + height, 0xFFFFFF);
+                DrawableHelper.fill(matrices, getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);
             } else {
-                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                RenderSystem.setShader(GameRenderer::getPositionTexProgram);
                 RenderSystem.setShaderTexture(0, texture);
                 int vOffset = this.v;
                 if (!this.isNarratable()) {
@@ -382,16 +402,13 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
                     vOffset += this.hoveredVOffset;
                 }
                 RenderSystem.enableDepthTest();
-                DrawableHelper.drawTexture(matrices, this.x, this.y, this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
-                if (this.hovered) {
-                    this.renderTooltip(matrices, mouseX, mouseY);
-                }
+                DrawableHelper.drawTexture(matrices, this.getX(), this.getY(), this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
             }
         }
 
         @Override
         public void updateHoveredState(int mouseX, int mouseY) {
-            this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+            this.hovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
         }
     }
 

@@ -53,11 +53,11 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     void updateBaseY(int baseY) {
-        this.y = this.baseY = baseY;
+        setY(this.baseY = baseY);
     }
 
     void updateY(int scrollY) {
-        this.y = baseY - scrollY;
+        setY(baseY - scrollY);
     }
 
     void setHeight(int height) {
@@ -84,7 +84,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     void updateHoverState(int mouseX, int mouseY, int viewportY, int viewportBottom, boolean updateHoverState) {
-        this.hovered = updateHoverState && (mouseX >= this.x && mouseY >= Math.max(this.y, viewportY) && mouseX < this.x + this.width && mouseY < Math.min(this.y + this.height, viewportBottom));
+        this.hovered = updateHoverState && (mouseX >= this.getX() && mouseY >= Math.max(this.getY(), viewportY) && mouseX < this.getX() + this.width && mouseY < Math.min(this.getY() + this.height, viewportBottom));
         int maxOpacity = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_BACKGROUND_OPACITY, 100);
         if (maxOpacity > 0 && hovered) {
             if (bgOpacity < maxOpacity / 100f) {
@@ -105,18 +105,18 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
         NativeImageBackedTexture image = texture();
         if (image != null && image.getImage() != null) {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShader(GameRenderer::getPositionTexProgram);
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             RenderSystem.setShaderTexture(0, image.getGlId());
             RenderSystem.enableBlend();
-            int renderY = Math.max(y + spacing, viewportY);
+            int renderY = Math.max(getY() + spacing, viewportY);
             int imgHeight = (int) (height / 1.08 - spacing * 3);
-            int topOffset = Math.max(0, viewportY - y - spacing);
-            int bottomOffset = Math.max(0, y + spacing + imgHeight - viewportBottom);
+            int topOffset = Math.max(0, viewportY - getY() - spacing);
+            int bottomOffset = Math.max(0, getY() + spacing + imgHeight - viewportBottom);
             int topV = topOffset * image.getImage().getHeight() / imgHeight;
             int bottomV = bottomOffset * image.getImage().getHeight() / imgHeight;
             DrawableHelper.drawTexture(matrices,
-                    x + spacing,
+                    getX() + spacing,
                     renderY,
                     width - spacing * 2,
                     imgHeight - topOffset - bottomOffset,
@@ -130,10 +130,10 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             RenderSystem.disableBlend();
         }
         float scaleFactor = (float) (client.getWindow().getScaledHeight() / 96) / ctx.screenshotsPerRow();
-        int textY = y + (int) (height / 1.08) - spacing;
+        int textY = getY() + (int) (height / 1.08) - spacing;
         if (textY > viewportY && (float) textY + scaleFactor * (client.textRenderer.fontHeight) < viewportBottom) {
             matrices.push();
-            matrices.translate(x + width / 2f, textY, 0);
+            matrices.translate(getX() + width / 2f, textY, 0);
             matrices.scale(scaleFactor, scaleFactor, scaleFactor);
             Text message = getMessage();
             float centerX = (float) (-client.textRenderer.getWidth(getMessage()) / 2);
@@ -152,9 +152,9 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     private void renderBackground(MatrixStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
-        int renderY = Math.max(y, viewportY);
-        int renderHeight = Math.min(y + height, viewportBottom);
-        DrawableHelper.fill(matrices, x, renderY, x + width, renderHeight, ColorHelper.Argb.getArgb((int) (bgOpacity * 255), 255, 255, 255));
+        int renderY = Math.max(getY(), viewportY);
+        int renderHeight = Math.min(getY() + height, viewportBottom);
+        DrawableHelper.fill(matrices, getX(), renderY, getX() + width, renderHeight, ColorHelper.Argb.getArgb((int) (bgOpacity * 255), 255, 255, 255));
     }
 
     /// Utility methods ///
@@ -257,7 +257,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
+    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
     }
 
     @Override

@@ -151,7 +151,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
                 mcSupplier.get().textRenderer.drawWithShadow(matrices, fileName, x + spacing, y + spacing, 0xFFFFFFFF);
                 for (ClickableWidget widget : buttons) {
                     widget.render(matrices, mouseX, mouseY, delta);
-                    mcSupplier.get().textRenderer.drawWithShadow(matrices, widget.getMessage(), widget.x + widget.getWidth() + spacing, widget.y + (widget.getHeight() - 9) / 2.f + spacing, 0xFFFFFFFF);
+                    mcSupplier.get().textRenderer.drawWithShadow(matrices, widget.getMessage(), widget.getX() + widget.getWidth() + spacing, widget.getY() + (widget.getHeight() - 9) / 2.f + spacing, 0xFFFFFFFF);
                 }
             } else {
                 childScreen.render(matrices, mouseX, mouseY, delta);
@@ -209,11 +209,11 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
 
         @Override
         public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShader(GameRenderer::getPositionTexProgram);
             RenderSystem.setShaderTexture(0, TEXTURE);
             RenderSystem.enableDepthTest();
-            TexturedButtonWidget.drawTexture(matrices, this.x, this.y, isHovered() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
-            TexturedButtonWidget.drawTexture(matrices, this.x, this.y, this.imgU, this.imgV, this.width, this.height, 128, 128);
+            TexturedButtonWidget.drawTexture(matrices, this.getX(), this.getY(), isHovered() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
+            TexturedButtonWidget.drawTexture(matrices, this.getX(), this.getY(), this.imgU, this.imgV, this.width, this.height, 128, 128);
         }
     }
 
@@ -255,16 +255,16 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
             this.textField = new TextFieldWidget(this.textRenderer, (this.width - 150) / 2, (this.height - 20) / 2, 150, 20, ScreenshotViewer.translatable("screen", "field.screenshot_name"));
             textField.setMaxLength(128);
             textField.setTextPredicate(RenameScreen::checkInvalidCharacters);
-            this.doneBtn = new ButtonWidget(this.width / 2 - 4 - 150, this.height / 2 + 50, 150, 20, ScreenTexts.DONE, btn -> {
+            this.doneBtn = ButtonWidget.builder(ScreenTexts.DONE, btn -> {
                 this.newNameConsumer.accept(textField.getText().trim().concat(".png"));
                 this.closeAction.run();
-            });
+            }).position(this.width / 2 - 4 - 150, this.height / 2 + 50).build();
             doneBtn.active = false;
             textField.setChangedListener(s -> doneBtn.active = !(s.isBlank() || s.trim().equals(previousName) || s.endsWith(".")));
             textField.setText(previousName);
             this.addDrawableChild(textField);
             this.addDrawableChild(doneBtn);
-            this.addDrawableChild(new ButtonWidget(this.width / 2 + 4, this.height / 2 + 50, 150, 20, ScreenTexts.BACK, btn -> closeAction.run()));
+            this.addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, btn -> closeAction.run()).position(this.width / 2 + 4, this.height / 2 + 50).build());
         }
 
         @Override

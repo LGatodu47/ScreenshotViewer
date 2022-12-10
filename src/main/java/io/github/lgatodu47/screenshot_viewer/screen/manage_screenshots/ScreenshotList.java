@@ -122,7 +122,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         int xOff = 0;
 
         for (ScreenshotWidget widget : screenshotWidgets) {
-            widget.x = childX;
+            widget.setX(childX);
             widget.updateBaseY(childY);
             widget.setWidth(childWidth);
             widget.setHeight(childHeight);
@@ -185,7 +185,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             int viewportBottom = y + height - spacing;
             screenshotWidget.updateHoverState(mouseX, mouseY, viewportY, viewportBottom, updateHoverState);
             // skips rendering the widget if it is not at all in the render area
-            if (screenshotWidget.y + screenshotWidget.getHeight() < y || screenshotWidget.y > y + height) {
+            if (screenshotWidget.getY() + screenshotWidget.getHeight() < y || screenshotWidget.getY() > y + height) {
                 continue;
             }
             screenshotWidget.render(matrices, mouseX, mouseY, delta, viewportY, viewportBottom);

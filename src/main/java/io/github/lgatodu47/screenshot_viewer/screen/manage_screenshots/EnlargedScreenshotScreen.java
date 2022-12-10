@@ -21,9 +21,9 @@ class EnlargedScreenshotScreen extends Screen {
 
     EnlargedScreenshotScreen() {
         super(Text.empty());
-        this.doneBtn = new ButtonWidget(0, 0, 52, 20, ScreenTexts.DONE, btn -> close());
-        this.prevBtn = new ButtonWidget(0, 0, 20, 20, Text.literal("<"), btn -> previousScreenshot());
-        this.nextBtn = new ButtonWidget(0, 0, 20, 20, Text.literal(">"), btn -> nextScreenshot());
+        this.doneBtn = ButtonWidget.builder(ScreenTexts.DONE, btn -> close()).width(52).build();
+        this.prevBtn = ButtonWidget.builder(Text.literal("<"), btn -> previousScreenshot()).width(20).build();
+        this.nextBtn = ButtonWidget.builder(Text.literal(">"), btn -> nextScreenshot()).width(20).build();
     }
 
     // Package-private allows the main screen to show this child screen
@@ -43,8 +43,8 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     private void addUpdatedButton(ButtonWidget button, int x, int y) {
-        button.x = x;
-        button.y = y;
+        button.setX(x);
+        button.setY(y);
         addDrawableChild(button);
     }
 
@@ -96,7 +96,7 @@ class EnlargedScreenshotScreen extends Screen {
 
             NativeImage image = showing.image();
             if (image != null) {
-                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                RenderSystem.setShader(GameRenderer::getPositionTexProgram);
                 RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
                 RenderSystem.setShaderTexture(0, showing.imageId());
                 RenderSystem.enableBlend();
