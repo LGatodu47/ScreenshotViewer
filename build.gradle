@@ -44,7 +44,9 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
 
-    runtimeOnly fg.deobf("curse.maven:configured-457570:${project.configured_release_id}")
+    if(hasProperty("configured_release_id")) {
+        runtimeOnly fg.deobf("curse.maven:configured-457570:${project.configured_release_id}")
+    }
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }

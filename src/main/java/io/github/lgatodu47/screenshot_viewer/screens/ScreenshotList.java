@@ -3,21 +3,22 @@ package io.github.lgatodu47.screenshot_viewer.screens;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.IntUnaryOperator;
 
-final class ScreenshotList extends AbstractContainerEventHandler implements Widget, NarratableEntry, ScreenshotImageList {
+final class ScreenshotList extends AbstractContainerEventHandler implements Renderable, NarratableEntry, ScreenshotImageList {
     private final ManageScreenshotsScreen mainScreen;
     private final Minecraft client;
     private final int x, y;
@@ -124,7 +125,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Widg
         int xOff = 0;
 
         for (ScreenshotWidget widget : screenshotWidgets) {
-            widget.x = childX;
+            widget.setX(childX);
             widget.updateBaseY(childY);
             widget.setWidth(childWidth);
             widget.setHeight(childHeight);
@@ -187,7 +188,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Widg
             int viewportBottom = y + height - spacing;
             screenshotWidget.updateHoverState(mouseX, mouseY, viewportY, viewportBottom, updateHoverState);
             // skips rendering the widget if it is not at all in the render area
-            if (screenshotWidget.y + screenshotWidget.getHeight() < y || screenshotWidget.y > y + height) {
+            if (screenshotWidget.getY() + screenshotWidget.getHeight() < y || screenshotWidget.getY() > y + height) {
                 continue;
             }
             screenshotWidget.render(matrices, mouseX, mouseY, delta, viewportY, viewportBottom);

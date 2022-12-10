@@ -21,9 +21,9 @@ class EnlargedScreenshotScreen extends Screen {
 
     EnlargedScreenshotScreen() {
         super(Component.empty());
-        this.doneBtn = new Button(0, 0, 52, 20, CommonComponents.GUI_DONE, btn -> onClose());
-        this.prevBtn = new Button(0, 0, 20, 20, Component.literal("<"), btn -> previousScreenshot());
-        this.nextBtn = new Button(0, 0, 20, 20, Component.literal(">"), btn -> nextScreenshot());
+        this.doneBtn = Button.builder(CommonComponents.GUI_DONE, btn -> onClose()).width(52).build();
+        this.prevBtn = Button.builder(Component.literal("<"), btn -> previousScreenshot()).width(20).build();
+        this.nextBtn = Button.builder(Component.literal(">"), btn -> nextScreenshot()).width(20).build();
     }
 
     // Package-private allows the main screen to show this child screen
@@ -43,8 +43,8 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     private void addUpdatedButton(Button button, int x, int y) {
-        button.x = x;
-        button.y = y;
+        button.setX(x);
+        button.setY(y);
         addRenderableWidget(button);
     }
 

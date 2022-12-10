@@ -11,8 +11,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -24,6 +26,7 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerConfigListener {
     // Package-private config instance accessible in all the package classes
@@ -95,11 +98,11 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
 
         // Config Button
         Optional<BiFunction<Minecraft, Screen, Screen>> configScreenFactory = ScreenshotViewer.getInstance().getConfigScreenFactory();
-        Button configButton = new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, 0, 0, btnSize, CONFIG_BUTTON_TEXTURE, 32, 64, button -> {
-            configScreenFactory.ifPresent(f -> minecraft.setScreen(f.apply(minecraft, this)));
-        }, (button, matrices, x, y) -> {
-            renderTooltip(matrices, minecraft.font.split(ScreenshotViewer.translatable("screen", configScreenFactory.isPresent() ? "button.config" : "no_config"), Math.max(width / 2 - 43, 170)), x, y + btnSize);
-        }, ScreenshotViewer.translatable("screen", configScreenFactory.isPresent() ? "button.config" : "no_config"));
+        Button configButton = new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, 0, 0, btnSize, CONFIG_BUTTON_TEXTURE, 32, 64,
+                button -> configScreenFactory.ifPresent(f -> minecraft.setScreen(f.apply(minecraft, this))),
+                ScreenshotViewer.translatable("screen", configScreenFactory.isPresent() ? "button.config" : "no_config"),
+                ScreenshotViewer.translatable("screen", configScreenFactory.isPresent() ? "button.config" : "no_config")
+        ).offsetTooltip();
         configButton.active = configScreenFactory.isPresent();
         addRenderableWidget(configButton);
         // Order Button
@@ -107,11 +110,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             if(list != null) {
                 list.invertOrder();
             }
-        }, (button, matrices, x, y) -> {
-            if(list != null) {
-                renderTooltip(matrices, minecraft.font.split(ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending"), Math.max(width / 2 - 43, 170)), x, y);
-            }
-        }, ScreenshotViewer.translatable("screen", "button.order")) {
+        }, list == null ? null : ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending"), ScreenshotViewer.translatable("screen", "button.order")) {
             @Override
             public @Nullable ResourceLocation getTexture() {
                 return list == null ? null : list.isInvertedOrder() ? DESCENDING_ORDER_BUTTON_TEXTURE : ASCENDING_ORDER_BUTTON_TEXTURE;
@@ -120,17 +119,13 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         // Screenshot Folder Button
         addRenderableWidget(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, OPEN_FOLDER_BUTTON_TEXTURE, 32, 64, btn -> {
             Util.getPlatform().openFile(new File(this.minecraft.gameDirectory, "screenshots"));
-        }, (button, matrices, x, y) -> {
-            renderTooltip(matrices, minecraft.font.split(ScreenshotViewer.translatable("screen", "button.screenshot_folder"), Math.max(width / 2 - 43, 170)), x, y);
-        }, ScreenshotViewer.translatable("screen", "button.screenshot_folder")));
+        }, ScreenshotViewer.translatable("screen", "button.screenshot_folder"), ScreenshotViewer.translatable("screen", "button.screenshot_folder")));
         // Done Button
         addRenderableWidget(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, CommonComponents.GUI_DONE, button -> onClose()));
         // Refresh Button
         addRenderableWidget(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, REFRESH_BUTTON_TEXTURE, 32, 64, button -> {
             list.init();
-        }, (btn, matrices, x, y) -> {
-            renderTooltip(matrices, minecraft.font.split(ScreenshotViewer.translatable("screen", "button.refresh"), Math.max(width / 2 - 43, 170)), x, y);
-        }, ScreenshotViewer.translatable("screen", "button.refresh")));
+        }, ScreenshotViewer.translatable("screen", "button.refresh"), ScreenshotViewer.translatable("screen", "button.refresh")));
     }
 
     @Override
@@ -322,7 +317,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
 
     private static final class ExtendedButtonWidget extends Button implements CustomHoverState {
         ExtendedButtonWidget(int x, int y, int width, int height, Component message, OnPress onPress) {
-            super(x, y, width, height, message, onPress);
+            super(x, y, width, height, message, onPress, Supplier::get);
         }
 
         @Override
@@ -335,7 +330,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
 
         @Override
         public void updateHoveredState(int mouseX, int mouseY) {
-            this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+            this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
         }
     }
 
@@ -347,15 +342,25 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         private final int hoveredVOffset;
         private final int textureWidth;
         private final int textureHeight;
+        @Nullable
+        private final Component tooltip;
+        private boolean offsetTooltip;
 
-        ExtendedTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, @Nullable ResourceLocation texture, int textureWidth, int textureHeight, OnPress pressAction, OnTooltip tooltipSupplier, Component text) {
-            super(x, y, width, height, u, v, hoveredVOffset, Button.WIDGETS_LOCATION, textureWidth, textureHeight, pressAction, tooltipSupplier, text);
+        ExtendedTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, @Nullable ResourceLocation texture, int textureWidth, int textureHeight, OnPress pressAction, @Nullable Component tooltip, Component text) {
+            super(x, y, width, height, u, v, hoveredVOffset, Button.WIDGETS_LOCATION, textureWidth, textureHeight, pressAction, text);
             this.textureWidth = textureWidth;
             this.textureHeight = textureHeight;
             this.u = u;
             this.v = v;
             this.hoveredVOffset = hoveredVOffset;
             this.texture = texture;
+            this.tooltip = tooltip;
+            setTooltip(Tooltip.create(tooltip));
+        }
+
+        ExtendedTexturedButtonWidget offsetTooltip() {
+            offsetTooltip = true;
+            return this;
         }
 
         @Override
@@ -364,6 +369,23 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
                 return;
             }
             this.renderButton(matrices, mouseX, mouseY, delta);
+            updateTooltip();
+        }
+
+        private void updateTooltip() {
+            if (this.tooltip != null) {
+                if (isHoveredOrFocused()) {
+                    Screen screen = Minecraft.getInstance().screen;
+                    if (screen != null) {
+                        screen.setTooltipForNextRenderPass(Tooltip.create(tooltip), this.createTooltipPositioner(), this.isFocused());
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected ClientTooltipPositioner createTooltipPositioner() {
+            return offsetTooltip ? (screen, x, y, w, h) -> super.createTooltipPositioner().positionTooltip(screen, x, y + height, w, h) : super.createTooltipPositioner();
         }
 
         @Nullable
@@ -375,7 +397,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         public void renderButton(PoseStack matrices, int mouseX, int mouseY, float delta) {
             ResourceLocation texture = getTexture();
             if(texture == null) {
-                GuiComponent.fill(matrices, x, y, x + width, y + height, 0xFFFFFF);
+                GuiComponent.fill(matrices, getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);
             } else {
                 RenderSystem.setShader(GameRenderer::getPositionTexShader);
                 RenderSystem.setShaderTexture(0, texture);
@@ -386,16 +408,13 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
                     vOffset += this.hoveredVOffset;
                 }
                 RenderSystem.enableDepthTest();
-                GuiComponent.blit(matrices, this.x, this.y, this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
-                if (this.isHovered) {
-                    this.renderToolTip(matrices, mouseX, mouseY);
-                }
+                GuiComponent.blit(matrices, this.getX(), this.getY(), this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
             }
         }
 
         @Override
         public void updateHoveredState(int mouseX, int mouseY) {
-            this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+            this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
         }
     }
 

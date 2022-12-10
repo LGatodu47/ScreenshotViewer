@@ -8,7 +8,9 @@ import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.GridWidget;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -31,7 +33,9 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.forgespi.language.IModInfo;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 @Mod(ScreenshotViewer.MODID)
@@ -83,12 +87,16 @@ public class ScreenshotViewer {
         List<GuiEventListener> buttons = event.getListenersList();
 
         if(config.showButtonInGamePauseMenu.get() && screen instanceof PauseScreen) {
-            AbstractWidget topButton = buttons.stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).toList().get(0);
-            event.addListener(new ImageButton(topButton.x + topButton.getWidth() + 8, topButton.y, topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
-                client.setScreen(new ManageScreenshotsScreen(screen));
-            }, (button, matrices, mouseX, mouseY) -> {
-                screen.renderTooltip(matrices, client.font.split(translatable("screen", "manage_screenshots"), Math.max(screen.width / 2 - 43, 170)), mouseX, mouseY);
-            }, translatable("screen", "manage_screenshots")));
+            buttons.stream()
+                    .filter(GridWidget.class::isInstance)
+                    .map(GridWidget.class::cast)
+                    .findFirst()
+                    .flatMap(grid -> grid.children().stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).findFirst())
+                    .ifPresent(topButton -> {
+                        event.addListener(Util.make(new ImageButton(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+                            client.setScreen(new ManageScreenshotsScreen(screen));
+                        }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.create(translatable("screen", "manage_screenshots")))));
+            });
         }
         if(config.showButtonOnTitleScreen.get() && screen instanceof TitleScreen) {
             Optional<ImageButton> accessibilityWidgetOpt = buttons.stream()
@@ -97,15 +105,13 @@ public class ScreenshotViewer {
                     .filter(widget -> widget.getMessage().equals(Component.translatable("narrator.button.accessibility")))
                     .findFirst();
 
-            int x = accessibilityWidgetOpt.map(widget -> widget.x).orElse(screen.width / 2 + 104);
-            int y = accessibilityWidgetOpt.map(widget -> widget.y).orElse(screen.height / 4 + 132);
+            int x = accessibilityWidgetOpt.map(AbstractWidget::getX).orElse(screen.width / 2 + 104);
+            int y = accessibilityWidgetOpt.map(AbstractWidget::getY).orElse(screen.height / 4 + 132);
             int width = accessibilityWidgetOpt.map(ImageButton::getWidth).orElse(20);
             int height = accessibilityWidgetOpt.map(ImageButton::getHeight).orElse(20);
-            event.addListener(new ImageButton(x + width + 4, y, width, height, 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+            event.addListener(Util.make(new ImageButton(x + width + 4, y, width, height, 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
                 client.setScreen(new ManageScreenshotsScreen(screen));
-            }, (button, matrices, mouseX, mouseY) -> {
-                screen.renderTooltip(matrices, client.font.split(translatable("screen", "manage_screenshots"), Math.max(screen.width / 2 - 43, 170)), mouseX, mouseY);
-            }, translatable("screen", "manage_screenshots")));
+            }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.create(translatable("screen", "manage_screenshots")))));
         }
     }
 

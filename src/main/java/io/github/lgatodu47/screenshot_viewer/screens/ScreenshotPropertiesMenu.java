@@ -12,7 +12,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button.OnPress;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ImageButton;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -36,7 +36,7 @@ import java.util.function.Supplier;
 
 import static io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen.LOGGER;
 
-class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements Widget {
+class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements Renderable {
     private static final int BUTTON_SIZE = 19;
 
     private final Supplier<Minecraft> mcSupplier;
@@ -150,7 +150,7 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
                 mcSupplier.get().font.drawShadow(matrices, fileName, x + spacing, y + spacing, 0xFFFFFFFF);
                 for (AbstractWidget widget : buttons) {
                     widget.render(matrices, mouseX, mouseY, delta);
-                    mcSupplier.get().font.drawShadow(matrices, widget.getMessage(), widget.x + widget.getWidth() + spacing, widget.y + (widget.getHeight() - 9) / 2.f + spacing, 0xFFFFFFFF);
+                    mcSupplier.get().font.drawShadow(matrices, widget.getMessage(), widget.getX() + widget.getWidth() + spacing, widget.getY() + (widget.getHeight() - 9) / 2.f + spacing, 0xFFFFFFFF);
                 }
             } else {
                 childScreen.render(matrices, mouseX, mouseY, delta);
@@ -211,8 +211,8 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.setShaderTexture(0, TEXTURE);
             RenderSystem.enableDepthTest();
-            ImageButton.blit(matrices, this.x, this.y, isHoveredOrFocused() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
-            ImageButton.blit(matrices, this.x, this.y, this.imgU, this.imgV, this.width, this.height, 128, 128);
+            ImageButton.blit(matrices, this.getX(), this.getY(), isHoveredOrFocused() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
+            ImageButton.blit(matrices, this.getX(), this.getY(), this.imgU, this.imgV, this.width, this.height, 128, 128);
         }
     }
 
@@ -254,16 +254,18 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
             this.textField = new EditBox(this.font, (this.width - 150) / 2, (this.height - 20) / 2, 150, 20, ScreenshotViewer.translatable("screen", "field.screenshot_name"));
             textField.setMaxLength(128);
             textField.setFilter(RenameScreen::checkInvalidCharacters);
-            this.doneBtn = new net.minecraft.client.gui.components.Button(this.width / 2 - 4 - 150, this.height / 2 + 50, 150, 20, CommonComponents.GUI_DONE, btn -> {
+            this.doneBtn = net.minecraft.client.gui.components.Button.builder(CommonComponents.GUI_DONE, btn -> {
                 this.newNameConsumer.accept(textField.getValue().trim().concat(".png"));
                 this.closeAction.run();
-            });
+            }).pos(this.width / 2 - 4 - 150, this.height / 2 + 50).build();
             doneBtn.active = false;
             textField.setResponder(s -> doneBtn.active = !(s.isBlank() || s.trim().equals(previousName) || s.endsWith(".")));
             textField.setValue(previousName);
             this.addRenderableWidget(textField);
             this.addRenderableWidget(doneBtn);
-            this.addRenderableWidget(new net.minecraft.client.gui.components.Button(this.width / 2 + 4, this.height / 2 + 50, 150, 20, CommonComponents.GUI_BACK, btn -> closeAction.run()));
+            this.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(CommonComponents.GUI_BACK, btn -> closeAction.run())
+                    .pos(this.width / 2 + 4, this.height / 2 + 50)
+                    .build());
         }
 
         @Override

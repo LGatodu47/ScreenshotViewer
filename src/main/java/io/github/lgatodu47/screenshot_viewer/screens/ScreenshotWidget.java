@@ -53,11 +53,11 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     void updateBaseY(int baseY) {
-        this.y = this.baseY = baseY;
+        setY(this.baseY = baseY);
     }
 
     void updateY(int scrollY) {
-        this.y = baseY - scrollY;
+        setY(baseY - scrollY);
     }
 
     void updateScreenshotFile(File screenshotFile) {
@@ -80,7 +80,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     void updateHoverState(int mouseX, int mouseY, int viewportY, int viewportBottom, boolean updateHoverState) {
-        this.isHovered = updateHoverState && (mouseX >= this.x && mouseY >= Math.max(this.y, viewportY) && mouseX < this.x + this.width && mouseY < Math.min(this.y + this.height, viewportBottom));
+        this.isHovered = updateHoverState && (mouseX >= this.getX() && mouseY >= Math.max(this.getY(), viewportY) && mouseX < this.getX() + this.width && mouseY < Math.min(this.getY() + this.height, viewportBottom));
         int maxOpacity = CONFIG.screenshotElementBackgroundOpacity.get();
         if (maxOpacity > 0 && isHovered) {
             if (bgOpacity < maxOpacity / 100f) {
@@ -105,14 +105,14 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             RenderSystem.setShaderTexture(0, image.getId());
             RenderSystem.enableBlend();
-            int renderY = Math.max(y + spacing, viewportY);
+            int renderY = Math.max(getY() + spacing, viewportY);
             int imgHeight = (int) (height / 1.08 - spacing * 3);
-            int topOffset = Math.max(0, viewportY - y - spacing);
-            int bottomOffset = Math.max(0, y + spacing + imgHeight - viewportBottom);
+            int topOffset = Math.max(0, viewportY - getY() - spacing);
+            int bottomOffset = Math.max(0, getY() + spacing + imgHeight - viewportBottom);
             int topV = topOffset * image.getPixels().getHeight() / imgHeight;
             int bottomV = bottomOffset * image.getPixels().getHeight() / imgHeight;
             GuiComponent.blit(matrices,
-                    x + spacing,
+                    getX() + spacing,
                     renderY,
                     width - spacing * 2,
                     imgHeight - topOffset - bottomOffset,
@@ -126,10 +126,10 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
             RenderSystem.disableBlend();
         }
         float scaleFactor = (float) (client.getWindow().getGuiScaledHeight() / 96) / ctx.screenshotsPerRow();
-        int textY = y + (int) (height / 1.08) - spacing;
+        int textY = getY() + (int) (height / 1.08) - spacing;
         if (textY > viewportY && (float) textY + scaleFactor * (client.font.lineHeight) < viewportBottom) {
             matrices.pushPose();
-            matrices.translate(x + width / 2f, textY, 0);
+            matrices.translate(getX() + width / 2f, textY, 0);
             matrices.scale(scaleFactor, scaleFactor, scaleFactor);
             Component message = getMessage();
             float centerX = (float) (-client.font.width(getMessage()) / 2);
@@ -148,9 +148,9 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     private void renderBackground(PoseStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
-        int renderY = Math.max(y, viewportY);
-        int renderHeight = Math.min(y + height, viewportBottom);
-        GuiComponent.fill(matrices, x, renderY, x + width, renderHeight, FastColor.ARGB32.color((int) (bgOpacity * 255), 255, 255, 255));
+        int renderY = Math.max(getY(), viewportY);
+        int renderHeight = Math.min(getY() + height, viewportBottom);
+        GuiComponent.fill(matrices, getX(), renderY, getX() + width, renderHeight, FastColor.ARGB32.color((int) (bgOpacity * 255), 255, 255, 255));
     }
 
     /// Utility methods ///
@@ -253,7 +253,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public void updateNarration(NarrationElementOutput builder) {
+    protected void updateWidgetNarration(NarrationElementOutput p_259858_) {
     }
 
     @Override
