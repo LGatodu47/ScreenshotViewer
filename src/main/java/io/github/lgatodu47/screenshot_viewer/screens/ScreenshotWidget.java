@@ -1,28 +1,25 @@
 package io.github.lgatodu47.screenshot_viewer.screens;
 
-import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.audio.SimpleSound;
+import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.client.sounds.SoundManager;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.FastColor;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.util.ColorHelper;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.Util;
+import net.minecraft.util.text.Color;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
@@ -31,7 +28,7 @@ import java.util.function.ToIntFunction;
 import static io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen.CONFIG;
 import static io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen.LOGGER;
 
-final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, ScreenshotImageHolder {
+final class ScreenshotWidget extends Widget implements AutoCloseable, ScreenshotImageHolder {
     private final ManageScreenshotsScreen mainScreen;
     private final Minecraft client;
     private final Context ctx;
@@ -44,7 +41,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     private int baseY;
 
     public ScreenshotWidget(ManageScreenshotsScreen mainScreen, int x, int y, int width, int height, Context ctx, File screenshotFile) {
-        super(x, y, width, height, new TextComponent(screenshotFile.getName()));
+        super(x, y, width, height, new StringTextComponent(screenshotFile.getName()));
         this.mainScreen = mainScreen;
         this.client = mainScreen.client();
         this.baseY = y;
@@ -96,15 +93,14 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
 
     /// Rendering Methods ///
 
-    void render(PoseStack matrices, int mouseX, int mouseY, float delta, int viewportY, int viewportBottom) {
+    void render(MatrixStack matrices, int mouseX, int mouseY, float delta, int viewportY, int viewportBottom) {
         renderBackground(matrices, mouseX, mouseY, viewportY, viewportBottom);
         final int spacing = 2;
 
         DynamicTexture image = texture();
         if (image != null && image.getPixels() != null) {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-            RenderSystem.setShaderTexture(0, image.getId());
+            RenderSystem.color4f(1.0f, 1.0f, 1.0f, 1.0f);
+            RenderSystem.bindTexture(image.getId());
             RenderSystem.enableBlend();
             int renderY = Math.max(y + spacing, viewportY);
             int imgHeight = (int) (height / 1.08 - spacing * 3);
@@ -112,7 +108,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
             int bottomOffset = Math.max(0, y + spacing + imgHeight - viewportBottom);
             int topV = topOffset * image.getPixels().getHeight() / imgHeight;
             int bottomV = bottomOffset * image.getPixels().getHeight() / imgHeight;
-            GuiComponent.blit(matrices,
+            blit(matrices,
                     x + spacing,
                     renderY,
                     width - spacing * 2,
@@ -132,9 +128,9 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
             matrices.pushPose();
             matrices.translate(x + width / 2f, textY, 0);
             matrices.scale(scaleFactor, scaleFactor, scaleFactor);
-            Component message = getMessage();
+            ITextComponent message = getMessage();
             float centerX = (float) (-client.font.width(getMessage()) / 2);
-            int textColor = Optional.ofNullable(TextColor.parseColor(CONFIG.screenshotElementTextColor.get())).map(TextColor::getValue).orElse(0xFFFFFF);
+            int textColor = Optional.ofNullable(Color.parseColor(CONFIG.screenshotElementTextColor.get())).map(Color::getValue).orElse(0xFFFFFF);
             if(CONFIG.renderScreenshotElementFontShadow.get()) {
                 client.font.drawShadow(matrices, message, centerX, 0, textColor);
             } else {
@@ -145,13 +141,13 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public void renderButton(PoseStack matrices, int mouseX, int mouseY, float delta) {
+    public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
     }
 
-    private void renderBackground(PoseStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
+    private void renderBackground(MatrixStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
         int renderY = Math.max(y, viewportY);
         int renderHeight = Math.min(y + height, viewportBottom);
-        GuiComponent.fill(matrices, x, renderY, x + width, renderHeight, FastColor.ARGB32.color((int) (bgOpacity * 255), 255, 255, 255));
+        fill(matrices, x, renderY, x + width, renderHeight, ColorHelper.PackedColor.color((int) (bgOpacity * 255), 255, 255, 255));
     }
 
     /// Utility methods ///
@@ -166,7 +162,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
 
     private CompletableFuture<NativeImage> getImage(File file) {
         return CompletableFuture.supplyAsync(() -> {
-            try (InputStream inputStream = new FileInputStream(file)) {
+            try (InputStream inputStream = Files.newInputStream(file.toPath())) {
                 return NativeImage.read(inputStream);
             } catch (Exception e) {
                 LOGGER.error("Failed to load screenshot: {}", file.getName(), e);
@@ -214,18 +210,18 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     /// Common Widget implementations ///
 
     @Override
-    public Component getMessage() {
-        return this.screenshotFile == null ? super.getMessage() : new TextComponent(this.screenshotFile.getName());
+    public ITextComponent getMessage() {
+        return this.screenshotFile == null ? super.getMessage() : new StringTextComponent(this.screenshotFile.getName());
     }
 
     @Override
-    public void playDownSound(SoundManager soundManager) {
-        soundManager.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+    public void playDownSound(SoundHandler soundManager) {
+        soundManager.play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (isHoveredOrFocused()) {
+        if (isHovered()) {
             playDownSound(this.client.getSoundManager());
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 onClick();
@@ -244,17 +240,13 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public boolean isHoveredOrFocused() {
+    public boolean isHovered() {
         return isHovered;
     }
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return isHoveredOrFocused();
-    }
-
-    @Override
-    public void updateNarration(NarrationElementOutput builder) {
+        return isHovered();
     }
 
     @Override

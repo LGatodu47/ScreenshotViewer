@@ -1,7 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer.config;
 
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
-import net.minecraft.network.chat.TextColor;
+import net.minecraft.util.text.Color;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
@@ -52,10 +52,11 @@ public final class ScreenshotViewerConfig {
     }
 
     private boolean validColorString(Object obj) {
-        if(!(obj instanceof String s)) {
+        if(!(obj instanceof String)) {
             return false;
         }
-        return s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parseColor(s) != null);
+        String s = (String) obj;
+        return s.startsWith("#") && (s.substring(1).isEmpty() || Color.parseColor(s) != null);
     }
 
     public static ScreenshotViewerConfig registerConfig(ModLoadingContext ctx) {

@@ -1,6 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.mixin;
 
-import com.mojang.blaze3d.platform.Window;
+import net.minecraft.client.MainWindow;
 import org.lwjgl.PointerBuffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -10,8 +10,8 @@ import static org.lwjgl.glfw.GLFW.glfwGetMonitors;
 import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-@Mixin(Window.class)
-public class WindowMixin {
+@Mixin(MainWindow.class)
+public class MainWindowMixin {
     /**
      * Simple Redirect that allows us to create the window on the monitor we choose (through the property 'screenshot_viewer.debug.monitor').
      * This is just a small feature that can be useful when you have 2 screens.

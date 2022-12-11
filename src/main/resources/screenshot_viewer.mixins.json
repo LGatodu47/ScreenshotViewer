@@ -2,9 +2,9 @@
   "required": true,
   "minVersion": "0.8",
   "package": "io.github.lgatodu47.screenshot_viewer.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_8",
   "client": [
-    "WindowMixin"
+    "MainWindowMixin"
   ],
   "injectors": {
     "defaultRequire": 1
