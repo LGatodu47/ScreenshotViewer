@@ -14,10 +14,11 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.client.ConfigGuiHandler;
 import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.common.MinecraftForge;
@@ -31,7 +32,9 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.forgespi.language.IModInfo;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 @Mod(ScreenshotViewer.MODID)
@@ -46,8 +49,8 @@ public class ScreenshotViewer {
 
     public ScreenshotViewer() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        bus.addListener(this::registerKeyMappings);
         bus.addListener(this::onConfigReloaded);
+        registerKeyMappings();
 
         ModLoadingContext mlc = ModLoadingContext.get();
         this.config = ScreenshotViewerConfig.registerConfig(mlc);
@@ -57,8 +60,8 @@ public class ScreenshotViewer {
         instance = this;
     }
 
-    private void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        openScreenshotsScreenKey = Util.make(new KeyMapping(translation("key", "open_screenshots_screen"), KeyConflictContext.IN_GAME, InputConstants.UNKNOWN, KeyMapping.CATEGORY_MISC), event::register);
+    private void registerKeyMappings() {
+        openScreenshotsScreenKey = Util.make(new KeyMapping(translation("key", "open_screenshots_screen"), KeyConflictContext.IN_GAME, InputConstants.UNKNOWN, KeyMapping.CATEGORY_MISC), ClientRegistry::registerKeyBinding);
     }
 
     private void onConfigReloaded(ModConfigEvent.Reloading event) {
@@ -66,7 +69,7 @@ public class ScreenshotViewer {
     }
 
     @SubscribeEvent
-    public void onKeyInput(InputEvent.Key event) {
+    public void onKeyInput(InputEvent.KeyInputEvent event) {
         Minecraft client = Minecraft.getInstance();
         KeyMapping openScreenshotsScreenKey = getInstance().getOpenScreenshotsScreenKey();
         if(client.level != null && client.screen == null && event.getAction() == InputConstants.PRESS && openScreenshotsScreenKey != null && openScreenshotsScreenKey.getKey().getValue() == event.getKey()) {
@@ -77,7 +80,7 @@ public class ScreenshotViewer {
     private static final ResourceLocation MANAGE_SCREENSHOTS_BUTTON_TEXTURE = new ResourceLocation(MODID, "textures/gui/screenshots_button.png");
 
     @SubscribeEvent(priority = EventPriority.LOW)
-    public void onScreenPostInit(ScreenEvent.Init.Post event) {
+    public void onScreenPostInit(ScreenEvent.InitScreenEvent.Post event) {
         Screen screen = event.getScreen();
         Minecraft client = screen.getMinecraft();
         List<GuiEventListener> buttons = event.getListenersList();
@@ -94,7 +97,7 @@ public class ScreenshotViewer {
             Optional<ImageButton> accessibilityWidgetOpt = buttons.stream()
                     .filter(ImageButton.class::isInstance)
                     .map(ImageButton.class::cast)
-                    .filter(widget -> widget.getMessage().equals(Component.translatable("narrator.button.accessibility")))
+                    .filter(widget -> widget.getMessage().equals(new TranslatableComponent("narrator.button.accessibility")))
                     .findFirst();
 
             int x = accessibilityWidgetOpt.map(widget -> widget.x).orElse(screen.width / 2 + 104);
@@ -118,7 +121,7 @@ public class ScreenshotViewer {
     }
 
     public Optional<BiFunction<Minecraft, Screen, Screen>> getConfigScreenFactory() {
-        return ConfigScreenHandler.getScreenFactoryFor(this.modInfo);
+        return ConfigGuiHandler.getGuiFactoryFor(this.modInfo);
     }
 
     public void registerConfigListener(ScreenshotViewerConfigListener listener) {
@@ -143,6 +146,6 @@ public class ScreenshotViewer {
     }
 
     public static Component translatable(String prefix, String suffix) {
-        return Component.translatable(translation(prefix, suffix));
+        return new TranslatableComponent(translation(prefix, suffix));
     }
 }

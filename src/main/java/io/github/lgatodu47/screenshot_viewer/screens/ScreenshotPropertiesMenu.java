@@ -19,6 +19,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.NotNull;
@@ -218,7 +219,7 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
 
     private static final class ConfirmScreen extends net.minecraft.client.gui.screens.ConfirmScreen {
         public ConfirmScreen(BooleanConsumer callback, String fileName) {
-            super(callback, Component.translatable("screen." + ScreenshotViewer.MODID + ".delete_prompt", fileName), ScreenshotViewer.translatable("screen", "delete_prompt.message"));
+            super(callback, new TranslatableComponent("screen." + ScreenshotViewer.MODID + ".delete_prompt", fileName), ScreenshotViewer.translatable("screen", "delete_prompt.message"));
         }
 
         @Override

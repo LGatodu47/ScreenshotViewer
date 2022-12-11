@@ -9,7 +9,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import org.jetbrains.annotations.Nullable;
 
 class EnlargedScreenshotScreen extends Screen {
@@ -20,10 +20,10 @@ class EnlargedScreenshotScreen extends Screen {
     private final Button doneBtn, nextBtn, prevBtn;
 
     EnlargedScreenshotScreen() {
-        super(Component.empty());
+        super(TextComponent.EMPTY);
         this.doneBtn = new Button(0, 0, 52, 20, CommonComponents.GUI_DONE, btn -> onClose());
-        this.prevBtn = new Button(0, 0, 20, 20, Component.literal("<"), btn -> previousScreenshot());
-        this.nextBtn = new Button(0, 0, 20, 20, Component.literal(">"), btn -> nextScreenshot());
+        this.prevBtn = new Button(0, 0, 20, 20, new TextComponent("<"), btn -> previousScreenshot());
+        this.nextBtn = new Button(0, 0, 20, 20, new TextComponent(">"), btn -> nextScreenshot());
     }
 
     // Package-private allows the main screen to show this child screen

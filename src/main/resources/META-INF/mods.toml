@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[41,)"
+loaderVersion="[40,)"
 license="MIT"
 issueTrackerURL="https://github.com/LGatodu47/ScreenshotViewer/issues"
 
@@ -9,19 +9,19 @@ version="${file.jarVersion}"
 displayName="Screenshot Viewer"
 logoFile="icon.png"
 authors="LGatodu47"
-displayTest="IGNORE_ALL_VERSION"
+credits="Ocelot5836 for screenshot lazy loading"
 description="A mod that allows you to see and manage your screenshots in game!"
 
 [[dependencies.screenshot_viewer]]
 modId="forge"
 mandatory=true
-versionRange="[41,)"
+versionRange="[40,)"
 ordering="NONE"
 side="CLIENT"
 
 [[dependencies.screenshot_viewer]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.19,1.19.3)"
+versionRange="[1.18.2,1.19)"
 ordering="NONE"
 side="CLIENT"

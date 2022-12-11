@@ -3,16 +3,6 @@ package io.github.lgatodu47.screenshot_viewer.screens;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.IntSupplier;
-import java.util.function.ToIntFunction;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -24,8 +14,19 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FastColor;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.IntSupplier;
+import java.util.function.ToIntFunction;
 
 import static io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen.CONFIG;
 import static io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen.LOGGER;
@@ -43,7 +44,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     private int baseY;
 
     public ScreenshotWidget(ManageScreenshotsScreen mainScreen, int x, int y, int width, int height, Context ctx, File screenshotFile) {
-        super(x, y, width, height, Component.literal(screenshotFile.getName()));
+        super(x, y, width, height, new TextComponent(screenshotFile.getName()));
         this.mainScreen = mainScreen;
         this.client = mainScreen.client();
         this.baseY = y;
@@ -214,7 +215,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
 
     @Override
     public Component getMessage() {
-        return this.screenshotFile == null ? super.getMessage() : Component.literal(this.screenshotFile.getName());
+        return this.screenshotFile == null ? super.getMessage() : new TextComponent(this.screenshotFile.getName());
     }
 
     @Override
