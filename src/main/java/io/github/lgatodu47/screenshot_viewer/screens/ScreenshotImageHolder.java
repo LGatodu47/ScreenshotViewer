@@ -1,8 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer.screens;
 
-import net.minecraft.client.renderer.texture.NativeImage;
-
 import javax.annotation.Nullable;
+import java.awt.image.BufferedImage;
 
 interface ScreenshotImageHolder {
     int indexInList();
@@ -10,5 +9,5 @@ interface ScreenshotImageHolder {
     int imageId();
 
     @Nullable
-    NativeImage image();
+    BufferedImage image();
 }

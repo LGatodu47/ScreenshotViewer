@@ -4,7 +4,6 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '5.1.+'
-    id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
 version = project.mod_version
@@ -15,14 +14,13 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
-    mappings channel: 'official', version: project.minecraft_version
+    mappings channel: 'snapshot', version: '20171003-1.12'
 
     // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
         client {
             workingDirectory project.file('run')
-            arg "-mixin.config=${project.modid}.mixins.json"
             property 'forge.logging.console.level', 'debug'
             property 'terminal.ansi', 'true'
 
@@ -35,18 +33,17 @@ minecraft {
     }
 }
 
-repositories {
-    maven {
-        url = "https://www.cursemaven.com"
+processResources {
+    inputs.property "version", project.version
+    filteringCharset "UTF-8"
+
+    filesMatching("mcmod.info") {
+        expand "version": project.version
     }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
-
-    runtimeOnly fg.deobf("curse.maven:configured-457570:${project.configured_release_id}")
-
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 java {
@@ -65,8 +62,7 @@ jar {
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
                 "Implementation-Vendor"   : "LGatodu47",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                "MixinConfigs": "${project.modid}.mixins.json"
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 
@@ -75,8 +71,10 @@ jar {
     }
 }
 
-mixin {
-    add sourceSets.main, "${project.modid}.refmap.json"
+sourceSets {
+    main {
+        output.resourcesDir = output.classesDirs.getSingleFile()
+    }
 }
 
 jar.finalizedBy('reobfJar')

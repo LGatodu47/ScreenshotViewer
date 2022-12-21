@@ -1,28 +1,29 @@
 package io.github.lgatodu47.screenshot_viewer.screens;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.DialogTexts;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.util.text.StringTextComponent;
-import org.lwjgl.glfw.GLFW;
+import io.github.lgatodu47.screenshot_viewer.screens.widgets.ButtonAction;
+import io.github.lgatodu47.screenshot_viewer.screens.widgets.ScreenshotViewerButton;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
-class EnlargedScreenshotScreen extends Screen {
+class EnlargedScreenshotScreen extends GuiScreen {
     @Nullable
     private ScreenshotImageHolder showing;
     @Nullable
     private ScreenshotImageList imageList;
-    private final Button doneBtn, nextBtn, prevBtn;
+    private final GuiButton doneBtn, nextBtn, prevBtn;
 
     EnlargedScreenshotScreen() {
-        super(StringTextComponent.EMPTY);
-        this.doneBtn = new Button(0, 0, 52, 20, DialogTexts.GUI_DONE, btn -> onClose());
-        this.prevBtn = new Button(0, 0, 20, 20, new StringTextComponent("<"), btn -> previousScreenshot());
-        this.nextBtn = new Button(0, 0, 20, 20, new StringTextComponent(">"), btn -> nextScreenshot());
+        this.doneBtn = new ScreenshotViewerButton(0, 0, 52, 20, ManageScreenshotsScreen.GUI_DONE, btn -> close());
+        this.prevBtn = new ScreenshotViewerButton(0, 0, 20, 20, "<", btn -> previousScreenshot());
+        this.nextBtn = new ScreenshotViewerButton(0, 0, 20, 20, ">", btn -> nextScreenshot());
     }
 
     // Package-private allows the main screen to show this child screen
@@ -33,16 +34,15 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    protected void init() {
-        super.init();
-        this.buttons.clear();
-        this.children.clear();
+    public void initGui() {
+        super.initGui();
+        this.buttonList.clear();
         addUpdatedButton(doneBtn, (width - 52) / 2, height - 20 - 8);
         addUpdatedButton(prevBtn, 8, (height - 20) / 2);
         addUpdatedButton(nextBtn, width - 8 - 20, (height - 20) / 2);
     }
 
-    private void addUpdatedButton(Button button, int x, int y) {
+    private void addUpdatedButton(GuiButton button, int x, int y) {
         button.x = x;
         button.y = y;
         addButton(button);
@@ -71,8 +71,8 @@ class EnlargedScreenshotScreen extends Screen {
     private void updateButtonsState() {
         if (hasInfo()) {
             int i = showing.indexInList();
-            prevBtn.active = i > 0;
-            nextBtn.active = i < imageList.size() - 1;
+            prevBtn.enabled = i > 0;
+            nextBtn.enabled = i < imageList.size() - 1;
         }
     }
 
@@ -85,57 +85,66 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(MatrixStack matrices) {
-        this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+    public void drawWorldBackground(int tint) {
+        this.drawGradientRect(0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void drawScreen(int mouseX, int mouseY, float delta) {
         if (showing != null) {
             final int spacing = 8;
 
-            NativeImage image = showing.image();
+            BufferedImage image = showing.image();
             if (image != null) {
-                RenderSystem.color4f(1.0f, 1.0f, 1.0f, 1.0f);
-                RenderSystem.bindTexture(showing.imageId());
-                RenderSystem.enableBlend();
+                GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+                GlStateManager.bindTexture(showing.imageId());
+                GlStateManager.enableBlend();
                 float imgRatio = (float) image.getWidth() / image.getHeight();
                 int texHeight = height - spacing * 3 - 20;
                 int texWidth = (int) (texHeight * imgRatio);
-                blit(matrices, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
-                RenderSystem.disableBlend();
+                drawScaledCustomSizeModalRect((width - texWidth) / 2, spacing, 0, 0, image.getWidth(), image.getHeight(), texWidth, texHeight, image.getWidth(), image.getHeight());
+                GlStateManager.disableBlend();
             }
 
-            super.render(matrices, mouseX, mouseY, delta);
+            super.drawScreen(mouseX, mouseY, delta);
         }
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        if (amount > 0) {
+    protected void actionPerformed(@Nonnull GuiButton button) {
+        if(button instanceof ButtonAction) {
+            ((ButtonAction) button).onPress(button);
+        }
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int scroll = Mouse.getEventDWheel();
+        if(scroll > 0) {
             nextScreenshot();
         }
-        if (amount < 0) {
+        if(scroll < 0) {
             previousScreenshot();
         }
-        return super.mouseScrolled(mouseX, mouseY, amount);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_LEFT) {
+    protected void keyTyped(char typedChar, int keyCode) {
+        if(keyCode == Keyboard.KEY_LEFT) {
             previousScreenshot();
-            return true;
+            return;
         }
-        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+        if(keyCode == Keyboard.KEY_RIGHT) {
             nextScreenshot();
-            return true;
+            return;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        if(keyCode == Keyboard.KEY_ESCAPE) {
+            close();
+        }
     }
 
-    @Override
-    public void onClose() {
+    public void close() {
         showing = null;
         imageList = null;
     }

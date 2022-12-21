@@ -1,46 +1,55 @@
 package io.github.lgatodu47.screenshot_viewer.screens;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfigListener;
+import io.github.lgatodu47.screenshot_viewer.screens.widgets.ButtonAction;
+import io.github.lgatodu47.screenshot_viewer.screens.widgets.ButtonTooltip;
+import io.github.lgatodu47.screenshot_viewer.screens.widgets.ScreenshotViewerButton;
+import io.github.lgatodu47.screenshot_viewer.screens.widgets.ScreenshotViewerImageButton;
+import io.github.lgatodu47.screenshot_viewer.util.DynamicButtonTexture;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.DialogTexts;
-import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.gui.widget.button.ImageButton;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
-import net.minecraft.util.text.ITextComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.security.PrivilegedExceptionAction;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.UnaryOperator;
 
-public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerConfigListener {
+public class ManageScreenshotsScreen extends GuiScreen implements ScreenshotViewerConfigListener {
     // Package-private config instance accessible in all the package classes
     static final ScreenshotViewerConfig CONFIG = ScreenshotViewer.getInstance().getConfig();
     static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation CONFIG_BUTTON_TEXTURE = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/config_button.png");
-    private static final ResourceLocation REFRESH_BUTTON_TEXTURE = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/refresh_button.png");
-    private static final ResourceLocation ASCENDING_ORDER_BUTTON_TEXTURE = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/ascending_order_button.png");
-    private static final ResourceLocation DESCENDING_ORDER_BUTTON_TEXTURE = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/descending_order_button.png");
-    private static final ResourceLocation OPEN_FOLDER_BUTTON_TEXTURE = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/open_folder_button.png");
+    static final String GUI_DONE = I18n.format("gui.done");
+    static final String GUI_BACK = I18n.format("gui.back");
 
-    private final Screen parent;
+    private static final ResourceLocation CONFIG_BUTTON_TEXTURE = new DynamicButtonTexture("config_button");
+    private static final ResourceLocation REFRESH_BUTTON_TEXTURE = new DynamicButtonTexture("refresh_button");
+    private static final ResourceLocation ASCENDING_ORDER_BUTTON_TEXTURE = new DynamicButtonTexture("ascending_order_button");
+    private static final ResourceLocation DESCENDING_ORDER_BUTTON_TEXTURE = new DynamicButtonTexture("descending_order_button");
+    private static final ResourceLocation OPEN_FOLDER_BUTTON_TEXTURE = new DynamicButtonTexture("open_folder_button");
+
+    private final GuiScreen parent;
     private final EnlargedScreenshotScreen enlargedScreenshot;
     private final ScreenshotPropertiesMenu screenshotProperties;
     private ScreenshotList list;
 
-    public ManageScreenshotsScreen(Screen parent) {
-        super(ScreenshotViewer.translatable("screen", "manage_screenshots"));
+    public ManageScreenshotsScreen(GuiScreen parent) {
         this.parent = parent;
         this.enlargedScreenshot = new EnlargedScreenshotScreen();
         this.screenshotProperties = new ScreenshotPropertiesMenu(this::client, () -> width, () -> height);
@@ -48,28 +57,28 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     }
 
     Minecraft client() {
-        return minecraft;
+        return mc;
     }
 
     /// Basic Screen implementations ///
 
     @Override
-    public void tick() {
+    public void updateScreen() {
         if(screenshotProperties != null) {
             screenshotProperties.tick();
         }
     }
 
     @Override
-    protected void init() {
-        if(minecraft == null) {
+    public void initGui() {
+        if(mc == null) {
             return;
         }
 
         final int spacing = 8;
         final int btnHeight = 20;
 
-        this.enlargedScreenshot.init(minecraft, width, height);
+        this.enlargedScreenshot.setWorldAndResolution(mc, width, height);
 
         //Main content
         int contentWidth = width - 24;
@@ -83,8 +92,6 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             list.updateSize(contentWidth, contentHeight);
             list.updateChildren();
         }
-        // Adds it to the 'children' list which makes 'mouseClicked' and other methods work with it.
-        addWidget(list);
 
         // Button stuff
         final int btnY = height - spacing - btnHeight;
@@ -92,24 +99,24 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         final int bigBtnWidth = 200;
 
         // Config Button
-        Optional<BiFunction<Minecraft, Screen, Screen>> configScreenFactory = ScreenshotViewer.getInstance().getConfigScreenFactory();
-        Button configButton = new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, 0, 0, btnSize, CONFIG_BUTTON_TEXTURE, 32, 64, button -> {
-            configScreenFactory.ifPresent(f -> minecraft.setScreen(f.apply(minecraft, this)));
-        }, (button, matrices, x, y) -> {
-            renderTooltip(matrices, minecraft.font.split(ScreenshotViewer.translatable("screen", configScreenFactory.isPresent() ? "button.config" : "no_config"), Math.max(width / 2 - 43, 170)), x, y + btnSize);
-        }, ScreenshotViewer.translatable("screen", configScreenFactory.isPresent() ? "button.config" : "no_config"));
-        configButton.active = configScreenFactory.isPresent();
+        Optional<UnaryOperator<GuiScreen>> configScreenFactory = ScreenshotViewer.getInstance().getConfigScreenFactory();
+        GuiButton configButton = new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, 0, 0, btnSize, CONFIG_BUTTON_TEXTURE, 32, 64, button -> {
+            configScreenFactory.ifPresent(f -> mc.displayGuiScreen(f.apply(this)));
+        }, (button, x, y) -> {
+            drawHoveringText(fontRenderer.trimStringToWidth(ScreenshotViewer.translated("screen", configScreenFactory.isPresent() ? "button.config" : "no_config"), Math.max(width / 2 - 43, 170)), x, y + btnSize);
+        }, ScreenshotViewer.translated("screen", configScreenFactory.isPresent() ? "button.config" : "no_config"));
+        configButton.enabled = configScreenFactory.isPresent();
         addButton(configButton);
         // Order Button
         addButton(new ExtendedTexturedButtonWidget(spacing, btnY, btnSize, btnSize, 0, 0, btnSize, null, 32, 64, button -> {
             if(list != null) {
                 list.invertOrder();
             }
-        }, (button, matrices, x, y) -> {
+        }, (button, x, y) -> {
             if(list != null) {
-                renderTooltip(matrices, minecraft.font.split(ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending"), Math.max(width / 2 - 43, 170)), x, y);
+                drawHoveringText(fontRenderer.trimStringToWidth(ScreenshotViewer.translated("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending"), Math.max(width / 2 - 43, 170)), x, y);
             }
-        }, ScreenshotViewer.translatable("screen", "button.order")) {
+        }, ScreenshotViewer.translated("screen", "button.order")) {
             @Override
             public @Nullable ResourceLocation getTexture() {
                 return list == null ? null : list.isInvertedOrder() ? DESCENDING_ORDER_BUTTON_TEXTURE : ASCENDING_ORDER_BUTTON_TEXTURE;
@@ -117,71 +124,112 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         });
         // Screenshot Folder Button
         addButton(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, OPEN_FOLDER_BUTTON_TEXTURE, 32, 64, btn -> {
-            Util.getPlatform().openFile(new File(this.minecraft.gameDirectory, "screenshots"));
-        }, (button, matrices, x, y) -> {
-            renderTooltip(matrices, minecraft.font.split(ScreenshotViewer.translatable("screen", "button.screenshot_folder"), Math.max(width / 2 - 43, 170)), x, y);
-        }, ScreenshotViewer.translatable("screen", "button.screenshot_folder")));
+            openFile(new File(mc.mcDataDir, "screenshots"));
+        }, (button, x, y) -> {
+            drawHoveringText(fontRenderer.trimStringToWidth(ScreenshotViewer.translated("screen", "button.screenshot_folder"), Math.max(width / 2 - 43, 170)), x, y);
+        }, ScreenshotViewer.translated("screen", "button.screenshot_folder")));
         // Done Button
-        addButton(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, DialogTexts.GUI_DONE, button -> onClose()));
+        addButton(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, GUI_DONE, button -> close()));
         // Refresh Button
         addButton(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, REFRESH_BUTTON_TEXTURE, 32, 64, button -> {
             list.init();
-        }, (btn, matrices, x, y) -> {
-            renderTooltip(matrices, minecraft.font.split(ScreenshotViewer.translatable("screen", "button.refresh"), Math.max(width / 2 - 43, 170)), x, y);
-        }, ScreenshotViewer.translatable("screen", "button.refresh")));
+        }, (btn, x, y) -> {
+            drawHoveringText(fontRenderer.trimStringToWidth(ScreenshotViewer.translated("screen", "button.refresh"), Math.max(width / 2 - 43, 170)), x, y);
+        }, ScreenshotViewer.translated("screen", "button.refresh")));
     }
 
     @Override
-    public void resize(Minecraft client, int width, int height) {
-        super.resize(client, width, height);
+    protected void actionPerformed(@Nonnull GuiButton button) {
+        if(button instanceof ButtonAction) {
+            ((ButtonAction) button).onPress(button);
+        }
+    }
+
+    @Override
+    public void onResize(@Nonnull Minecraft client, int width, int height) {
+        super.onResize(client, width, height);
         // Adapts the size of the enlarged screenshot when resized
-        this.enlargedScreenshot.resize(client, width, height);
+        this.enlargedScreenshot.onResize(client, width, height);
         // Hides the screenshot properties menu
         this.screenshotProperties.hide();
+    }
+
+    static void openFile(File file) {
+        try {
+            URL fileUrl = file.toURI().toURL();
+            @SuppressWarnings("removal") // I'm using JDK 17
+            Process process = java.security.AccessController.doPrivileged((PrivilegedExceptionAction<? extends Process>) () -> Runtime.getRuntime().exec(getCommand(fileUrl)));
+            process.getInputStream().close();
+            process.getErrorStream().close();
+            process.getOutputStream().close();
+        }
+        catch (Exception e) {
+            LOGGER.error("Couldn't open file at '{}'", file.toPath().toAbsolutePath(), e);
+        }
+    }
+
+    private static String[] getCommand(URL url) {
+        switch (Util.getOSType()) {
+            case WINDOWS:
+                return new String[] { "rundll32", "url.dll,FileProtocolHandler", url.toString() };
+            case OSX:
+                return new String[] { "open", url.toString() };
+            default:
+                return new String[] { "xdg-open", url.toString().replace("file:", "file://") };
+        }
     }
 
     private float screenshotScaleAnimation;
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
+    public void drawScreen(int mouseX, int mouseY, float delta) {
+        drawDefaultBackground();
         if(list != null) {
-            list.render(matrices, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()));
+            list.render(mouseX, mouseY, !(enlargedScreenshot.renders() || screenshotProperties.renders()));
         }
-        drawCenteredString(matrices, font, title,width / 2, 8, 0xFFFFFF);
-        ITextComponent text = ScreenshotViewer.translatable("screen", "screenshot_manager.zoom");
-        drawString(matrices, font, text, width - font.width(text) - 8, 8, isCtrlDown ? 0x18DE39 : 0xF0CA22);
-        super.render(matrices, mouseX, mouseY, delta);
-        screenshotProperties.render(matrices, mouseX, mouseY, delta);
+        drawCenteredString(fontRenderer, ScreenshotViewer.translated("screen", "manage_screenshots"),width / 2, 8, 0xFFFFFF);
+        String text = ScreenshotViewer.translated("screen", "screenshot_manager.zoom");
+        drawString(fontRenderer, text, width - fontRenderer.getStringWidth(text) - 8, 8, isCtrlKeyDown() ? 0x18DE39 : 0xF0CA22);
+        super.drawScreen(mouseX, mouseY, delta);
+        screenshotProperties.render(mouseX, mouseY, delta);
         if(enlargedScreenshot.renders()) {
             float animationTime = 1;
 
-            if(CONFIG.enableScreenshotEnlargementAnimation.get()) {
+            if(CONFIG.enableScreenshotEnlargementAnimation.getAsBoolean()) {
                 if(screenshotScaleAnimation < 1f) {
                     animationTime = (float) (1 - Math.pow(1 - (screenshotScaleAnimation += 0.03), 3));
                 }
             }
 
-            matrices.pushPose();
-            matrices.translate(0, 0, 1);
-            enlargedScreenshot.renderBackground(matrices);
-            matrices.translate((enlargedScreenshot.width / 2f) * (1 - animationTime), (enlargedScreenshot.height / 2f) * (1 - animationTime), 0);
-            matrices.scale(animationTime, animationTime, animationTime);
-            enlargedScreenshot.render(matrices, mouseX, mouseY, delta);
-            matrices.popPose();
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(0, 0, 1);
+            enlargedScreenshot.drawDefaultBackground();
+            GlStateManager.translate((enlargedScreenshot.width / 2f) * (1 - animationTime), (enlargedScreenshot.height / 2f) * (1 - animationTime), 0);
+            GlStateManager.scale(animationTime, animationTime, animationTime);
+            enlargedScreenshot.drawScreen(mouseX, mouseY, delta);
+            GlStateManager.popMatrix();
         } else {
             if(screenshotScaleAnimation > 0) {
                 screenshotScaleAnimation = 0;
             }
 
             if(!screenshotProperties.renders()) {
-                for (IGuiEventListener element : this.children()) {
-                    if (element instanceof CustomHoverState) {
-                        ((CustomHoverState) element).updateHoveredState(mouseX, mouseY);
+                for (GuiButton btn : this.buttonList) {
+                    if (btn instanceof CustomHoverState) {
+                        ((CustomHoverState) btn).updateHoveredState(mouseX, mouseY);
                     }
                 }
+
+                this.handleHoveredChildren(mouseX, mouseY);
             }
         }
+    }
+
+    private void handleHoveredChildren(double mouseX, double mouseY) {
+        this.buttonList.stream()
+                .filter(GuiButton::isMouseOver)
+                .filter(ButtonTooltip.class::isInstance)
+                .forEach(btn -> ((ButtonTooltip) btn).renderTooltip(btn, (int) mouseX, (int) mouseY));
     }
 
     /// Methods shared between the classes of the package ///
@@ -196,120 +244,58 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
 
     /// Input handling methods below ///
 
-    private boolean isCtrlDown;
-
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public void handleKeyboardInput() throws IOException {
         if(screenshotProperties.renders()) {
-            return screenshotProperties.keyPressed(keyCode, scanCode, modifiers);
+            screenshotProperties.handleKeyboardInput();
+            return;
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.keyPressed(keyCode, scanCode, modifiers);
+            enlargedScreenshot.handleKeyboardInput();
+            return;
         }
-        isCtrlDown = keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL;
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        super.handleKeyboardInput();
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if(screenshotProperties.renders()) {
-            return screenshotProperties.keyReleased(keyCode, scanCode, modifiers);
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if(keyCode == Keyboard.KEY_ESCAPE) {
+            close();
         }
-        if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.keyReleased(keyCode, scanCode, modifiers);
-        }
-        if(isCtrlDown) {
-            isCtrlDown = false;
-        }
-        return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
-    @Override
-    public boolean charTyped(char chr, int modifiers) {
-        if(screenshotProperties.renders()) {
-            return screenshotProperties.charTyped(chr, modifiers);
-        }
-        if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.charTyped(chr, modifiers);
-        }
-        return super.charTyped(chr, modifiers);
-    }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    public void handleMouseInput() throws IOException {
         if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseScrolled(mouseX, mouseY, amount);
+            screenshotProperties.handleMouseInput();
+            return;
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseScrolled(mouseX, mouseY, amount);
+            enlargedScreenshot.handleMouseInput();
+            return;
         }
         if(list != null) {
-            if(isCtrlDown) {
-                list.updateScreenshotsPerRow(amount);
-                return true;
+            if(isCtrlKeyDown()) {
+                list.updateScreenshotsPerRow(Mouse.getEventDWheel());
+            } else {
+                list.handleMouseInput();
             }
-
-            return list.mouseScrolled(mouseX, mouseY, amount);
         }
-        return super.mouseScrolled(mouseX, mouseY, amount);
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseClicked(mouseX, mouseY, button);
-        }
-        if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseClicked(mouseX, mouseY, button);
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseReleased(mouseX, mouseY, button);
-        }
-        if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseReleased(mouseX, mouseY, button);
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
-
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-        }
-        if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-        }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-    }
-
-    @Override
-    public Optional<IGuiEventListener> getChildAt(double mouseX, double mouseY) {
-        if(screenshotProperties.renders()) {
-            return screenshotProperties.getChildAt(mouseX, mouseY);
-        }
-        if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.getChildAt(mouseX, mouseY);
-        }
-        return super.getChildAt(mouseX, mouseY);
+        super.handleMouseInput();
     }
 
     /// Other Methods ///
 
-    @Override
-    public void onClose() {
-        if(minecraft != null) {
-            this.minecraft.setScreen(parent);
+    private void close() {
+        if(mc != null) {
+            this.mc.displayGuiScreen(parent);
         }
         ScreenshotViewer.getInstance().unregisterConfigListener(this);
     }
 
     @Override
-    public void removed() {
+    public void onGuiClosed() {
         list.close();
     }
 
@@ -318,81 +304,88 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         list.configUpdated();
     }
 
-    private static final class ExtendedButtonWidget extends Button implements CustomHoverState {
-        ExtendedButtonWidget(int x, int y, int width, int height, ITextComponent message, IPressable onPress) {
-            super(x, y, width, height, message, onPress);
+    private static final class ExtendedButtonWidget extends ScreenshotViewerButton implements CustomHoverState {
+        ExtendedButtonWidget(int x, int y, int width, int height, String message, ButtonAction action) {
+            super(x, y, width, height, message, action);
         }
 
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            if (!this.visible) {
-                return;
+        public void drawButton(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+            if (this.visible) {
+                FontRenderer fontRenderer = mc.fontRenderer;
+                mc.getTextureManager().bindTexture(BUTTON_TEXTURES);
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                int hoverState = this.getHoverState(this.hovered);
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+                GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+                this.drawTexturedModalRect(this.x, this.y, 0, 46 + hoverState * 20, this.width / 2, this.height);
+                this.drawTexturedModalRect(this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + hoverState * 20, this.width / 2, this.height);
+                this.mouseDragged(mc, mouseX, mouseY);
+                int j = 14737632;
+
+                if (packedFGColour != 0) {
+                    j = packedFGColour;
+                } else if (!this.enabled) {
+                    j = 10526880;
+                } else if (this.hovered) {
+                    j = 16777120;
+                }
+
+                this.drawCenteredString(fontRenderer, this.displayString, this.x + this.width / 2, this.y + (this.height - 8) / 2, j);
             }
-            this.renderButton(matrices, mouseX, mouseY, delta);
         }
 
         @Override
         public void updateHoveredState(int mouseX, int mouseY) {
-            this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+            this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
         }
     }
 
-    private static class ExtendedTexturedButtonWidget extends ImageButton implements CustomHoverState {
+    private static class ExtendedTexturedButtonWidget extends ScreenshotViewerImageButton implements CustomHoverState {
         @Nullable
         private final ResourceLocation texture;
-        private final int u;
-        private final int v;
-        private final int hoveredVOffset;
-        private final int textureWidth;
-        private final int textureHeight;
 
-        ExtendedTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, @Nullable ResourceLocation texture, int textureWidth, int textureHeight, IPressable pressAction, ITooltip tooltipSupplier, ITextComponent text) {
-            super(x, y, width, height, u, v, hoveredVOffset, Button.WIDGETS_LOCATION, textureWidth, textureHeight, pressAction, tooltipSupplier, text);
-            this.textureWidth = textureWidth;
-            this.textureHeight = textureHeight;
-            this.u = u;
-            this.v = v;
-            this.hoveredVOffset = hoveredVOffset;
+        ExtendedTexturedButtonWidget(int x, int y, int width, int height,
+                                     int u, int v, int hoveredVOffset, @Nullable ResourceLocation texture,
+                                     int textureWidth, int textureHeight, ButtonAction action, ButtonTooltip tooltip,
+                                     String text) {
+            super(x, y, width, height, u, v, hoveredVOffset, GuiButton.BUTTON_TEXTURES, textureWidth, textureHeight, text, action, tooltip);
             this.texture = texture;
-        }
-
-        @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            if (!this.visible) {
-                return;
-            }
-            this.renderButton(matrices, mouseX, mouseY, delta);
+            this.displayString = text;
         }
 
         @Nullable
         public ResourceLocation getTexture() {
-            return texture;
+            return this.texture;
         }
 
         @Override
-        public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            ResourceLocation texture = getTexture();
-            if(texture == null) {
-                fill(matrices, x, y, x + width, y + height, 0xFFFFFF);
-            } else {
-                Minecraft.getInstance().getTextureManager().bind(texture);
-                int vOffset = this.v;
-                if (!active) {
-                    vOffset += this.hoveredVOffset * 2;
-                } else if (this.isHovered()) {
-                    vOffset += this.hoveredVOffset;
-                }
-                RenderSystem.enableDepthTest();
-                blit(matrices, this.x, this.y, this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
-                if (this.isHovered) {
-                    this.renderToolTip(matrices, mouseX, mouseY);
+        public void drawButton(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+            if (this.visible) {
+                ResourceLocation texture = getTexture();
+                if(texture == null) {
+                    drawRect(x, y, x + width, y + height, 0xFFFFFF);
+                } else {
+                    mc.getTextureManager().bindTexture(texture);
+                    GlStateManager.color(1, 1, 1, 1);
+                    GlStateManager.disableDepth();
+                    int vOffset = this.v;
+                    if (!enabled) {
+                        vOffset += this.hoveredVOffset * 2;
+                    } else if (hovered) {
+                        vOffset += this.hoveredVOffset;
+                    }
+
+                    drawModalRectWithCustomSizedTexture(this.x, this.y, this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
+                    GlStateManager.enableDepth();
                 }
             }
         }
 
         @Override
         public void updateHoveredState(int mouseX, int mouseY) {
-            this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+            this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
         }
     }
 

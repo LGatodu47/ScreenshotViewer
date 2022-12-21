@@ -1,0 +1,14 @@
+[
+  {
+    "modid": "screenshot_viewer",
+    "name": "Screenshot Viewer",
+    "description": "A mod that allows you to see and manage your screenshots in game!",
+    "version": "${version}",
+    "mcversion": "1.12.2",
+    "authorList": ["LGatodu47"],
+    "credits": "",
+    "logoFile": "icon.png",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
