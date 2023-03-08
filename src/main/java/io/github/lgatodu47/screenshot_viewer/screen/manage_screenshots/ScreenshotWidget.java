@@ -186,8 +186,9 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         if (image == null) {
             image = getImage(screenshotFile);
         }
-        if (image.isDone()) {
-            return texture = new NativeImageBackedTexture(image.join());
+        NativeImage nativeImage;
+        if (image.isDone() && (nativeImage = image.join()) != null) {
+            return texture = new NativeImageBackedTexture(nativeImage);
         }
         return null;
     }
