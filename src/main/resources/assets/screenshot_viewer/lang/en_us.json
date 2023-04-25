@@ -12,6 +12,7 @@
   "screen.screenshot_viewer.button.open_file": "Open file",
   "screen.screenshot_viewer.button.rename_file": "Rename screenshot",
   "screen.screenshot_viewer.button.close_properties_menu": "Close",
+  "screen.screenshot_viewer.button.copy_screenshot": "Copy Image",
   "screen.screenshot_viewer.delete_prompt": "Delete '%s'",
   "screen.screenshot_viewer.delete_prompt.message": "Are you sure you want to delete this screenshot ?",
   "screen.screenshot_viewer.rename_screenshot": "Enter a new name for your screenshot:",
@@ -36,6 +37,8 @@
   "config.screenshot_viewer.render_screenshot_element_font_shadow.desc": "If a font shadow should be rendered under the screenshot elements text.",
   "config.screenshot_viewer.screenshot_element_text_color": "Screenshot Elements Text Color",
   "config.screenshot_viewer.screenshot_element_text_color.desc": "Color of the texts describing the screenshots elements.",
+  "config.screenshot_viewer.default_list_order": "Default Screenshot List Ordering",
+  "config.screenshot_viewer.default_list_order.desc": "The ordering of the screenshots when the screen is opened.",
 
   "key.screenshot_viewer.open_screenshots_screen": "Open Screenshot Manager"
 }

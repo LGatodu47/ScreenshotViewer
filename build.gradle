@@ -30,6 +30,8 @@ dependencies {
     def catConfigMc = "io.github.lgatodu47:catconfig-mc:${project.minecraft_version}-0.1.1"
     modImplementation catConfigMc
     include catConfigMc
+
+    implementation "ca.weblite:java-objc-bridge:1.0.0"
 }
 
 processResources {

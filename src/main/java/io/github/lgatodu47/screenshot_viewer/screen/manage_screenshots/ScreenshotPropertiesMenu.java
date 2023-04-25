@@ -2,6 +2,7 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
+import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerMacOsUtils;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.MinecraftClient;
@@ -25,12 +26,21 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -38,6 +48,8 @@ import java.util.function.Supplier;
 import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.LOGGER;
 
 class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable {
+    @Nullable
+    private static final Clipboard AWT_CLIPBOARD = tryGetAWTClipboard();
     private static final int BUTTON_SIZE = 19;
 
     private final Supplier<MinecraftClient> mcSupplier;
@@ -89,6 +101,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
                     }
                 }),
                 Triple.of(1, ScreenshotViewer.translatable("screen", "button.open_file"), btn -> Util.getOperatingSystem().open(screenshotFile)),
+                Triple.of(4, ScreenshotViewer.translatable("screen", "button.copy_screenshot"), btn -> copyImageToClipboard(screenshotFile)),
                 Triple.of(3, ScreenshotViewer.translatable("screen", "button.rename_file"), btn -> {
                     childScreen = new RenameScreen(fileName.substring(0, fileName.lastIndexOf('.')), s -> {
                         try {
@@ -134,6 +147,26 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         childScreen = null;
         x = y = width = height = 0;
         fileName = "";
+    }
+
+    void copyImageToClipboard(File screenshotFile) {
+        if(MinecraftClient.IS_SYSTEM_MAC) {
+            ScreenshotViewerMacOsUtils.doCopyMacOS(screenshotFile.getAbsolutePath());
+            return;
+        }
+        if(AWT_CLIPBOARD != null && screenshotFile.exists()) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    BufferedImage img = ImageIO.read(screenshotFile);
+                    BufferedImage rgbImg = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
+                    rgbImg.createGraphics().drawImage(img, 0, 0, img.getWidth(), img.getHeight(), null);
+                    ImageTransferable imageTransferable = new ImageTransferable(rgbImg);
+                    AWT_CLIPBOARD.setContents(imageTransferable, null);
+                } catch (Throwable t) {
+                    LOGGER.error("Failed to copy screenshot image to clipboard!", t);
+                }
+            }, Util.getMainWorkerExecutor());
+        }
     }
 
     boolean renders() {
@@ -197,6 +230,19 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         return super.charTyped(chr, modifiers);
     }
 
+    @Nullable
+    private static Clipboard tryGetAWTClipboard() {
+        if(MinecraftClient.IS_SYSTEM_MAC) {
+            return null;
+        }
+        try {
+            return Toolkit.getDefaultToolkit().getSystemClipboard();
+        } catch (Throwable t) {
+            LOGGER.error("Unable to retrieve Java AWT Clipboard instance!", t);
+        }
+        return null;
+    }
+
     private static final class Button extends TexturedButtonWidget {
         private static final Identifier TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/screenshot_viewer_icons.png");
         private final int imgU, imgV;
@@ -223,8 +269,8 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void renderBackground(MatrixStack matrices, int vOffset) {
-            this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+        public void renderBackground(MatrixStack matrices) {
+            fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
         }
     }
 
@@ -269,8 +315,8 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
 
         @Override
         public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
-            drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
+            fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+            drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
             super.render(matrices, mouseX, mouseY, delta);
         }
 
@@ -290,6 +336,27 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
 
         private static boolean checkInvalidCharacters(String s) {
             return s.chars().noneMatch(c -> c == '\\' || c == '/' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|');
+        }
+    }
+
+    private record ImageTransferable(Image image) implements Transferable {
+        @Override
+        public DataFlavor[] getTransferDataFlavors() {
+            return new DataFlavor[] {DataFlavor.imageFlavor};
+        }
+
+        @Override
+        public boolean isDataFlavorSupported(DataFlavor flavor) {
+            return DataFlavor.imageFlavor.equals(flavor);
+        }
+
+        @Nonnull
+        @Override
+        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+            if(!isDataFlavorSupported(flavor)) {
+                throw new UnsupportedFlavorException(flavor);
+            }
+            return image();
         }
     }
 }

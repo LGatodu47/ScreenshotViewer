@@ -19,6 +19,7 @@ public class ScreenshotViewerRenderedOptions {
         BUILDER.ofInt(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_BACKGROUND_OPACITY).setCommonTranslationKey(ScreenshotViewer.translation("config", "screenshot_element_background_opacity")).build();
         BUILDER.ofBoolean(ScreenshotViewerOptions.RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW).setCommonTranslationKey(ScreenshotViewer.translation("config", "render_screenshot_element_font_shadow")).build();
         BUILDER.option(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR).setWidgetFactory(config -> ColorOption.createWidget(config, ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR)).setCommonTranslationKey(ScreenshotViewer.translation("config", "screenshot_element_text_color")).build();
+        BUILDER.ofEnum(ScreenshotViewerOptions.DEFAULT_LIST_ORDER, ScreenshotListOrder.class).setCommonTranslationKey(ScreenshotViewer.translation("config", "default_list_order")).build();
     }
 
     public static List<RenderedConfigOption<?>> options() {

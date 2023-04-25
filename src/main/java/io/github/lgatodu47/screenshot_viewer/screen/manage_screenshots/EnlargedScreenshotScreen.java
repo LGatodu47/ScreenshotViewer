@@ -86,7 +86,7 @@ class EnlargedScreenshotScreen extends Screen {
 
     @Override
     public void renderBackground(MatrixStack matrices) {
-        this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+        fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
     @Override

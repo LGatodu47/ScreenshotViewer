@@ -1,6 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
+import io.github.lgatodu47.screenshot_viewer.config.ScreenshotListOrder;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
@@ -53,7 +54,11 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     void onConfigUpdate() {
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREEN_SCROLL_SPEED, 10);
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
-        updateChildren();
+        if(invertedOrder != ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.DEFAULT_LIST_ORDER, ScreenshotListOrder.ASCENDING).isInverted()) {
+            invertOrder();
+        } else {
+            updateChildren();
+        }
     }
 
     /**
@@ -90,6 +95,9 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             }
         }
         scrollbar.repositionScrollbar(x, y, width, height, spacing, getTotalHeightOfChildren());
+        if(ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.DEFAULT_LIST_ORDER, ScreenshotListOrder.ASCENDING).isInverted()) {
+            invertOrder();
+        }
     }
 
     /**
@@ -177,7 +185,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     void render(MatrixStack matrices, int mouseX, int mouseY, float delta, boolean updateHoverState) {
         fill(matrices, x, y, x + width, y + height, ColorHelper.Argb.getArgb((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
-            drawCenteredText(matrices, client.textRenderer, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
+            drawCenteredTextWithShadow(matrices, client.textRenderer, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }
         for (ScreenshotWidget screenshotWidget : screenshotWidgets) {
             screenshotWidget.updateY(scrollY);

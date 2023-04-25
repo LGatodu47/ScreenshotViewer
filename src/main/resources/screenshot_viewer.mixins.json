@@ -4,6 +4,7 @@
   "package": "io.github.lgatodu47.screenshot_viewer.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "MainMixin",
     "WindowMixin"
   ],
   "injectors": {

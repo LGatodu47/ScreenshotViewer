@@ -64,7 +64,7 @@ public class ScreenshotViewer implements ClientModInitializer {
         ScreenEvents.AFTER_INIT.register(DELAYED_PHASE, (client, screen, scaledWidth, scaledHeight) -> {
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && screen instanceof GameMenuScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
-                buttons.stream()
+                /*buttons.stream()
                         .filter(GridWidget.class::isInstance)
                         .map(GridWidget.class::cast)
                         .findFirst()
@@ -73,7 +73,11 @@ public class ScreenshotViewer implements ClientModInitializer {
                             buttons.add(Util.make(new TexturedButtonWidget(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
                                 client.setScreen(new ManageScreenshotsScreen(screen));
                             }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.of(translatable("screen", "manage_screenshots")))));
-                        });
+                        });*/
+                ClickableWidget topButton = buttons.get(0);
+                buttons.add(Util.make(new TexturedButtonWidget(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+                    client.setScreen(new ManageScreenshotsScreen(screen));
+                }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.of(translatable("screen", "manage_screenshots")))));
             }
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_ON_TITLE_SCREEN, true) && screen instanceof TitleScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);

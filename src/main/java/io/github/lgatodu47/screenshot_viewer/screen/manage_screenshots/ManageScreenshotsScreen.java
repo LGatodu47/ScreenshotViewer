@@ -105,7 +105,12 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             if(list != null) {
                 list.invertOrder();
             }
-        }, list == null ? null : ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending"), ScreenshotViewer.translatable("screen", "button.order")) {
+        }, null, ScreenshotViewer.translatable("screen", "button.order")) {
+            @Override
+            protected @Nullable Text getTooltipText() {
+                return list == null ? null : ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending");
+            }
+
             @Override
             public @Nullable Identifier getTexture() {
                 return list == null ? null : list.isInvertedOrder() ? DESCENDING_ORDER_BUTTON_TEXTURE : ASCENDING_ORDER_BUTTON_TEXTURE;
@@ -140,7 +145,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         if(list != null) {
             list.render(matrices, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()));
         }
-        drawCenteredText(matrices, textRenderer, title,width / 2, 8, 0xFFFFFF);
+        drawCenteredTextWithShadow(matrices, textRenderer, title,width / 2, 8, 0xFFFFFF);
         Text text = ScreenshotViewer.translatable("screen", "screenshot_manager.zoom");
         drawTextWithShadow(matrices, textRenderer, text, width - textRenderer.getWidth(text) - 8, 8, isCtrlDown ? 0x18DE39 : 0xF0CA22);
         super.render(matrices, mouseX, mouseY, delta);
@@ -349,7 +354,9 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             this.hoveredVOffset = hoveredVOffset;
             this.texture = texture;
             this.tooltip = tooltip;
-            setTooltip(Tooltip.of(tooltip));
+            if(tooltip != null) {
+                setTooltip(Tooltip.of(tooltip));
+            }
         }
 
         ExtendedTexturedButtonWidget offsetTooltip() {
@@ -367,14 +374,20 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         private void applyTooltip() {
-            if (this.tooltip != null) {
+            Text tooltipText = getTooltipText();
+            if (tooltipText != null) {
                 if (isHovered()) {
                     Screen screen = MinecraftClient.getInstance().currentScreen;
                     if (screen != null) {
-                        screen.setTooltip(Tooltip.of(tooltip), getTooltipPositioner(), isFocused());
+                        screen.setTooltip(Tooltip.of(tooltipText), getTooltipPositioner(), isFocused());
                     }
                 }
             }
+        }
+
+        @Nullable
+        protected Text getTooltipText() {
+            return tooltip;
         }
 
         @Override
