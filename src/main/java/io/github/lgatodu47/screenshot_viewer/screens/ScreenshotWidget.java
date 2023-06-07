@@ -144,7 +144,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public void renderButton(PoseStack matrices, int mouseX, int mouseY, float delta) {
+    public void renderWidget(PoseStack matrices, int mouseX, int mouseY, float delta) {
     }
 
     private void renderBackground(PoseStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
@@ -225,7 +225,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isHoveredOrFocused()) {
-            playDownSound(this.client.getSoundManager());
+            super.playDownSound(this.client.getSoundManager());
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 onClick();
             }

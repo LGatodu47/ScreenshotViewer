@@ -56,7 +56,11 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     void configUpdated() {
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.screenScrollSpeed.get();
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.initialScreenshotAmountPerRow.get();
-        updateChildren();
+        if(invertedOrder != ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
+            invertOrder();
+        } else {
+            updateChildren();
+        }
     }
 
     /**
@@ -93,6 +97,9 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             }
         }
         scrollbar.repositionScrollbar(x, y, width, height, spacing, getTotalHeightOfChildren());
+        if(ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
+            invertOrder();
+        }
     }
 
     /**

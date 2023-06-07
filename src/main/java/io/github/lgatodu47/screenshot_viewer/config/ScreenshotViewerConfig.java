@@ -20,6 +20,7 @@ public final class ScreenshotViewerConfig {
     public final IntValue screenshotElementBackgroundOpacity;
     public final BooleanValue renderScreenshotElementFontShadow;
     public final ConfigValue<String> screenshotElementTextColor;
+    public final ConfigValue<ScreenshotListOrder> defaultListOrder;
 
     private ScreenshotViewerConfig(ForgeConfigSpec.Builder builder) {
         showButtonInGamePauseMenu = builder.comment("Shows a button to access screenshots directly in the pause menu.")
@@ -49,6 +50,9 @@ public final class ScreenshotViewerConfig {
         screenshotElementTextColor = builder.comment("Color of the texts describing the screenshots elements.")
                 .translation("config.screenshot_viewer.screenshot_element_text_color")
                 .define("screenshotElementTextColor", "#FFFFFF", this::validColorString);
+        defaultListOrder = builder.comment("The ordering of the screenshots when the screen is opened.")
+                .translation("config.screenshot_viewer.default_list_order")
+                .defineEnum("defaultListOrder", ScreenshotListOrder.ASCENDING);
     }
 
     private boolean validColorString(Object obj) {

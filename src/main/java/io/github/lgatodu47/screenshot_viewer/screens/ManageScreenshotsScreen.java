@@ -110,7 +110,12 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             if(list != null) {
                 list.invertOrder();
             }
-        }, list == null ? null : ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending"), ScreenshotViewer.translatable("screen", "button.order")) {
+        }, null, ScreenshotViewer.translatable("screen", "button.order")) {
+            @Override
+            protected @Nullable Component getTooltipText() {
+                return list == null ? null : ScreenshotViewer.translatable("screen", list.isInvertedOrder() ? "button.order.descending" : "button.order.ascending");
+            }
+
             @Override
             public @Nullable ResourceLocation getTexture() {
                 return list == null ? null : list.isInvertedOrder() ? DESCENDING_ORDER_BUTTON_TEXTURE : ASCENDING_ORDER_BUTTON_TEXTURE;
@@ -325,7 +330,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             if (!this.visible) {
                 return;
             }
-            this.renderButton(matrices, mouseX, mouseY, delta);
+            super.renderWidget(matrices, mouseX, mouseY, delta);
         }
 
         @Override
@@ -355,7 +360,9 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             this.hoveredVOffset = hoveredVOffset;
             this.texture = texture;
             this.tooltip = tooltip;
-            setTooltip(Tooltip.create(tooltip));
+            if(tooltip != null) {
+                setTooltip(Tooltip.create(tooltip));
+            }
         }
 
         ExtendedTexturedButtonWidget offsetTooltip() {
@@ -368,19 +375,25 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             if (!this.visible) {
                 return;
             }
-            this.renderButton(matrices, mouseX, mouseY, delta);
+            this.renderWidget(matrices, mouseX, mouseY, delta);
             updateTooltip();
         }
 
         private void updateTooltip() {
-            if (this.tooltip != null) {
-                if (isHoveredOrFocused()) {
+            Component tooltip = getTooltipText();
+            if (tooltip != null) {
+                if (this.isHovered || this.isFocused() && Minecraft.getInstance().getLastInputType().isKeyboard()) {
                     Screen screen = Minecraft.getInstance().screen;
                     if (screen != null) {
                         screen.setTooltipForNextRenderPass(Tooltip.create(tooltip), this.createTooltipPositioner(), this.isFocused());
                     }
                 }
             }
+        }
+
+        @Nullable
+        protected Component getTooltipText() {
+            return tooltip;
         }
 
         @Override
@@ -394,7 +407,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         }
 
         @Override
-        public void renderButton(PoseStack matrices, int mouseX, int mouseY, float delta) {
+        public void renderWidget(PoseStack matrices, int mouseX, int mouseY, float delta) {
             ResourceLocation texture = getTexture();
             if(texture == null) {
                 GuiComponent.fill(matrices, getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);

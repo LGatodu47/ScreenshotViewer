@@ -8,7 +8,6 @@ import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.GridWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -87,15 +86,10 @@ public class ScreenshotViewer {
         List<GuiEventListener> buttons = event.getListenersList();
 
         if(config.showButtonInGamePauseMenu.get() && screen instanceof PauseScreen) {
-            buttons.stream()
-                    .filter(GridWidget.class::isInstance)
-                    .map(GridWidget.class::cast)
-                    .findFirst()
-                    .flatMap(grid -> grid.children().stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).findFirst())
-                    .ifPresent(topButton -> {
-                        event.addListener(Util.make(new ImageButton(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
-                            client.setScreen(new ManageScreenshotsScreen(screen));
-                        }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.create(translatable("screen", "manage_screenshots")))));
+            buttons.stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).findFirst().ifPresent(topButton -> {
+                event.addListener(Util.make(new ImageButton(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+                    client.setScreen(new ManageScreenshotsScreen(screen));
+                }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.create(translatable("screen", "manage_screenshots")))));
             });
         }
         if(config.showButtonOnTitleScreen.get() && screen instanceof TitleScreen) {
