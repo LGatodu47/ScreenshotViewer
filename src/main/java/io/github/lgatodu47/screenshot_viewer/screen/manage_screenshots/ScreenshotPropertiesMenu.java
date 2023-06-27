@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.AbstractParentElement;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
@@ -15,7 +16,6 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
@@ -101,7 +101,10 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
                     }
                 }),
                 Triple.of(1, ScreenshotViewer.translatable("screen", "button.open_file"), btn -> Util.getOperatingSystem().open(screenshotFile)),
-                Triple.of(4, ScreenshotViewer.translatable("screen", "button.copy_screenshot"), btn -> copyImageToClipboard(screenshotFile)),
+                Triple.of(4, ScreenshotViewer.translatable("screen", "button.copy_screenshot"), btn -> {
+                    copyImageToClipboard(screenshotFile);
+                    hide();
+                }),
                 Triple.of(3, ScreenshotViewer.translatable("screen", "button.rename_file"), btn -> {
                     childScreen = new RenameScreen(fileName.substring(0, fileName.lastIndexOf('.')), s -> {
                         try {
@@ -174,20 +177,21 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (shouldRender) {
+            MatrixStack matrices = context.getMatrices();
             matrices.push();
             matrices.translate(0, 0, 1);
             if (childScreen == null) {
                 final int spacing = 2;
-                fill(matrices, x, y, x + width, y + height, 0xFF424242);
-                mcSupplier.get().textRenderer.drawWithShadow(matrices, fileName, x + spacing, y + spacing, 0xFFFFFFFF);
+                context.fill(x, y, x + width, y + height, 0xFF424242);
+                context.drawTextWithShadow(mcSupplier.get().textRenderer, fileName, x + spacing, y + spacing, 0xFFFFFFFF);
                 for (ClickableWidget widget : buttons) {
-                    widget.render(matrices, mouseX, mouseY, delta);
-                    mcSupplier.get().textRenderer.drawWithShadow(matrices, widget.getMessage(), widget.getX() + widget.getWidth() + spacing, widget.getY() + (widget.getHeight() - 9) / 2.f + spacing, 0xFFFFFFFF);
+                    widget.render(context, mouseX, mouseY, delta);
+                    context.drawTextWithShadow(mcSupplier.get().textRenderer, widget.getMessage(), widget.getX() + widget.getWidth() + spacing, (int) (widget.getY() + (widget.getHeight() - 9) / 2.f + spacing), 0xFFFFFFFF);
                 }
             } else {
-                childScreen.render(matrices, mouseX, mouseY, delta);
+                childScreen.render(context, mouseX, mouseY, delta);
             }
             matrices.pop();
         }
@@ -254,12 +258,10 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-            RenderSystem.setShaderTexture(0, TEXTURE);
+        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
             RenderSystem.enableDepthTest();
-            TexturedButtonWidget.drawTexture(matrices, this.getX(), this.getY(), isHovered() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
-            TexturedButtonWidget.drawTexture(matrices, this.getX(), this.getY(), this.imgU, this.imgV, this.width, this.height, 128, 128);
+            context.drawTexture(TEXTURE, this.getX(), this.getY(), isHovered() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
+            context.drawTexture(TEXTURE, this.getX(), this.getY(), this.imgU, this.imgV, this.width, this.height, 128, 128);
         }
     }
 
@@ -269,8 +271,8 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void renderBackground(MatrixStack matrices) {
-            fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+        public void renderBackground(DrawContext context) {
+            context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
         }
     }
 
@@ -314,10 +316,10 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
-            drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
-            super.render(matrices, mouseX, mouseY, delta);
+        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+            context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
+            context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
+            super.render(context, mouseX, mouseY, delta);
         }
 
         @Override

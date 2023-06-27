@@ -8,14 +8,13 @@ import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerConfigScreen;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipPositioner;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
@@ -140,16 +139,16 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     private float screenshotScaleAnimation;
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        renderBackground(context);
         if(list != null) {
-            list.render(matrices, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()));
+            list.render(context, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()));
         }
-        drawCenteredTextWithShadow(matrices, textRenderer, title,width / 2, 8, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(textRenderer, title,width / 2, 8, 0xFFFFFF);
         Text text = ScreenshotViewer.translatable("screen", "screenshot_manager.zoom");
-        drawTextWithShadow(matrices, textRenderer, text, width - textRenderer.getWidth(text) - 8, 8, isCtrlDown ? 0x18DE39 : 0xF0CA22);
-        super.render(matrices, mouseX, mouseY, delta);
-        screenshotProperties.render(matrices, mouseX, mouseY, delta);
+        context.drawTextWithShadow(textRenderer, text, width - textRenderer.getWidth(text) - 8, 8, isCtrlDown ? 0x18DE39 : 0xF0CA22);
+        super.render(context, mouseX, mouseY, delta);
+        screenshotProperties.render(context, mouseX, mouseY, delta);
         if(enlargedScreenshot.renders()) {
             float animationTime = 1;
 
@@ -159,12 +158,13 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
                 }
             }
 
+            MatrixStack matrices = context.getMatrices();
             matrices.push();
             matrices.translate(0, 0, 1);
-            enlargedScreenshot.renderBackground(matrices);
+            enlargedScreenshot.renderBackground(context);
             matrices.translate((enlargedScreenshot.width / 2f) * (1 - animationTime), (enlargedScreenshot.height / 2f) * (1 - animationTime), 0);
             matrices.scale(animationTime, animationTime, animationTime);
-            enlargedScreenshot.render(matrices, mouseX, mouseY, delta);
+            enlargedScreenshot.render(context, mouseX, mouseY, delta);
             matrices.pop();
         } else {
             if(screenshotScaleAnimation > 0) {
@@ -320,11 +320,11 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
-            this.renderButton(matrices, mouseX, mouseY, delta);
+            this.renderButton(context, mouseX, mouseY, delta);
         }
 
         @Override
@@ -365,11 +365,11 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
-            this.renderButton(matrices, mouseX, mouseY, delta);
+            this.renderButton(context, mouseX, mouseY, delta);
             applyTooltip();
         }
 
@@ -392,7 +392,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
 
         @Override
         protected TooltipPositioner getTooltipPositioner() {
-            return offsetTooltip ? (screen, x, y, w, h) -> super.getTooltipPositioner().getPosition(screen, x, y + height, w, h) : super.getTooltipPositioner();
+            return offsetTooltip ? (screen_width, screen_height, x, y, w, h) -> super.getTooltipPositioner().getPosition(screen_width, screen_height, x, y + height, w, h) : super.getTooltipPositioner();
         }
 
         @Nullable
@@ -401,13 +401,11 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         @Override
-        public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
             Identifier texture = getTexture();
             if(texture == null) {
-                DrawableHelper.fill(matrices, getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);
+                context.fill(getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);
             } else {
-                RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-                RenderSystem.setShaderTexture(0, texture);
                 int vOffset = this.v;
                 if (!this.isNarratable()) {
                     vOffset += this.hoveredVOffset * 2;
@@ -415,7 +413,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
                     vOffset += this.hoveredVOffset;
                 }
                 RenderSystem.enableDepthTest();
-                DrawableHelper.drawTexture(matrices, this.getX(), this.getY(), this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
+                context.drawTexture(texture, this.getX(), this.getY(), this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
             }
         }
 

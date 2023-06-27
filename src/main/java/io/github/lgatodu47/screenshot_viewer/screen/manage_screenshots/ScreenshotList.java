@@ -6,7 +6,6 @@ import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 
@@ -178,14 +177,14 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     /// Common Methods ///
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
     }
 
     // The boolean added controls whether the screenshot widgets should update its `hovered` state.
-    void render(MatrixStack matrices, int mouseX, int mouseY, float delta, boolean updateHoverState) {
-        fill(matrices, x, y, x + width, y + height, ColorHelper.Argb.getArgb((int) (0.7f * 255), 0, 0, 0));
+    void render(DrawContext context, int mouseX, int mouseY, float delta, boolean updateHoverState) {
+        context.fill(x, y, x + width, y + height, ColorHelper.Argb.getArgb((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
-            drawCenteredTextWithShadow(matrices, client.textRenderer, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
+            context.drawCenteredTextWithShadow(client.textRenderer, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }
         for (ScreenshotWidget screenshotWidget : screenshotWidgets) {
             screenshotWidget.updateY(scrollY);
@@ -196,10 +195,10 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             if (screenshotWidget.getY() + screenshotWidget.getHeight() < y || screenshotWidget.getY() > y + height) {
                 continue;
             }
-            screenshotWidget.render(matrices, mouseX, mouseY, delta, viewportY, viewportBottom);
+            screenshotWidget.render(context, mouseX, mouseY, delta, viewportY, viewportBottom);
         }
         if (canScroll()) {
-            scrollbar.render(matrices, mouseX, mouseY, scrollY);
+            scrollbar.render(context, mouseX, mouseY, scrollY);
         }
     }
 
@@ -345,10 +344,10 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
         }
 
-        void render(MatrixStack matrices, double mouseX, double mouseY, int scrollOffset) {
+        void render(DrawContext context, double mouseX, double mouseY, int scrollOffset) {
             int y = scrollbarYGetter.applyAsInt(scrollOffset);
-            DrawableHelper.fill(matrices, trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
-            DrawableHelper.fill(matrices, x, y, x + width, y + height, isHovered(mouseX, mouseY, y) ? 0xFF6D6D6D : 0xFF1E1E1E);
+            context.fill(trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
+            context.fill(x, y, x + width, y + height, isHovered(mouseX, mouseY, y) ? 0xFF6D6D6D : 0xFF1E1E1E);
         }
 
         /*boolean mouseClicked(double mouseX, double mouseY, double button, int scrollOffset) {

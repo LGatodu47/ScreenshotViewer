@@ -8,6 +8,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -83,14 +84,14 @@ public record ColorOption(String name, @Nullable TextColor defaultValue) impleme
         }
 
         @Override
-        public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            super.renderButton(matrices, mouseX, mouseY, delta);
+        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+            super.renderButton(context, mouseX, mouseY, delta);
             if(this.isVisible()) {
                 String text = getText();
                 if(!text.isEmpty()) {
                     try {
                         int color = Integer.parseInt(text.substring(1), 16);
-                        fill(matrices, this.getX(), this.getY(), this.getX() + 3, this.getY() + this.height, 0xFF000000 | color);
+                        context.fill(this.getX(), this.getY(), this.getX() + 3, this.getY() + this.height, 0xFF000000 | color);
                     } catch (NumberFormatException ignored) {
                     }
                 }

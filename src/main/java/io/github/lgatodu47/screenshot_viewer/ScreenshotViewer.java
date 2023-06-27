@@ -1,9 +1,9 @@
 package io.github.lgatodu47.screenshot_viewer;
 
 import io.github.lgatodu47.catconfig.CatConfig;
-import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
+import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -16,7 +16,6 @@ import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.GridWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -64,16 +63,6 @@ public class ScreenshotViewer implements ClientModInitializer {
         ScreenEvents.AFTER_INIT.register(DELAYED_PHASE, (client, screen, scaledWidth, scaledHeight) -> {
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && screen instanceof GameMenuScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
-                /*buttons.stream()
-                        .filter(GridWidget.class::isInstance)
-                        .map(GridWidget.class::cast)
-                        .findFirst()
-                        .flatMap(grid -> grid.children().stream().filter(ClickableWidget.class::isInstance).map(ClickableWidget.class::cast).findFirst())
-                        .ifPresent(topButton -> {
-                            buttons.add(Util.make(new TexturedButtonWidget(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
-                                client.setScreen(new ManageScreenshotsScreen(screen));
-                            }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.of(translatable("screen", "manage_screenshots")))));
-                        });*/
                 ClickableWidget topButton = buttons.get(0);
                 buttons.add(Util.make(new TexturedButtonWidget(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
@@ -109,7 +98,7 @@ public class ScreenshotViewer implements ClientModInitializer {
     @NotNull
     public static ScreenshotViewer getInstance() {
         if(instance == null) {
-            throw new IllegalStateException("Screenshot Viewer Client is not yet loaded!");
+            throw new IllegalStateException("Screenshot Viewer Client is not loaded yet!");
         }
 
         return instance;

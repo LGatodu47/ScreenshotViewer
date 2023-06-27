@@ -3,10 +3,10 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.*;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.texture.NativeImage;
@@ -18,6 +18,7 @@ import net.minecraft.text.TextColor;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
@@ -99,8 +100,8 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
     /// Rendering Methods ///
 
-    void render(MatrixStack matrices, int mouseX, int mouseY, float delta, int viewportY, int viewportBottom) {
-        renderBackground(matrices, mouseX, mouseY, viewportY, viewportBottom);
+    void render(DrawContext context, int mouseX, int mouseY, float delta, int viewportY, int viewportBottom) {
+        renderBackground(context, mouseX, mouseY, viewportY, viewportBottom);
         final int spacing = 2;
 
         NativeImageBackedTexture image = texture();
@@ -115,7 +116,9 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             int bottomOffset = Math.max(0, getY() + spacing + imgHeight - viewportBottom);
             int topV = topOffset * image.getImage().getHeight() / imgHeight;
             int bottomV = bottomOffset * image.getImage().getHeight() / imgHeight;
-            DrawableHelper.drawTexture(matrices,
+
+            drawTexture(
+                    context,
                     getX() + spacing,
                     renderY,
                     width - spacing * 2,
@@ -132,29 +135,44 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         float scaleFactor = (float) (client.getWindow().getScaledHeight() / 96) / ctx.screenshotsPerRow();
         int textY = getY() + (int) (height / 1.08) - spacing;
         if (textY > viewportY && (float) textY + scaleFactor * (client.textRenderer.fontHeight) < viewportBottom) {
+            MatrixStack matrices = context.getMatrices();
             matrices.push();
             matrices.translate(getX() + width / 2f, textY, 0);
             matrices.scale(scaleFactor, scaleFactor, scaleFactor);
             Text message = getMessage();
             float centerX = (float) (-client.textRenderer.getWidth(getMessage()) / 2);
             int textColor = CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR).map(TextColor::getRgb).orElse(0xFFFFFF);
-            if(CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW, true)) {
-                client.textRenderer.drawWithShadow(matrices, message, centerX, 0, textColor);
-            } else {
-                client.textRenderer.draw(matrices, message, centerX, 0, textColor);
-            }
+            context.drawText(client.textRenderer, message, (int) centerX, 0, textColor, CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW, true));
             matrices.pop();
         }
     }
 
-    @Override
-    public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public static void drawTexture(DrawContext context, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
+        int x2 = x + width;
+        int y2 = y + height;
+        float u1 = u / (float) textureWidth;
+        float u2 = (u + (float) regionWidth) / (float) textureWidth;
+        float v1 = v / (float) textureHeight;
+        float v2 = (v + (float) regionHeight) / (float) textureHeight;
+
+        Matrix4f matrix4f = context.getMatrices().peek().getPositionMatrix();
+        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+        bufferBuilder.vertex(matrix4f, x, y, 0).texture(u1, v1).next();
+        bufferBuilder.vertex(matrix4f, x, y2, 0).texture(u1, v2).next();
+        bufferBuilder.vertex(matrix4f, x2, y2, 0).texture(u2, v2).next();
+        bufferBuilder.vertex(matrix4f, x2, y, 0).texture(u2, v1).next();
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
     }
 
-    private void renderBackground(MatrixStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
+    @Override
+    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    }
+
+    private void renderBackground(DrawContext context, int mouseX, int mouseY, int viewportY, int viewportBottom) {
         int renderY = Math.max(getY(), viewportY);
         int renderHeight = Math.min(getY() + height, viewportBottom);
-        DrawableHelper.fill(matrices, getX(), renderY, getX() + width, renderHeight, ColorHelper.Argb.getArgb((int) (bgOpacity * 255), 255, 255, 255));
+        context.fill(getX(), renderY, getX() + width, renderHeight, ColorHelper.Argb.getArgb((int) (bgOpacity * 255), 255, 255, 255));
     }
 
     /// Utility methods ///

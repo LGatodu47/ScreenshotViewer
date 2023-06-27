@@ -1,13 +1,12 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -85,12 +84,12 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(MatrixStack matrices) {
-        fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+    public void renderBackground(DrawContext context) {
+        context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (showing != null) {
             final int spacing = 8;
 
@@ -103,11 +102,11 @@ class EnlargedScreenshotScreen extends Screen {
                 float imgRatio = (float) image.getWidth() / image.getHeight();
                 int texHeight = height - spacing * 3 - 20;
                 int texWidth = (int) (texHeight * imgRatio);
-                DrawableHelper.drawTexture(matrices, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
+                ScreenshotWidget.drawTexture(context, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
                 RenderSystem.disableBlend();
             }
 
-            super.render(matrices, mouseX, mouseY, delta);
+            super.render(context, mouseX, mouseY, delta);
         }
     }
 
