@@ -8,17 +8,17 @@ import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfigListener;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -134,7 +134,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     }
 
     @Override
-    public void resize(Minecraft client, int width, int height) {
+    public void resize(@NotNull Minecraft client, int width, int height) {
         super.resize(client, width, height);
         // Adapts the size of the enlarged screenshot when resized
         this.enlargedScreenshot.resize(client, width, height);
@@ -145,16 +145,16 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     private float screenshotScaleAnimation;
 
     @Override
-    public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        renderBackground(graphics);
         if(list != null) {
-            list.render(matrices, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()));
+            list.render(graphics, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()));
         }
-        drawCenteredString(matrices, font, title,width / 2, 8, 0xFFFFFF);
+        graphics.drawCenteredString(font, title,width / 2, 8, 0xFFFFFF);
         Component text = ScreenshotViewer.translatable("screen", "screenshot_manager.zoom");
-        drawString(matrices, font, text, width - font.width(text) - 8, 8, isCtrlDown ? 0x18DE39 : 0xF0CA22);
-        super.render(matrices, mouseX, mouseY, delta);
-        screenshotProperties.render(matrices, mouseX, mouseY, delta);
+        graphics.drawString(font, text, width - font.width(text) - 8, 8, isCtrlDown ? 0x18DE39 : 0xF0CA22);
+        super.render(graphics, mouseX, mouseY, delta);
+        screenshotProperties.render(graphics, mouseX, mouseY, delta);
         if(enlargedScreenshot.renders()) {
             float animationTime = 1;
 
@@ -164,13 +164,14 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
                 }
             }
 
-            matrices.pushPose();
-            matrices.translate(0, 0, 1);
-            enlargedScreenshot.renderBackground(matrices);
-            matrices.translate((enlargedScreenshot.width / 2f) * (1 - animationTime), (enlargedScreenshot.height / 2f) * (1 - animationTime), 0);
-            matrices.scale(animationTime, animationTime, animationTime);
-            enlargedScreenshot.render(matrices, mouseX, mouseY, delta);
-            matrices.popPose();
+            PoseStack pose = graphics.pose();
+            pose.pushPose();
+            pose.translate(0, 0, 1);
+            enlargedScreenshot.renderBackground(graphics);
+            pose.translate((enlargedScreenshot.width / 2f) * (1 - animationTime), (enlargedScreenshot.height / 2f) * (1 - animationTime), 0);
+            pose.scale(animationTime, animationTime, animationTime);
+            enlargedScreenshot.render(graphics, mouseX, mouseY, delta);
+            pose.popPose();
         } else {
             if(screenshotScaleAnimation > 0) {
                 screenshotScaleAnimation = 0;
@@ -290,7 +291,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     }
 
     @Override
-    public Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
+    public @NotNull Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
         if(screenshotProperties.renders()) {
             return screenshotProperties.getChildAt(mouseX, mouseY);
         }
@@ -326,11 +327,11 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         }
 
         @Override
-        public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
-            super.renderWidget(matrices, mouseX, mouseY, delta);
+            super.renderWidget(graphics, mouseX, mouseY, delta);
         }
 
         @Override
@@ -371,11 +372,11 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         }
 
         @Override
-        public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
-            this.renderWidget(matrices, mouseX, mouseY, delta);
+            this.renderWidget(graphics, mouseX, mouseY, delta);
             updateTooltip();
         }
 
@@ -397,8 +398,8 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         }
 
         @Override
-        protected ClientTooltipPositioner createTooltipPositioner() {
-            return offsetTooltip ? (screen, x, y, w, h) -> super.createTooltipPositioner().positionTooltip(screen, x, y + height, w, h) : super.createTooltipPositioner();
+        protected @NotNull ClientTooltipPositioner createTooltipPositioner() {
+            return offsetTooltip ? (screenWidth, screenHeight, x, y, w, h) -> super.createTooltipPositioner().positionTooltip(screenWidth, screenHeight, x, y + height, w, h) : super.createTooltipPositioner();
         }
 
         @Nullable
@@ -407,13 +408,11 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         }
 
         @Override
-        public void renderWidget(PoseStack matrices, int mouseX, int mouseY, float delta) {
+        public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             ResourceLocation texture = getTexture();
             if(texture == null) {
-                GuiComponent.fill(matrices, getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);
+                graphics.fill(getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);
             } else {
-                RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                RenderSystem.setShaderTexture(0, texture);
                 int vOffset = this.v;
                 if (!this.isActive()) {
                     vOffset += this.hoveredVOffset * 2;
@@ -421,7 +420,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
                     vOffset += this.hoveredVOffset;
                 }
                 RenderSystem.enableDepthTest();
-                GuiComponent.blit(matrices, this.getX(), this.getY(), this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
+                graphics.blit(texture, this.getX(), this.getY(), this.u, vOffset, this.width, this.height, this.textureWidth, this.textureHeight);
             }
         }
 

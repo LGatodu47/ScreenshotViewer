@@ -2,8 +2,20 @@ package io.github.lgatodu47.screenshot_viewer.screens;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.util.FastColor;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
@@ -13,19 +25,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
 import java.util.function.ToIntFunction;
-import net.minecraft.Util;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.client.sounds.SoundManager;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.FastColor;
 
 import static io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen.CONFIG;
 import static io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen.LOGGER;
@@ -95,8 +94,8 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
 
     /// Rendering Methods ///
 
-    void render(PoseStack matrices, int mouseX, int mouseY, float delta, int viewportY, int viewportBottom) {
-        renderBackground(matrices, mouseX, mouseY, viewportY, viewportBottom);
+    void render(GuiGraphics graphics, int mouseX, int mouseY, float delta, int viewportY, int viewportBottom) {
+        renderBackground(graphics, mouseX, mouseY, viewportY, viewportBottom);
         final int spacing = 2;
 
         DynamicTexture image = texture();
@@ -111,7 +110,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
             int bottomOffset = Math.max(0, getY() + spacing + imgHeight - viewportBottom);
             int topV = topOffset * image.getPixels().getHeight() / imgHeight;
             int bottomV = bottomOffset * image.getPixels().getHeight() / imgHeight;
-            GuiComponent.blit(matrices,
+            drawTexture(graphics,
                     getX() + spacing,
                     renderY,
                     width - spacing * 2,
@@ -128,29 +127,44 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
         float scaleFactor = (float) (client.getWindow().getGuiScaledHeight() / 96) / ctx.screenshotsPerRow();
         int textY = getY() + (int) (height / 1.08) - spacing;
         if (textY > viewportY && (float) textY + scaleFactor * (client.font.lineHeight) < viewportBottom) {
+            PoseStack matrices = graphics.pose();
             matrices.pushPose();
             matrices.translate(getX() + width / 2f, textY, 0);
             matrices.scale(scaleFactor, scaleFactor, scaleFactor);
             Component message = getMessage();
             float centerX = (float) (-client.font.width(getMessage()) / 2);
             int textColor = Optional.ofNullable(TextColor.parseColor(CONFIG.screenshotElementTextColor.get())).map(TextColor::getValue).orElse(0xFFFFFF);
-            if(CONFIG.renderScreenshotElementFontShadow.get()) {
-                client.font.drawShadow(matrices, message, centerX, 0, textColor);
-            } else {
-                client.font.draw(matrices, message, centerX, 0, textColor);
-            }
+            graphics.drawString(client.font, message, (int) centerX, 0, textColor, CONFIG.renderScreenshotElementFontShadow.get());
             matrices.popPose();
         }
     }
 
-    @Override
-    public void renderWidget(PoseStack matrices, int mouseX, int mouseY, float delta) {
+    public static void drawTexture(GuiGraphics graphics, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
+        int x2 = x + width;
+        int y2 = y + height;
+        float u1 = u / (float) textureWidth;
+        float u2 = (u + (float) regionWidth) / (float) textureWidth;
+        float v1 = v / (float) textureHeight;
+        float v2 = (v + (float) regionHeight) / (float) textureHeight;
+
+        Matrix4f matrix4f = graphics.pose().last().pose();
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        bufferBuilder.vertex(matrix4f, x, y, 0).uv(u1, v1).endVertex();
+        bufferBuilder.vertex(matrix4f, x, y2, 0).uv(u1, v2).endVertex();
+        bufferBuilder.vertex(matrix4f, x2, y2, 0).uv(u2, v2).endVertex();
+        bufferBuilder.vertex(matrix4f, x2, y, 0).uv(u2, v1).endVertex();
+        BufferUploader.drawWithShader(bufferBuilder.end());
     }
 
-    private void renderBackground(PoseStack matrices, int mouseX, int mouseY, int viewportY, int viewportBottom) {
+    @Override
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    }
+
+    private void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, int viewportY, int viewportBottom) {
         int renderY = Math.max(getY(), viewportY);
         int renderHeight = Math.min(getY() + height, viewportBottom);
-        GuiComponent.fill(matrices, getX(), renderY, getX() + width, renderHeight, FastColor.ARGB32.color((int) (bgOpacity * 255), 255, 255, 255));
+        graphics.fill(getX(), renderY, getX() + width, renderHeight, FastColor.ARGB32.color((int) (bgOpacity * 255), 255, 255, 255));
     }
 
     /// Utility methods ///
@@ -213,13 +227,8 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     /// Common Widget implementations ///
 
     @Override
-    public Component getMessage() {
+    public @NotNull Component getMessage() {
         return this.screenshotFile == null ? super.getMessage() : Component.literal(this.screenshotFile.getName());
-    }
-
-    @Override
-    public void playDownSound(SoundManager soundManager) {
-        soundManager.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
     }
 
     @Override
@@ -253,7 +262,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput p_259858_) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput p_259858_) {
     }
 
     @Override

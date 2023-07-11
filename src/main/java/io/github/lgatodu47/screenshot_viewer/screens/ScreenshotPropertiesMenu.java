@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button.OnPress;
 import net.minecraft.client.gui.components.EditBox;
@@ -17,7 +18,6 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -176,27 +176,28 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
     }
 
     @Override
-    public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         if (shouldRender) {
+            PoseStack matrices = graphics.pose();
             matrices.pushPose();
             matrices.translate(0, 0, 1);
             if (childScreen == null) {
                 final int spacing = 2;
-                fill(matrices, x, y, x + width, y + height, 0xFF424242);
-                mcSupplier.get().font.drawShadow(matrices, fileName, x + spacing, y + spacing, 0xFFFFFFFF);
+                graphics.fill(x, y, x + width, y + height, 0xFF424242);
+                graphics.drawString(mcSupplier.get().font, fileName, x + spacing, y + spacing, 0xFFFFFFFF);
                 for (AbstractWidget widget : buttons) {
-                    widget.render(matrices, mouseX, mouseY, delta);
-                    mcSupplier.get().font.drawShadow(matrices, widget.getMessage(), widget.getX() + widget.getWidth() + spacing, widget.getY() + (widget.getHeight() - 9) / 2.f + spacing, 0xFFFFFFFF);
+                    widget.render(graphics, mouseX, mouseY, delta);
+                    graphics.drawString(mcSupplier.get().font, widget.getMessage(), widget.getX() + widget.getWidth() + spacing, (int) (widget.getY() + (widget.getHeight() - 9) / 2.f + spacing), 0xFFFFFFFF);
                 }
             } else {
-                childScreen.render(matrices, mouseX, mouseY, delta);
+                childScreen.render(graphics, mouseX, mouseY, delta);
             }
             matrices.popPose();
         }
     }
 
     @Override
-    public List<? extends GuiEventListener> children() {
+    public @NotNull List<? extends GuiEventListener> children() {
         return buttons;
     }
 
@@ -256,12 +257,10 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
         }
 
         @Override
-        public void renderWidget(PoseStack matrices, int mouseX, int mouseY, float delta) {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.setShaderTexture(0, TEXTURE);
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             RenderSystem.enableDepthTest();
-            ImageButton.blit(matrices, this.getX(), this.getY(), isHoveredOrFocused() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
-            ImageButton.blit(matrices, this.getX(), this.getY(), this.imgU, this.imgV, this.width, this.height, 128, 128);
+            graphics.blit(TEXTURE, this.getX(), this.getY(), isHoveredOrFocused() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
+            graphics.blit(TEXTURE, this.getX(), this.getY(), this.imgU, this.imgV, this.width, this.height, 128, 128);
         }
     }
 
@@ -271,8 +270,8 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
         }
 
         @Override
-        public void renderBackground(PoseStack matrices) {
-            fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+        public void renderBackground(GuiGraphics graphics) {
+            graphics.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
         }
     }
 
@@ -318,10 +317,10 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
         }
 
         @Override
-        public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
-            fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
-            drawCenteredString(matrices, this.font, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
-            super.render(matrices, mouseX, mouseY, delta);
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+            graphics.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
+            graphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
+            super.render(graphics, mouseX, mouseY, delta);
         }
 
         @Override

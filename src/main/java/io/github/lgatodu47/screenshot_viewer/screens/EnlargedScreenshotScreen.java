@@ -3,13 +3,13 @@ package io.github.lgatodu47.screenshot_viewer.screens;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class EnlargedScreenshotScreen extends Screen {
@@ -85,12 +85,12 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(PoseStack matrices) {
-        fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+    public void renderBackground(GuiGraphics graphics) {
+        graphics.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
     @Override
-    public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         if (showing != null) {
             final int spacing = 8;
 
@@ -103,11 +103,11 @@ class EnlargedScreenshotScreen extends Screen {
                 float imgRatio = (float) image.getWidth() / image.getHeight();
                 int texHeight = height - spacing * 3 - 20;
                 int texWidth = (int) (texHeight * imgRatio);
-                GuiComponent.blit(matrices, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
+                ScreenshotWidget.drawTexture(graphics, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
                 RenderSystem.disableBlend();
             }
 
-            super.render(matrices, mouseX, mouseY, delta);
+            super.render(graphics, mouseX, mouseY, delta);
         }
     }
 

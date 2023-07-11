@@ -1,9 +1,8 @@
 package io.github.lgatodu47.screenshot_viewer.screens;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -11,6 +10,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     void configUpdated() {
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.screenScrollSpeed.get();
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.initialScreenshotAmountPerRow.get();
-        if(invertedOrder != ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
+        if (invertedOrder != ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
             invertOrder();
         } else {
             updateChildren();
@@ -97,13 +97,14 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             }
         }
         scrollbar.repositionScrollbar(x, y, width, height, spacing, getTotalHeightOfChildren());
-        if(ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
+        if (ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
             invertOrder();
         }
     }
 
     /**
      * Updates the number of screenshots per row. Called when the `ctrl` key is held and when the user is scrolling.
+     *
      * @param scrollAmount A value that determines the scrolling direction and intensity (value from -1.0 to 1.0).
      */
     void updateScreenshotsPerRow(double scrollAmount) {
@@ -180,14 +181,14 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     /// Common Methods ///
 
     @Override
-    public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
     }
 
     // The boolean added controls whether the screenshot widgets should update its `hovered` state.
-    void render(PoseStack matrices, int mouseX, int mouseY, float delta, boolean updateHoverState) {
-        fill(matrices, x, y, x + width, y + height, FastColor.ARGB32.color((int) (0.7f * 255), 0, 0, 0));
+    void render(GuiGraphics graphics, int mouseX, int mouseY, float delta, boolean updateHoverState) {
+        graphics.fill(x, y, x + width, y + height, FastColor.ARGB32.color((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
-            drawCenteredString(matrices, client.font, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
+            graphics.drawCenteredString(client.font, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }
         for (ScreenshotWidget screenshotWidget : screenshotWidgets) {
             screenshotWidget.updateY(scrollY);
@@ -198,15 +199,15 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             if (screenshotWidget.getY() + screenshotWidget.getHeight() < y || screenshotWidget.getY() > y + height) {
                 continue;
             }
-            screenshotWidget.render(matrices, mouseX, mouseY, delta, viewportY, viewportBottom);
+            screenshotWidget.render(graphics, mouseX, mouseY, delta, viewportY, viewportBottom);
         }
         if (canScroll()) {
-            scrollbar.render(matrices, mouseX, mouseY, scrollY);
+            scrollbar.render(graphics, mouseX, mouseY, scrollY);
         }
     }
 
     @Override
-    public List<? extends GuiEventListener> children() {
+    public @NotNull List<? extends GuiEventListener> children() {
         return elements;
     }
 
@@ -319,11 +320,11 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     /// Random implementation methods ///
 
     @Override
-    public void updateNarration(NarrationElementOutput builder) {
+    public void updateNarration(@NotNull NarrationElementOutput builder) {
     }
 
     @Override
-    public NarrationPriority narrationPriority() {
+    public @NotNull NarrationPriority narrationPriority() {
         return NarrationPriority.NONE;
     }
 
@@ -347,10 +348,10 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
         }
 
-        void render(PoseStack matrices, double mouseX, double mouseY, int scrollOffset) {
+        void render(GuiGraphics graphics, double mouseX, double mouseY, int scrollOffset) {
             int y = scrollbarYGetter.applyAsInt(scrollOffset);
-            GuiComponent.fill(matrices, trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
-            GuiComponent.fill(matrices, x, y, x + width, y + height, isHovered(mouseX, mouseY, y) ? 0xFF6D6D6D : 0xFF1E1E1E);
+            graphics.fill(trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
+            graphics.fill(x, y, x + width, y + height, isHovered(mouseX, mouseY, y) ? 0xFF6D6D6D : 0xFF1E1E1E);
         }
 
         /*boolean mouseClicked(double mouseX, double mouseY, double button, int scrollOffset) {
