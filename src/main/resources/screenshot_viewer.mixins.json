@@ -2,6 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "io.github.lgatodu47.screenshot_viewer.mixin",
+  "refmap": "screenshot_viewer.refmap.json",
   "compatibilityLevel": "JAVA_17",
   "client": [
     "MainMixin",

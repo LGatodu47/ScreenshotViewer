@@ -84,6 +84,11 @@ mixin {
     add sourceSets.main, "${project.modid}.refmap.json"
 }
 
+afterEvaluate {
+    tasks.configureReobfTaskForReobfJar.mustRunAfter(tasks.compileJava)
+    tasks.configureReobfTaskForReobfJarJar.mustRunAfter(tasks.compileJava)
+}
+
 jar.finalizedBy('reobfJar')
 
 tasks.withType(JavaCompile).configureEach {
