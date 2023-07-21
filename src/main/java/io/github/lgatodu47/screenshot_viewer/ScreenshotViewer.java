@@ -64,7 +64,7 @@ public class ScreenshotViewer implements ClientModInitializer {
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && screen instanceof GameMenuScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
                 ClickableWidget topButton = buttons.get(0);
-                buttons.add(Util.make(new TexturedButtonWidget(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+                buttons.add(Util.make(new TexturedButtonWidget(topButton.getX() + topButton.getWidth() + 4, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
                 }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.of(translatable("screen", "manage_screenshots")))));
             }
