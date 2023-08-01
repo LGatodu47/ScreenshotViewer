@@ -23,4 +23,5 @@ public class ScreenshotViewerOptions {
     public static final ConfigOption<Boolean> RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW = BUILDER.createBool("render_screenshot_element_font_shadow", true);
     public static final ConfigOption<TextColor> SCREENSHOT_ELEMENT_TEXT_COLOR = BUILDER.put(new ColorOption("screenshot_element_text_color", TextColor.fromRgb(0xFFFFFF)));
     public static final ConfigOption<ScreenshotListOrder> DEFAULT_LIST_ORDER = BUILDER.createEnum("default_list_order", ScreenshotListOrder.class, ScreenshotListOrder.ASCENDING);
+    public static final ConfigOption<Integer> PAUSE_MENU_BUTTON_OFFSET = BUILDER.createInt("pause_menu_button_offset", 4, 0, Integer.MAX_VALUE);
 }
