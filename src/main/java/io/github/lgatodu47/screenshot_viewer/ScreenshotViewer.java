@@ -67,9 +67,11 @@ public class ScreenshotViewer {
 
     @SubscribeEvent
     public void onKeyInput(InputEvent.Key event) {
+        if(openScreenshotsScreenKey == null || openScreenshotsScreenKey.isUnbound()) {
+            return;
+        }
         Minecraft client = Minecraft.getInstance();
-        KeyMapping openScreenshotsScreenKey = getInstance().getOpenScreenshotsScreenKey();
-        if(client.level != null && client.screen == null && event.getAction() == InputConstants.PRESS && openScreenshotsScreenKey != null && openScreenshotsScreenKey.getKey().getValue() == event.getKey()) {
+        if(client.level != null && client.screen == null && event.getAction() == InputConstants.PRESS && openScreenshotsScreenKey.getKey().getValue() == event.getKey()) {
             client.setScreen(new ManageScreenshotsScreen(null));
         }
     }
