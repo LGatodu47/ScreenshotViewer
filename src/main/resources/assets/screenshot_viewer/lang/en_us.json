@@ -40,6 +40,8 @@
   "config.screenshot_viewer.screenshot_element_text_color.desc": "Color of the texts describing the screenshots elements.",
   "config.screenshot_viewer.default_list_order": "Default Screenshot List Ordering",
   "config.screenshot_viewer.default_list_order.desc": "The ordering of the screenshots when the screen is opened.",
+  "config.screenshot_viewer.pause_menu_button_offset": "Pause Menu Button Offset",
+  "config.screenshot_viewer.pause_menu_button_offset.desc": "The offset in pixels of the screenshot manager button if shown in the pause menu (from 0 to how much you want).",
 
   "key.screenshot_viewer.open_screenshots_screen": "Open Screenshot Manager"
 }

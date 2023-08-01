@@ -21,6 +21,7 @@ public final class ScreenshotViewerConfig {
     public final BooleanValue renderScreenshotElementFontShadow;
     public final ConfigValue<String> screenshotElementTextColor;
     public final ConfigValue<ScreenshotListOrder> defaultListOrder;
+    public final IntValue pauseMenuButtonOffset;
 
     private ScreenshotViewerConfig(ForgeConfigSpec.Builder builder) {
         showButtonInGamePauseMenu = builder.comment("Shows a button to access screenshots directly in the pause menu.")
@@ -53,6 +54,9 @@ public final class ScreenshotViewerConfig {
         defaultListOrder = builder.comment("The ordering of the screenshots when the screen is opened.")
                 .translation("config.screenshot_viewer.default_list_order")
                 .defineEnum("defaultListOrder", ScreenshotListOrder.ASCENDING);
+        pauseMenuButtonOffset = builder.comment("The offset in pixels of the screenshot manager button if shown in the pause menu (from 0 to how much you want).")
+                .translation("config.screenshot_viewer.pause_menu_button_offset")
+                .defineInRange("pauseMenuButtonOffset", 4, 0, Integer.MAX_VALUE);
     }
 
     private boolean validColorString(Object obj) {

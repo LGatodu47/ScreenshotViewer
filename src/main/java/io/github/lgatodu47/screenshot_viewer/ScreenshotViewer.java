@@ -70,9 +70,12 @@ public class ScreenshotViewer {
 
     @SubscribeEvent
     public void onKeyInput(InputEvent.Key event) {
+        if(openScreenshotsScreenKey == null || openScreenshotsScreenKey.isUnbound()) {
+            return;
+        }
         Minecraft client = Minecraft.getInstance();
         KeyMapping openScreenshotsScreenKey = getInstance().getOpenScreenshotsScreenKey();
-        if(client.level != null && client.screen == null && event.getAction() == InputConstants.PRESS && openScreenshotsScreenKey != null && openScreenshotsScreenKey.getKey().getValue() == event.getKey()) {
+        if(client.level != null && client.screen == null && event.getAction() == InputConstants.PRESS && openScreenshotsScreenKey.getKey().getValue() == event.getKey()) {
             client.setScreen(new ManageScreenshotsScreen(null));
         }
     }
@@ -87,7 +90,7 @@ public class ScreenshotViewer {
 
         if(config.showButtonInGamePauseMenu.get() && screen instanceof PauseScreen) {
             buttons.stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).findFirst().ifPresent(topButton -> {
-                event.addListener(Util.make(new ImageButton(topButton.getX() + topButton.getWidth() + 8, topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+                event.addListener(Util.make(new ImageButton(topButton.getX() + topButton.getWidth() + config.pauseMenuButtonOffset.get(), topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
                 }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.create(translatable("screen", "manage_screenshots")))));
             });
