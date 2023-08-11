@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.fabricmc.fabric.api.event.Event;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
@@ -24,6 +25,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
@@ -110,5 +112,9 @@ public class ScreenshotViewer implements ClientModInitializer {
 
     public static Text translatable(String prefix, String suffix) {
         return Text.translatable(translation(prefix, suffix));
+    }
+
+    public static File getVanillaScreenshotsFolder() {
+        return new File(MinecraftClient.getInstance().runDirectory, "screenshots");
     }
 }

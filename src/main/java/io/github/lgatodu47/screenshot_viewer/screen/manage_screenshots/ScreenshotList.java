@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Supplier;
 
 final class ScreenshotList extends AbstractParentElement implements Drawable, Selectable, ScreenshotImageList {
     private final ManageScreenshotsScreen mainScreen;
@@ -30,6 +31,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     private int screenshotsPerRow;
     private int spacing, childWidth, childHeight;
     private boolean invertedOrder;
+    private File screenshotsFolder;
 
     ScreenshotList(ManageScreenshotsScreen mainScreen, int x, int y, int width, int height) {
         this.mainScreen = mainScreen;
@@ -40,6 +42,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         this.height = height;
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREEN_SCROLL_SPEED, 10);
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
+        this.screenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewer::getVanillaScreenshotsFolder);
         updateVariables();
     }
 
@@ -53,11 +56,17 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     void onConfigUpdate() {
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREEN_SCROLL_SPEED, 10);
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
+        File currentScreenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewer::getVanillaScreenshotsFolder);
+        if(screenshotsFolder != currentScreenshotsFolder) {
+            screenshotsFolder = currentScreenshotsFolder;
+            init();
+            return;
+        }
         if(invertedOrder != ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.DEFAULT_LIST_ORDER, ScreenshotListOrder.ASCENDING).isInverted()) {
             invertOrder();
-        } else {
-            updateChildren();
+            return;
         }
+        updateChildren();
     }
 
     /**
@@ -66,7 +75,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     void init() {
         clearChildren();
 
-        File[] files = new File(client.runDirectory, "screenshots").listFiles();
+        File[] files = screenshotsFolder.listFiles();
         if (files != null) {
             updateVariables();
             final int maxXOff = screenshotsPerRow - 1;

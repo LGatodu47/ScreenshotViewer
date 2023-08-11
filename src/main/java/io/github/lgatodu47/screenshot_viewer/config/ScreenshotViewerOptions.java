@@ -4,7 +4,10 @@ import io.github.lgatodu47.catconfig.ConfigOption;
 import io.github.lgatodu47.catconfig.ConfigOptionAccess;
 import io.github.lgatodu47.catconfig.ConfigOptionBuilder;
 import io.github.lgatodu47.catconfigmc.MinecraftConfigSides;
+import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import net.minecraft.text.TextColor;
+
+import java.io.File;
 
 public class ScreenshotViewerOptions {
     private static final ConfigOptionBuilder BUILDER = ConfigOptionBuilder.create();
@@ -24,4 +27,5 @@ public class ScreenshotViewerOptions {
     public static final ConfigOption<TextColor> SCREENSHOT_ELEMENT_TEXT_COLOR = BUILDER.put(new ColorOption("screenshot_element_text_color", TextColor.fromRgb(0xFFFFFF)));
     public static final ConfigOption<ScreenshotListOrder> DEFAULT_LIST_ORDER = BUILDER.createEnum("default_list_order", ScreenshotListOrder.class, ScreenshotListOrder.ASCENDING);
     public static final ConfigOption<Integer> PAUSE_MENU_BUTTON_OFFSET = BUILDER.createInt("pause_menu_button_offset", 4, 0, Integer.MAX_VALUE);
+    public static final ConfigOption<File> SCREENSHOTS_FOLDER = BUILDER.put(new FileOption("screenshots_folder", ScreenshotViewer::getVanillaScreenshotsFolder));
 }
