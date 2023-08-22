@@ -43,12 +43,19 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     private final EnlargedScreenshotScreen enlargedScreenshot;
     private final ScreenshotPropertiesMenu screenshotProperties;
     private ScreenshotList list;
+    @Nullable
+    private File enlargedScreenshotFile;
 
     public ManageScreenshotsScreen(Screen parent) {
         super(ScreenshotViewer.translatable("screen", "manage_screenshots"));
         this.parent = parent;
         this.enlargedScreenshot = new EnlargedScreenshotScreen();
         this.screenshotProperties = new ScreenshotPropertiesMenu(this::client, () -> width, () -> height);
+    }
+
+    public ManageScreenshotsScreen(Screen parent, @Nullable File enlargedScreenshotFile) {
+        this(parent);
+        this.enlargedScreenshotFile = enlargedScreenshotFile;
     }
 
     MinecraftClient client() {
@@ -125,6 +132,11 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         addDrawableChild(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, REFRESH_BUTTON_TEXTURE, 32, 64, button -> {
             list.init();
         }, ScreenshotViewer.translatable("screen", "button.refresh"), ScreenshotViewer.translatable("screen", "button.refresh")));
+
+        if(enlargedScreenshotFile != null) {
+            list.findByFileName(enlargedScreenshotFile).ifPresentOrElse(this::enlargeScreenshot, () -> LOGGER.warn("Tried to enlarge screenshot with a path '{}' that could not be located in the screenshots folder!", enlargedScreenshotFile.getAbsolutePath()));
+            enlargedScreenshotFile = null;
+        }
     }
 
     @Override
@@ -269,6 +281,9 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
         if(enlargedScreenshot.renders()) {
             return enlargedScreenshot.mouseReleased(mouseX, mouseY, button);
+        }
+        if(list != null) {
+            return list.mouseReleased(mouseX, mouseY, button);
         }
         return super.mouseReleased(mouseX, mouseY, button);
     }

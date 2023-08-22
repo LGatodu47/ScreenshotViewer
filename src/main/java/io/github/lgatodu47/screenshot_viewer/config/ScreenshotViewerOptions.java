@@ -28,4 +28,5 @@ public class ScreenshotViewerOptions {
     public static final ConfigOption<ScreenshotListOrder> DEFAULT_LIST_ORDER = BUILDER.createEnum("default_list_order", ScreenshotListOrder.class, ScreenshotListOrder.ASCENDING);
     public static final ConfigOption<Integer> PAUSE_MENU_BUTTON_OFFSET = BUILDER.createInt("pause_menu_button_offset", 4, 0, Integer.MAX_VALUE);
     public static final ConfigOption<File> SCREENSHOTS_FOLDER = BUILDER.put(new FileOption("screenshots_folder", ScreenshotViewer::getVanillaScreenshotsFolder));
+    public static final ConfigOption<Boolean> REDIRECT_SCREENSHOT_CHAT_LINKS = BUILDER.createBool("redirect_screenshot_chat_links", false);
 }

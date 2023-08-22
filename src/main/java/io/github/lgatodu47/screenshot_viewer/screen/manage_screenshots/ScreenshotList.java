@@ -8,11 +8,13 @@ import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
@@ -207,7 +209,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             screenshotWidget.render(context, mouseX, mouseY, delta, viewportY, viewportBottom);
         }
         if (canScroll()) {
-            scrollbar.render(context, mouseX, mouseY, scrollY);
+            scrollbar.render(context, mouseX, mouseY, scrollY, scrollbarClicked);
         }
     }
 
@@ -221,6 +223,11 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     @Override
     public ScreenshotImageHolder getScreenshot(int index) {
         return screenshotWidgets.get(index);
+    }
+
+    @Override
+    public Optional<ScreenshotImageHolder> findByFileName(File file) {
+        return screenshotWidgets.stream().filter(screenshotWidget -> screenshotWidget.getScreenshotFile().equals(file)).map(ScreenshotImageHolder.class::cast).findFirst();
     }
 
     @Override
@@ -285,12 +292,12 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         return super.mouseScrolled(mouseX, mouseY, amount);
     }
 
-    /*private boolean scrollbarClicked;
+    private boolean scrollbarClicked;
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         scrollbarClicked = false;
-        if(scrollbar.mouseClicked(mouseX, mouseY, button, scrollY)) {
+        if(canScroll() && scrollbar.mouseClicked(mouseX, mouseY, button, scrollY)) {
             scrollbarClicked = true;
             return true;
         }
@@ -316,11 +323,11 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
                 // Maximum offset from the top
                 final int leftOver = totalHeightOfTheChildrens - viewHeight;
 
-                scrollY = Math.min(leftOver, scrollY + scrollDelta);
+                scrollY = Math.min(leftOver, scrollY - scrollDelta);
             }
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-    }*/
+    }
 
     /// Random implementation methods ///
 
@@ -336,6 +343,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     private static class Scrollbar {
         private final int spacing = 2;
         private final int width = 6;
+        @SuppressWarnings("FieldCanBeLocal")
         private final int trackWidth = 2;
         private int x, height;
         private int trackX, trackY, trackHeight;
@@ -353,20 +361,20 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
         }
 
-        void render(DrawContext context, double mouseX, double mouseY, int scrollOffset) {
+        void render(DrawContext context, double mouseX, double mouseY, int scrollOffset, boolean clicked) {
             int y = scrollbarYGetter.applyAsInt(scrollOffset);
             context.fill(trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
-            context.fill(x, y, x + width, y + height, isHovered(mouseX, mouseY, y) ? 0xFF6D6D6D : 0xFF1E1E1E);
+            context.fill(x, y, x + width, y + height, isHovered(mouseX, mouseY, y) || clicked ? 0xFF6D6D6D : 0xFF1E1E1E);
         }
 
-        /*boolean mouseClicked(double mouseX, double mouseY, double button, int scrollOffset) {
+        boolean mouseClicked(double mouseX, double mouseY, double button, int scrollOffset) {
             return button == GLFW.GLFW_MOUSE_BUTTON_LEFT && isHovered(mouseX, mouseY, scrollbarYGetter.applyAsInt(scrollOffset));
         }
 
         int getScrollOffsetDelta(double scrollbarDelta, double totalHeightOfTheChildrens) {
             int scrollbarSpacedTrackHeight = trackHeight + 2 * spacing;
-            return MathHelper.ceil(scrollbarDelta * totalHeightOfTheChildrens / (float) scrollbarSpacedTrackHeight);
-        }*/
+            return MathHelper.ceil(-scrollbarDelta * totalHeightOfTheChildrens / (float) scrollbarSpacedTrackHeight);
+        }
 
         private boolean isHovered(double mouseX, double mouseY, int y) {
             return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;

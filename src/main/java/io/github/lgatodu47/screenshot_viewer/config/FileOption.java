@@ -13,6 +13,7 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -43,7 +44,7 @@ public record FileOption(String name, @Nullable Supplier<File> defValue) impleme
         Supplier<File> defaultValue = () -> Objects.requireNonNull(ScreenshotViewerOptions.SCREENSHOTS_FOLDER.defaultValue());
         widget.setText(config.get(ScreenshotViewerOptions.SCREENSHOTS_FOLDER).orElseGet(defaultValue).getAbsolutePath());
         AtomicBoolean corrected = new AtomicBoolean(false);
-        widget.setUnfocusedListener(() -> {
+        widget.setAcceptChangesListener(() -> {
             File target = new File(widget.getText());
             if(target.exists() && target.isAbsolute() && target.isDirectory() && target.canRead()) {
                 config.put(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, target);
@@ -59,7 +60,7 @@ public record FileOption(String name, @Nullable Supplier<File> defValue) impleme
 
     public static class FilePathWidget extends TextFieldWidget {
 //        protected static final Identifier OPEN_FOLDER_BUTTON_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/open_folder_button.png");
-        protected Runnable onUnfocused;
+        protected Runnable acceptChangesListener;
 
         public FilePathWidget(TextRenderer renderer, int x, int y, int width, int height, Text text) {
             super(renderer, x, y, width /*- height*/, height, text);
@@ -96,19 +97,35 @@ public record FileOption(String name, @Nullable Supplier<File> defValue) impleme
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return super.mouseClicked(mouseX, mouseY, button);
+            boolean res = super.mouseClicked(mouseX, mouseY, button);
+            if(res && acceptChangesListener != null) {
+                acceptChangesListener.run();
+            }
+            return res;
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if(!isActive()) {
+                return false;
+            }
+            if(keyCode == GLFW.GLFW_KEY_ENTER && acceptChangesListener != null) {
+                acceptChangesListener.run();
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override
         public void setFocused(boolean focused) {
             super.setFocused(focused);
-            if(!focused && onUnfocused != null) {
-                onUnfocused.run();
+            if(!focused && acceptChangesListener != null) {
+                acceptChangesListener.run();
             }
         }
 
-        public void setUnfocusedListener(Runnable onUnfocused) {
-            this.onUnfocused = onUnfocused;
+        public void setAcceptChangesListener(Runnable acceptChangesListener) {
+            this.acceptChangesListener = acceptChangesListener;
         }
     }
 }

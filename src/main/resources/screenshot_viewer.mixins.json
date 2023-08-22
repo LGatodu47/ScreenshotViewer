@@ -4,9 +4,11 @@
   "package": "io.github.lgatodu47.screenshot_viewer.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "ScreenMixin",
     "MainMixin",
-    "WindowMixin",
-    "MinecraftClientMixin"
+    "MinecraftClientMixin",
+    "ScreenshotRecorderMixin",
+    "WindowMixin"
   ],
   "injectors": {
     "defaultRequire": 1
