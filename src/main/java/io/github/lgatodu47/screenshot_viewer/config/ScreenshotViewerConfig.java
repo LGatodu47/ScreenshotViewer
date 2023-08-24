@@ -10,6 +10,8 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.File;
+
 public final class ScreenshotViewerConfig {
     public final BooleanValue showButtonInGamePauseMenu;
     public final BooleanValue showButtonOnTitleScreen;
@@ -22,6 +24,8 @@ public final class ScreenshotViewerConfig {
     public final ConfigValue<String> screenshotElementTextColor;
     public final ConfigValue<ScreenshotListOrder> defaultListOrder;
     public final IntValue pauseMenuButtonOffset;
+    public final ConfigValue<String> screenshotsFolder;
+    public final BooleanValue redirectScreenshotChatLinks;
 
     private ScreenshotViewerConfig(ForgeConfigSpec.Builder builder) {
         showButtonInGamePauseMenu = builder.comment("Shows a button to access screenshots directly in the pause menu.")
@@ -57,6 +61,12 @@ public final class ScreenshotViewerConfig {
         pauseMenuButtonOffset = builder.comment("The offset in pixels of the screenshot manager button if shown in the pause menu (from 0 to how much you want).")
                 .translation("config.screenshot_viewer.pause_menu_button_offset")
                 .defineInRange("pauseMenuButtonOffset", 4, 0, Integer.MAX_VALUE);
+        screenshotsFolder = builder.comment("The path to the folder containing the screenshots images that will be displayed in the screen.")
+                .translation("config.screenshot_viewer.screenshots_folder")
+                .define("screenshotsFolder", () -> ScreenshotViewer.getVanillaScreenshotsFolder().getAbsolutePath(), this::validDirectory);
+        redirectScreenshotChatLinks = builder.comment("If enabled, clicking on the link printed in the chat when taking a screenshot will open it directly in the screenshot manager.")
+                .translation("config.screenshot_viewer.redirect_screenshot_chat_links")
+                .define("redirectScreenshotChatLinks", false);
     }
 
     private boolean validColorString(Object obj) {
@@ -64,6 +74,14 @@ public final class ScreenshotViewerConfig {
             return false;
         }
         return s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parseColor(s) != null);
+    }
+
+    private boolean validDirectory(Object obj) {
+        if(!(obj instanceof String fileName)) {
+            return false;
+        }
+        File file = new File(fileName);
+        return file.exists() && file.isAbsolute() && file.isDirectory() && file.canRead();
     }
 
     public static ScreenshotViewerConfig registerConfig(ModLoadingContext ctx) {

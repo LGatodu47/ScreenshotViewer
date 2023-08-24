@@ -43,6 +43,8 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     private final EnlargedScreenshotScreen enlargedScreenshot;
     private final ScreenshotPropertiesMenu screenshotProperties;
     private ScreenshotList list;
+    @Nullable
+    private File enlargedScreenshotFile;
 
     public ManageScreenshotsScreen(Screen parent) {
         super(ScreenshotViewer.translatable("screen", "manage_screenshots"));
@@ -50,6 +52,11 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         this.enlargedScreenshot = new EnlargedScreenshotScreen();
         this.screenshotProperties = new ScreenshotPropertiesMenu(this::client, () -> width, () -> height);
         ScreenshotViewer.getInstance().registerConfigListener(this);
+    }
+
+    public ManageScreenshotsScreen(Screen parent, @Nullable File enlargedScreenshotFile) {
+        this(parent);
+        this.enlargedScreenshotFile = enlargedScreenshotFile;
     }
 
     Minecraft client() {
@@ -123,7 +130,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         });
         // Screenshot Folder Button
         addRenderableWidget(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, OPEN_FOLDER_BUTTON_TEXTURE, 32, 64, btn -> {
-            Util.getPlatform().openFile(new File(this.minecraft.gameDirectory, "screenshots"));
+            Util.getPlatform().openFile(new File(CONFIG.screenshotsFolder.get()));
         }, ScreenshotViewer.translatable("screen", "button.screenshot_folder"), ScreenshotViewer.translatable("screen", "button.screenshot_folder")));
         // Done Button
         addRenderableWidget(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, CommonComponents.GUI_DONE, button -> onClose()));
@@ -131,6 +138,11 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         addRenderableWidget(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, 0, 0, btnSize, REFRESH_BUTTON_TEXTURE, 32, 64, button -> {
             list.init();
         }, ScreenshotViewer.translatable("screen", "button.refresh"), ScreenshotViewer.translatable("screen", "button.refresh")));
+
+        if(enlargedScreenshotFile != null) {
+            list.findByFileName(enlargedScreenshotFile).ifPresentOrElse(this::enlargeScreenshot, () -> LOGGER.warn("Tried to enlarge screenshot with a path '{}' that could not be located in the screenshots folder!", enlargedScreenshotFile.getAbsolutePath()));
+            enlargedScreenshotFile = null;
+        }
     }
 
     @Override
@@ -160,7 +172,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
 
             if(CONFIG.enableScreenshotEnlargementAnimation.get()) {
                 if(screenshotScaleAnimation < 1f) {
-                    animationTime = (float) (1 - Math.pow(1 - (screenshotScaleAnimation += 0.03), 3));
+                    animationTime = (float) (1 - Math.pow(1 - (screenshotScaleAnimation += 0.03F), 3));
                 }
             }
 
@@ -275,6 +287,9 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         }
         if(enlargedScreenshot.renders()) {
             return enlargedScreenshot.mouseReleased(mouseX, mouseY, button);
+        }
+        if(list != null) {
+            return list.mouseReleased(mouseX, mouseY, button);
         }
         return super.mouseReleased(mouseX, mouseY, button);
     }

@@ -18,6 +18,7 @@
   "screen.screenshot_viewer.delete_prompt.message": "Are you sure you want to delete this screenshot ?",
   "screen.screenshot_viewer.rename_screenshot": "Enter a new name for your screenshot:",
   "screen.screenshot_viewer.field.screenshot_name": "New screenshot name",
+  "tooltip.screenshot_viewer.redirect_to_screenshot_manager": "Open screenshot in the Screenshot Manager...",
 
   "screen.screenshot_viewer.config": "Screenshot Viewer Config",
   "config.screenshot_viewer.show_button_in_game_pause_menu": "Show Button In Pause Menu",
@@ -42,6 +43,10 @@
   "config.screenshot_viewer.default_list_order.desc": "The ordering of the screenshots when the screen is opened.",
   "config.screenshot_viewer.pause_menu_button_offset": "Pause Menu Button Offset",
   "config.screenshot_viewer.pause_menu_button_offset.desc": "The offset in pixels of the screenshot manager button if shown in the pause menu (from 0 to how much you want).",
+  "config.screenshot_viewer.screenshots_folder": "Screenshots Folder",
+  "config.screenshot_viewer.screenshots_folder.desc": "The path to the folder containing the screenshots images that will be displayed in the screen.",
+  "config.screenshot_viewer.redirect_screenshot_chat_links": "Redirect Screenshot Chat Links",
+  "config.screenshot_viewer.redirect_screenshot_chat_links.desc": "If enabled, clicking on the link printed in the chat when taking a screenshot will open it directly in the screenshot manager.",
 
   "key.screenshot_viewer.open_screenshots_screen": "Open Screenshot Manager"
 }

@@ -18,6 +18,7 @@
   "screen.screenshot_viewer.delete_prompt.message": "Êtes vous sûr(e) de vouloir supprimer cette capture d'écran ?",
   "screen.screenshot_viewer.rename_screenshot": "Entrez un nouveau nom pour votre capture d'écran :",
   "screen.screenshot_viewer.field.screenshot_name": "Nouveau nom de capture d'écran",
+  "tooltip.screenshot_viewer.redirect_to_screenshot_manager": "Ouvrir dans le gestionnaire de captures d'écran...",
 
   "screen.screenshot_viewer.config": "Config de Screenshot Viewer",
   "config.screenshot_viewer.show_button_in_game_pause_menu": "Afficher le bouton dans le menu Pause",
@@ -42,6 +43,10 @@
   "config.screenshot_viewer.default_list_order.desc": "L'ordre des captures d'écran lorsque l'interface est ouverte.",
   "config.screenshot_viewer.pause_menu_button_offset": "Décalage du bouton sur le menu Pause",
   "config.screenshot_viewer.pause_menu_button_offset.desc": "Le décalage en pixel du bouton pour accéder à l'interface apparaissant dans le menu Pause (de 0 à ce que vous voulez).",
+  "config.screenshot_viewer.screenshots_folder": "Dossier des captures d'écran",
+  "config.screenshot_viewer.screenshots_folder.desc": "The path to the folder containing the screenshots images that will be displayed in the screen.",
+  "config.screenshot_viewer.redirect_screenshot_chat_links": "Rediriger les liens de capture d'écran du tchat",
+  "config.screenshot_viewer.redirect_screenshot_chat_links.desc": "Si l'option est active, lorsque vous cliquerez sur le lien affiché dans le tchat après avoir pris une capture d'écran, le gestionnaire s'ouvrira et sélectionnera celle-ci.",
 
   "key.screenshot_viewer.open_screenshots_screen": "Ouvrir le Gestionnaire de Captures d'écran"
 }

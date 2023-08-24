@@ -4,6 +4,8 @@ import com.mojang.blaze3d.platform.InputConstants;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfigListener;
 import io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen;
+import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotClickEvent;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -15,11 +17,13 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.client.event.ScreenshotEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -32,6 +36,9 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.forgespi.language.IModInfo;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -112,6 +119,24 @@ public class ScreenshotViewer {
         }
     }
 
+    @SubscribeEvent
+    public void onScreenshotTaken(ScreenshotEvent event) {
+        event.setResultMessage(
+                Component.translatable("screenshot.success", Component.literal(event.getScreenshotFile().getName())
+                        .withStyle(ChatFormatting.UNDERLINE)
+                        .withStyle((style) -> style
+                                .withClickEvent(new ScreenshotClickEvent(event.getScreenshotFile()))
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, translatable("tooltip", "redirect_to_screenshot_manager")) {
+                                    @Nullable
+                                    @Override
+                                    public <T> T getValue(@Nonnull Action<T> action) {
+                                        return config.redirectScreenshotChatLinks.get() ? super.getValue(action) : null;
+                                    }
+                                })
+                ))
+        );
+    }
+
     public ScreenshotViewerConfig getConfig() {
         return config;
     }
@@ -147,5 +172,9 @@ public class ScreenshotViewer {
 
     public static Component translatable(String prefix, String suffix) {
         return Component.translatable(translation(prefix, suffix));
+    }
+
+    public static File getVanillaScreenshotsFolder() {
+        return new File(Minecraft.getInstance().gameDirectory.toPath().normalize().toAbsolutePath().toFile(), "screenshots");
     }
 }

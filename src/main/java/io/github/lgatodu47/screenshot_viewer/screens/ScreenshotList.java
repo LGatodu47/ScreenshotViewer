@@ -11,11 +11,10 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.IntUnaryOperator;
 
 final class ScreenshotList extends AbstractContainerEventHandler implements Renderable, NarratableEntry, ScreenshotImageList {
@@ -33,6 +32,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     private int screenshotsPerRow;
     private int spacing, childWidth, childHeight;
     private boolean invertedOrder;
+    private File screenshotsFolder;
 
     ScreenshotList(ManageScreenshotsScreen mainScreen, int x, int y, int width, int height) {
         this.mainScreen = mainScreen;
@@ -43,6 +43,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
         this.height = height;
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.screenScrollSpeed.get();
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.initialScreenshotAmountPerRow.get();
+        this.screenshotsFolder = new File(ManageScreenshotsScreen.CONFIG.screenshotsFolder.get());
         updateVariables();
     }
 
@@ -56,11 +57,16 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     void configUpdated() {
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.screenScrollSpeed.get();
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.initialScreenshotAmountPerRow.get();
+        File currentScreenshotFolder = new File(ManageScreenshotsScreen.CONFIG.screenshotsFolder.get());
+        if(!Objects.equals(screenshotsFolder, currentScreenshotFolder)) {
+            screenshotsFolder = currentScreenshotFolder;
+            return;
+        }
         if (invertedOrder != ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
             invertOrder();
-        } else {
-            updateChildren();
+            return;
         }
+        updateChildren();
     }
 
     /**
@@ -69,7 +75,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     void init() {
         clearChildren();
 
-        File[] files = new File(client.gameDirectory, "screenshots").listFiles();
+        File[] files = screenshotsFolder.listFiles();
         if (files != null) {
             updateVariables();
             final int maxXOff = screenshotsPerRow - 1;
@@ -202,7 +208,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             screenshotWidget.render(graphics, mouseX, mouseY, delta, viewportY, viewportBottom);
         }
         if (canScroll()) {
-            scrollbar.render(graphics, mouseX, mouseY, scrollY);
+            scrollbar.render(graphics, mouseX, mouseY, scrollY, scrollbarClicked);
         }
     }
 
@@ -216,6 +222,11 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     @Override
     public ScreenshotImageHolder getScreenshot(int index) {
         return screenshotWidgets.get(index);
+    }
+
+    @Override
+    public Optional<ScreenshotImageHolder> findByFileName(File file) {
+        return screenshotWidgets.stream().filter(screenshotWidget -> screenshotWidget.getScreenshotFile().equals(file)).map(ScreenshotImageHolder.class::cast).findFirst();
     }
 
     @Override
@@ -280,12 +291,12 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
         return super.mouseScrolled(mouseX, mouseY, amount);
     }
 
-    /*private boolean scrollbarClicked;
+    private boolean scrollbarClicked;
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         scrollbarClicked = false;
-        if(scrollbar.mouseClicked(mouseX, mouseY, button, scrollY)) {
+        if(canScroll() && scrollbar.mouseClicked(mouseX, mouseY, button, scrollY)) {
             scrollbarClicked = true;
             return true;
         }
@@ -311,11 +322,11 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
                 // Maximum offset from the top
                 final int leftOver = totalHeightOfTheChildrens - viewHeight;
 
-                scrollY = Math.min(leftOver, scrollY + scrollDelta);
+                scrollY = Math.min(leftOver, scrollY - scrollDelta);
             }
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-    }*/
+    }
 
     /// Random implementation methods ///
 
@@ -331,6 +342,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     private static class Scrollbar {
         private final int spacing = 2;
         private final int width = 6;
+        @SuppressWarnings("FieldCanBeLocal")
         private final int trackWidth = 2;
         private int x, height;
         private int trackX, trackY, trackHeight;
@@ -348,20 +360,20 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
         }
 
-        void render(GuiGraphics graphics, double mouseX, double mouseY, int scrollOffset) {
+        void render(GuiGraphics graphics, double mouseX, double mouseY, int scrollOffset, boolean clicked) {
             int y = scrollbarYGetter.applyAsInt(scrollOffset);
             graphics.fill(trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
-            graphics.fill(x, y, x + width, y + height, isHovered(mouseX, mouseY, y) ? 0xFF6D6D6D : 0xFF1E1E1E);
+            graphics.fill(x, y, x + width, y + height, isHovered(mouseX, mouseY, y) || clicked ? 0xFF6D6D6D : 0xFF1E1E1E);
         }
 
-        /*boolean mouseClicked(double mouseX, double mouseY, double button, int scrollOffset) {
+        boolean mouseClicked(double mouseX, double mouseY, double button, int scrollOffset) {
             return button == GLFW.GLFW_MOUSE_BUTTON_LEFT && isHovered(mouseX, mouseY, scrollbarYGetter.applyAsInt(scrollOffset));
         }
 
         int getScrollOffsetDelta(double scrollbarDelta, double totalHeightOfTheChildrens) {
             int scrollbarSpacedTrackHeight = trackHeight + 2 * spacing;
-            return MathHelper.ceil(scrollbarDelta * totalHeightOfTheChildrens / (float) scrollbarSpacedTrackHeight);
-        }*/
+            return Mth.ceil(-scrollbarDelta * totalHeightOfTheChildrens / (float) scrollbarSpacedTrackHeight);
+        }
 
         private boolean isHovered(double mouseX, double mouseY, int y) {
             return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;

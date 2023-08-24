@@ -7,6 +7,7 @@
   "client": [
     "MainMixin",
     "MinecraftMixin",
+    "ScreenMixin",
     "WindowMixin"
   ],
   "injectors": {
