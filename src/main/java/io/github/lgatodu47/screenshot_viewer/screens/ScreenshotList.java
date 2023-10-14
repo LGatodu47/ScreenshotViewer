@@ -86,7 +86,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
 
             ScreenshotWidget.Context context = ScreenshotWidget.Context.create(() -> screenshotsPerRow, screenshotWidgets::indexOf);
             for (File file : files) {
-                if (file.isFile() && file.getName().endsWith(".png")) {
+                if (file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))) {
                     ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, context, file);
                     this.screenshotWidgets.add(widget);
                     this.elements.add(widget);
