@@ -46,6 +46,7 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.LOGGER;
+import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.forEachDrawable;
 
 class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable {
     @Nullable
@@ -252,7 +253,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         private final int imgU, imgV;
 
         public Button(int x, int y, int imgU, int imgV, Text title, PressAction pressAction) {
-            super(x, y, BUTTON_SIZE, BUTTON_SIZE, 0, 0, 0, ButtonWidget.WIDGETS_TEXTURE, 128, 128, pressAction, title);
+            super(x, y, BUTTON_SIZE, BUTTON_SIZE, ManageScreenshotsScreen.DEFAULT_BUTTON_TEXTURES, pressAction, title);
             this.imgU = imgU;
             this.imgV = imgV;
         }
@@ -271,7 +272,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void renderBackground(DrawContext context) {
+        public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
             context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
         }
     }
@@ -280,7 +281,6 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         private final String previousName;
         private final Consumer<String> newNameConsumer;
         private final Runnable closeAction;
-        private TextFieldWidget textField;
         private ButtonWidget doneBtn;
 
         private RenameScreen(String previousName, Consumer<String> newNameConsumer, Runnable closeAction) {
@@ -291,16 +291,9 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void tick() {
-            if (textField != null) {
-                textField.tick();
-            }
-        }
-
-        @Override
         protected void init() {
             super.init();
-            this.textField = new TextFieldWidget(this.textRenderer, (this.width - 150) / 2, (this.height - 20) / 2, 150, 20, ScreenshotViewer.translatable("screen", "field.screenshot_name"));
+            TextFieldWidget textField = new TextFieldWidget(this.textRenderer, (this.width - 150) / 2, (this.height - 20) / 2, 150, 20, ScreenshotViewer.translatable("screen", "field.screenshot_name"));
             textField.setMaxLength(128);
             textField.setTextPredicate(RenameScreen::checkInvalidCharacters);
             this.doneBtn = ButtonWidget.builder(ScreenTexts.DONE, btn -> {
@@ -319,7 +312,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         public void render(DrawContext context, int mouseX, int mouseY, float delta) {
             context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
             context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
-            super.render(context, mouseX, mouseY, delta);
+            forEachDrawable(this, drawable -> drawable.render(context, mouseX, mouseY, delta));
         }
 
         @Override

@@ -61,10 +61,6 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         setY(baseY - scrollY);
     }
 
-    void setHeight(int height) {
-        this.height = height;
-    }
-
     void updateScreenshotFile(File screenshotFile) {
         this.screenshotFile = screenshotFile;
         if (texture != null) {

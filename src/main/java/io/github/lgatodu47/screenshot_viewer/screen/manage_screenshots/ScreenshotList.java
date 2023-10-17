@@ -273,13 +273,13 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (canScroll()) {
-            final int scrollSpeed = Math.abs((int) (scrollSpeedFactor * (6.0f / screenshotsPerRow) * amount));
-            if (scrollY > 0 && amount > 0) {
+            final int scrollSpeed = Math.abs((int) (scrollSpeedFactor * (6.0f / screenshotsPerRow) * verticalAmount));
+            if (scrollY > 0 && verticalAmount > 0) {
                 scrollY = Math.max(0, scrollY - scrollSpeed);
             }
-            if (canScrollDown() && amount < 0) {
+            if (canScrollDown() && verticalAmount < 0) {
                 final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
                 final int viewHeight = height - 2 * spacing;
                 // Maximum offset from the top
@@ -289,7 +289,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             }
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, amount);
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     private boolean scrollbarClicked;

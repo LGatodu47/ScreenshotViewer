@@ -11,6 +11,8 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
+import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.forEachDrawable;
+
 class EnlargedScreenshotScreen extends Screen {
     @Nullable
     private ScreenshotImageHolder showing;
@@ -84,7 +86,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(DrawContext context) {
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
@@ -106,19 +108,19 @@ class EnlargedScreenshotScreen extends Screen {
                 RenderSystem.disableBlend();
             }
 
-            super.render(context, mouseX, mouseY, delta);
+            forEachDrawable(this, drawable -> drawable.render(context, mouseX, mouseY, delta));
         }
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        if (amount > 0) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (verticalAmount > 0) {
             nextScreenshot();
         }
-        if (amount < 0) {
+        if (verticalAmount < 0) {
             previousScreenshot();
         }
-        return super.mouseScrolled(mouseX, mouseY, amount);
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override
