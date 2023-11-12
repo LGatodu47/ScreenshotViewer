@@ -17,7 +17,7 @@
   "screen.screenshot_viewer.delete_prompt.message": "Ви впевнені, що бажаєте видалити цей знімок екрана?",
   "screen.screenshot_viewer.rename_screenshot": "Уведіть нову назву для цього знімка екрана:",
   "screen.screenshot_viewer.field.screenshot_name": "Нова назва знімка екрана",
-  "tooltip.screenshot_viewer.redirect_to_screenshot_manager": "Відкрити знімок у панелі керування знімками екрана...",
+  "tooltip.screenshot_viewer.redirect_to_screenshot_manager": "Відкрити у панелі керування знімками екрана...",
 
   "screen.screenshot_viewer.config": "Налаштування Screenshot Viewer",
   "config.screenshot_viewer.show_button_in_game_pause_menu": "Показувати кнопку у меню павзи",
