@@ -29,4 +29,5 @@ public class ScreenshotViewerOptions {
     public static final ConfigOption<Integer> PAUSE_MENU_BUTTON_OFFSET = BUILDER.createInt("pause_menu_button_offset", 4, 0, Integer.MAX_VALUE);
     public static final ConfigOption<File> SCREENSHOTS_FOLDER = BUILDER.put(new FileOption("screenshots_folder", ScreenshotViewer::getVanillaScreenshotsFolder));
     public static final ConfigOption<Boolean> REDIRECT_SCREENSHOT_CHAT_LINKS = BUILDER.createBool("redirect_screenshot_chat_links", false);
+    public static final ConfigOption<Boolean> INVERT_SCROLL = BUILDER.createBool("invert_scroll", false);
 }

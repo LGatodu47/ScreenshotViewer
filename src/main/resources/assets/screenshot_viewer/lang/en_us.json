@@ -46,6 +46,8 @@
   "config.screenshot_viewer.screenshots_folder.desc": "The path to the folder containing the screenshots images that will be displayed in the screen.",
   "config.screenshot_viewer.redirect_screenshot_chat_links": "Redirect Screenshot Chat Links",
   "config.screenshot_viewer.redirect_screenshot_chat_links.desc": "If enabled, clicking on the link printed in the chat when taking a screenshot will open it directly in the screenshot manager.",
+  "config.screenshot_viewer.invert_scroll": "Invert Scroll",
+  "config.screenshot_viewer.invert_scroll.desc": "If enabled, it inverts the scroll during zoom in the Screenshot Viewer menu",
 
   "key.screenshot_viewer.open_screenshots_screen": "Open Screenshot Manager"
 }

@@ -46,6 +46,8 @@
   "config.screenshot_viewer.screenshots_folder.desc": "The path to the folder containing the screenshots images that will be displayed in the screen.",
   "config.screenshot_viewer.redirect_screenshot_chat_links": "Rediriger les liens de capture d'écran du tchat",
   "config.screenshot_viewer.redirect_screenshot_chat_links.desc": "Si l'option est active, lorsque vous cliquerez sur le lien affiché dans le tchat après avoir pris une capture d'écran, le gestionnaire s'ouvrira et sélectionnera celle-ci.",
+  "config.screenshot_viewer.invert_scroll": "Inversion du scroll",
+  "config.screenshot_viewer.invert_scroll.desc": "Si activé, le scrolling du menu des screenshots sera inversé.",
 
   "key.screenshot_viewer.open_screenshots_screen": "Ouvrir le Gestionnaire de Captures d'écran"
 }
