@@ -11,10 +11,7 @@ import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
@@ -79,6 +76,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
 
         File[] files = screenshotsFolder.listFiles();
         if (files != null) {
+            Arrays.sort(files);
             updateVariables();
             final int maxXOff = screenshotsPerRow - 1;
 

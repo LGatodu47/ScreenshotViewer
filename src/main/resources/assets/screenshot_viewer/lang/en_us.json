@@ -46,6 +46,11 @@
   "config.screenshot_viewer.screenshots_folder.desc": "The path to the folder containing the screenshots images that will be displayed in the screen.",
   "config.screenshot_viewer.redirect_screenshot_chat_links": "Redirect Screenshot Chat Links",
   "config.screenshot_viewer.redirect_screenshot_chat_links.desc": "If enabled, clicking on the link printed in the chat when taking a screenshot will open it directly in the screenshot manager.",
+  "config.screenshot_viewer.screenshot_element_text_visibility": "Screenshot Names Visibility",
+  "config.screenshot_viewer.screenshot_element_text_visibility.desc": "The visibility state of the screenshots names.",
+
+  "config_category.screenshot_viewer.ingame": "Screenshot Viewer Hooks",
+  "config_category.screenshot_viewer.ingui": "Screenshot Manager Customization",
 
   "key.screenshot_viewer.open_screenshots_screen": "Open Screenshot Manager"
 }

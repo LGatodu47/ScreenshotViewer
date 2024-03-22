@@ -27,7 +27,7 @@
   "config.screenshot_viewer.enable_screenshot_enlargement_animation": "Animer l'agrandissement des captures d'écran",
   "config.screenshot_viewer.enable_screenshot_enlargement_animation.desc": "Si une animation devrait avoir lieu quand la capture d'écran est cliquée pour être agrandie.",
   "config.screenshot_viewer.prompt_when_deleting_screenshot": "Demander pour supprimer les captures d'écran",
-  "config.screenshot_viewer.prompt_when_deleting_screenshot.desc": "Vous averti lorsque vous tentez de supprimer une capture d'écran.",
+  "config.screenshot_viewer.prompt_when_deleting_screenshot.desc": "Vous avertit lorsque vous tentez de supprimer une capture d'écran.",
   "config.screenshot_viewer.initial_screenshot_amount_per_row": "Nombre initial de captures d'écran par ligne",
   "config.screenshot_viewer.initial_screenshot_amount_per_row.desc": "Le nombre de captures d'écran à afficher par ligne lorsque l'interface est ouverte (de 2 à 8).",
   "config.screenshot_viewer.screen_scroll_speed": "Vitesse de défilage",
@@ -46,6 +46,11 @@
   "config.screenshot_viewer.screenshots_folder.desc": "The path to the folder containing the screenshots images that will be displayed in the screen.",
   "config.screenshot_viewer.redirect_screenshot_chat_links": "Rediriger les liens de capture d'écran du tchat",
   "config.screenshot_viewer.redirect_screenshot_chat_links.desc": "Si l'option est active, lorsque vous cliquerez sur le lien affiché dans le tchat après avoir pris une capture d'écran, le gestionnaire s'ouvrira et sélectionnera celle-ci.",
+  "config.screenshot_viewer.screenshot_element_text_visibility": "Visibilité des Noms de Captures",
+  "config.screenshot_viewer.screenshot_element_text_visibility.desc": "L'état de visibilité des noms des captures d'écran.",
+
+  "config_category.screenshot_viewer.ingame": "Accès au gestionnaire de captures d'écran",
+  "config_category.screenshot_viewer.ingui": "Personalisation du gestionnaire de captures d'écran",
 
   "key.screenshot_viewer.open_screenshots_screen": "Ouvrir le Gestionnaire de Captures d'écran"
 }
