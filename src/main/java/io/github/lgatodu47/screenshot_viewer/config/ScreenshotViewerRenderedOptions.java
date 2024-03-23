@@ -23,7 +23,7 @@ public class ScreenshotViewerRenderedOptions {
         BUILDER.ofInt(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_OFFSET).setCommonTranslationKey(ScreenshotViewer.translation("config", "pause_menu_button_offset")).build();
         BUILDER.option(ScreenshotViewerOptions.SCREENSHOTS_FOLDER).setWidgetFactory(FileOption::createScreenshotsDirectoryWidget).setCommonTranslationKey(ScreenshotViewer.translation("config", "screenshots_folder")).build();
         BUILDER.ofBoolean(ScreenshotViewerOptions.REDIRECT_SCREENSHOT_CHAT_LINKS).setCommonTranslationKey(ScreenshotViewer.translation("config", "redirect_screenshot_chat_links")).build();
-        BUILDER.ofBoolean(ScreenshotViewerOptions.INVERT_SCROLL).setCommonTranslationKey(ScreenshotViewer.translation("config", "invert_scroll")).build();
+        BUILDER.ofBoolean(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION).setCommonTranslationKey(ScreenshotViewer.translation("config", "invert_zoom_direction")).build();
     }
 
     public static List<RenderedConfigOption<?>> options() {

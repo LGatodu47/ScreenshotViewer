@@ -46,7 +46,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREEN_SCROLL_SPEED, 10);
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
         this.screenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewer::getVanillaScreenshotsFolder);
-        this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_SCROLL, false);
+        this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION, false);
         updateVariables();
     }
 
@@ -70,7 +70,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             invertOrder();
             return;
         }
-        this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_SCROLL, false);
+        this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION, false);
         updateChildren();
     }
 
@@ -118,25 +118,14 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
      * @param scrollAmount A value that determines the scrolling direction and intensity (value from -1.0 to 1.0).
      */
     void updateScreenshotsPerRow(double scrollAmount) {
-        if(invertedScroll) {
-            if (scrollAmount < 0) {
-                if (screenshotsPerRow < 8) {
-                    screenshotsPerRow = Math.min(8, screenshotsPerRow + 1);
-                }
-            } else if (scrollAmount > 0) {
-                if (screenshotsPerRow > 2) {
-                    screenshotsPerRow = Math.max(2, screenshotsPerRow - 1);
-                }
+        scrollAmount = invertedScroll ? -scrollAmount : scrollAmount;
+        if (scrollAmount > 0) {
+            if (screenshotsPerRow < 8) {
+                screenshotsPerRow = Math.min(8, screenshotsPerRow + 1);
             }
-        } else {
-            if (scrollAmount > 0) {
-                if (screenshotsPerRow < 8) {
-                    screenshotsPerRow = Math.min(8, screenshotsPerRow + 1);
-                }
-            } else if (scrollAmount < 0) {
-                if (screenshotsPerRow > 2) {
-                    screenshotsPerRow = Math.max(2, screenshotsPerRow - 1);
-                }
+        } else if (scrollAmount < 0) {
+            if (screenshotsPerRow > 2) {
+                screenshotsPerRow = Math.max(2, screenshotsPerRow - 1);
             }
         }
         updateChildren();
