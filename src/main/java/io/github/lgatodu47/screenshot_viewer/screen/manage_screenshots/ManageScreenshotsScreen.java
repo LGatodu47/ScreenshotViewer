@@ -1,11 +1,11 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.catconfig.CatConfig;
 import io.github.lgatodu47.catconfigmc.screen.ConfigListener;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
+import io.github.lgatodu47.screenshot_viewer.screen.IconButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerConfigScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -18,7 +18,6 @@ import net.minecraft.client.gui.tooltip.HoveredTooltipPositioner;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipPositioner;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
@@ -38,12 +37,12 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     static final CatConfig CONFIG = ScreenshotViewer.getInstance().getConfig();
     static final Logger LOGGER = LogUtils.getLogger();
 
-    static final ButtonTextures DEFAULT_BUTTON_TEXTURES = new ButtonTextures(new Identifier("widget/button"), new Identifier("widget/button_disabled"), new Identifier("widget/button_highlighted"));
-    private static final ButtonTextures CONFIG_BUTTON_TEXTURE = new ButtonTextures(new Identifier(ScreenshotViewer.MODID, "widget/config_button"), new Identifier(ScreenshotViewer.MODID, "widget/config_button_focused"));
-    private static final ButtonTextures REFRESH_BUTTON_TEXTURE = new ButtonTextures(new Identifier(ScreenshotViewer.MODID, "widget/refresh_button"), new Identifier(ScreenshotViewer.MODID, "widget/refresh_button_focused"));
-    private static final ButtonTextures ASCENDING_ORDER_BUTTON_TEXTURE = new ButtonTextures(new Identifier(ScreenshotViewer.MODID, "widget/ascending_order_button"), new Identifier(ScreenshotViewer.MODID, "widget/ascending_order_button_focused"));
-    private static final ButtonTextures DESCENDING_ORDER_BUTTON_TEXTURE = new ButtonTextures(new Identifier(ScreenshotViewer.MODID, "widget/descending_order_button"), new Identifier(ScreenshotViewer.MODID, "widget/descending_order_button_focused"));
-    private static final ButtonTextures OPEN_FOLDER_BUTTON_TEXTURE = new ButtonTextures(new Identifier(ScreenshotViewer.MODID, "widget/open_folder_button"), new Identifier(ScreenshotViewer.MODID, "widget/open_folder_button_focused"));
+    public static final ButtonTextures DEFAULT_BUTTON_TEXTURES = new ButtonTextures(new Identifier("widget/button"), new Identifier("widget/button_disabled"), new Identifier("widget/button_highlighted"));
+    private static final Identifier CONFIG_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/config");
+    private static final Identifier REFRESH_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/refresh");
+    private static final Identifier ASCENDING_ORDER_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/ascending_order");
+    private static final Identifier DESCENDING_ORDER_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/descending_order");
+    private static final Identifier OPEN_FOLDER_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/open_folder");
 
     private final Screen parent;
     private final EnlargedScreenshotScreen enlargedScreenshot;
@@ -109,7 +108,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         final int bigBtnWidth = 200;
 
         // Config Button
-        addDrawableChild(new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, CONFIG_BUTTON_TEXTURE, button -> {
+        addDrawableChild(new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, CONFIG_ICON, button -> {
             client.setScreen(new ScreenshotViewerConfigScreen(this));
         }, ScreenshotViewer.translatable("screen", "button.config"), ScreenshotViewer.translatable("screen", "button.config")).offsetTooltip());
         // Order Button
@@ -124,18 +123,18 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             }
 
             @Override
-            public @Nullable ButtonTextures getTextures() {
-                return list == null ? null : list.isInvertedOrder() ? DESCENDING_ORDER_BUTTON_TEXTURE : ASCENDING_ORDER_BUTTON_TEXTURE;
+            public @Nullable Identifier getIconTexture() {
+                return list == null ? null : list.isInvertedOrder() ? DESCENDING_ORDER_ICON : ASCENDING_ORDER_ICON;
             }
         });
         // Screenshot Folder Button
-        addDrawableChild(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, OPEN_FOLDER_BUTTON_TEXTURE, btn -> {
+        addDrawableChild(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, OPEN_FOLDER_ICON, btn -> {
             Util.getOperatingSystem().open(CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewer::getVanillaScreenshotsFolder));
         }, ScreenshotViewer.translatable("screen", "button.screenshot_folder"), ScreenshotViewer.translatable("screen", "button.screenshot_folder")));
         // Done Button
         addDrawableChild(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, ScreenTexts.DONE, button -> close()));
         // Refresh Button
-        addDrawableChild(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, REFRESH_BUTTON_TEXTURE, button -> {
+        addDrawableChild(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, REFRESH_ICON, button -> {
             list.init();
         }, ScreenshotViewer.translatable("screen", "button.refresh"), ScreenshotViewer.translatable("screen", "button.refresh")));
 
@@ -353,21 +352,23 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         @Override
+        public boolean isSelected() {
+            return isHovered();
+        }
+
+        @Override
         public void updateHoveredState(int mouseX, int mouseY) {
             this.hovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
         }
     }
 
-    private static class ExtendedTexturedButtonWidget extends TexturedButtonWidget implements CustomHoverState {
-        @Nullable
-        private final ButtonTextures texture;
+    private static class ExtendedTexturedButtonWidget extends IconButtonWidget implements CustomHoverState {
         @Nullable
         private final Text tooltip;
         private boolean offsetTooltip;
 
-        ExtendedTexturedButtonWidget(int x, int y, int width, int height, @Nullable ButtonTextures texture, PressAction pressAction, @Nullable Text tooltip, Text text) {
-            super(x, y, width, height, DEFAULT_BUTTON_TEXTURES, pressAction, text);
-            this.texture = texture;
+        ExtendedTexturedButtonWidget(int x, int y, int width, int height, @Nullable Identifier texture, PressAction pressAction, @Nullable Text tooltip, Text text) {
+            super(x, y, width, height, text, texture, pressAction);
             this.tooltip = tooltip;
             if(tooltip != null) {
                 setTooltip(Tooltip.of(tooltip));
@@ -410,20 +411,9 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             return offsetTooltip ? (screen_width, screen_height, x, y, w, h) -> positioner.getPosition(screen_width, screen_height, x, y + height, w, h) : positioner;
         }
 
-        @Nullable
-        public ButtonTextures getTextures() {
-            return texture;
-        }
-
         @Override
-        public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-            ButtonTextures textures = getTextures();
-            if(textures == null) {
-                context.fill(getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);
-            } else {
-                RenderSystem.enableDepthTest();
-                context.drawGuiTexture(textures.get(isNarratable(), isSelected()), this.getX(), this.getY(), this.width, this.height);
-            }
+        public boolean isSelected() {
+            return isHovered();
         }
 
         @Override

@@ -3,6 +3,7 @@ package io.github.lgatodu47.screenshot_viewer;
 import io.github.lgatodu47.catconfig.CatConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
+import io.github.lgatodu47.screenshot_viewer.screen.IconButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -13,13 +14,11 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.fabricmc.fabric.api.event.Event;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextIconButtonWidget;
-import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
@@ -54,7 +53,7 @@ public class ScreenshotViewer implements ClientModInitializer {
     }
 
     private static final Identifier DELAYED_PHASE = new Identifier(MODID, "delayed");
-    private static final ButtonTextures MANAGE_SCREENSHOTS_BUTTON_TEXTURE = new ButtonTextures(new Identifier(MODID, "widget/screenshots_button"), new Identifier(MODID, "widget/screenshots_button_focused"));
+    private static final Identifier SCREENSHOT_VIEWER_ICON = new Identifier(MODID, "widget/icons/screenshot_viewer");
 
     private void registerEvents() {
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
@@ -68,9 +67,9 @@ public class ScreenshotViewer implements ClientModInitializer {
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && screen instanceof GameMenuScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
                 ClickableWidget topButton = buttons.get(0);
-                buttons.add(Util.make(new TexturedButtonWidget(topButton.getX() + topButton.getWidth() + config.getOrFallback(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_OFFSET, 4), topButton.getY(), topButton.getHeight(), topButton.getHeight(), MANAGE_SCREENSHOTS_BUTTON_TEXTURE, button -> {
+                buttons.add(Util.make(new IconButtonWidget(topButton.getX() + topButton.getWidth() + config.getOrFallback(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_OFFSET, 4), topButton.getY(), topButton.getHeight(), topButton.getHeight(), translatable("screen", "manage_screenshots"), SCREENSHOT_VIEWER_ICON, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
-                }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.of(translatable("screen", "manage_screenshots")))));
+                }), btn -> btn.setTooltip(Tooltip.of(translatable("screen", "manage_screenshots")))));
             }
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_ON_TITLE_SCREEN, true) && screen instanceof TitleScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
@@ -83,9 +82,9 @@ public class ScreenshotViewer implements ClientModInitializer {
                 int y = accessibilityWidgetOpt.map(ClickableWidget::getY).orElse(screen.height / 4 + 132);
                 int width = accessibilityWidgetOpt.map(ClickableWidget::getWidth).orElse(20);
                 int height = accessibilityWidgetOpt.map(ClickableWidget::getHeight).orElse(20);
-                buttons.add(Util.make(new TexturedButtonWidget(x + width + 4, y, width, height, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, button -> {
+                buttons.add(Util.make(new IconButtonWidget(x + width + 4, y, width, height, translatable("screen", "manage_screenshots"), SCREENSHOT_VIEWER_ICON, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
-                }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.of(translatable("screen", "manage_screenshots")))));
+                }), btn -> btn.setTooltip(Tooltip.of(translatable("screen", "manage_screenshots")))));
             }
         });
         ScreenEvents.AFTER_INIT.addPhaseOrdering(Event.DEFAULT_PHASE, DELAYED_PHASE);
