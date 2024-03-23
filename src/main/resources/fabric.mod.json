@@ -29,8 +29,9 @@
   "mixins": [
     "screenshot_viewer.mixins.json"
   ],
+  "accessWidener": "screenshot_viewer.accesswidener",
   "depends": {
     "fabric": "*",
-    "minecraft": ">=1.20.2"
+    "minecraft": ">=1.20.4"
   }
 }

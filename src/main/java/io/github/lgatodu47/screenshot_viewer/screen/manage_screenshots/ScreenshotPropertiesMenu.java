@@ -258,7 +258,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+        public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
             RenderSystem.enableDepthTest();
             context.drawTexture(TEXTURE, this.getX(), this.getY(), isHovered() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
             context.drawTexture(TEXTURE, this.getX(), this.getY(), this.imgU, this.imgV, this.width, this.height, 128, 128);

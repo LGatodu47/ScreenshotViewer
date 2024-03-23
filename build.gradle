@@ -1,7 +1,7 @@
 import java.nio.file.Paths
 
 plugins {
-    id 'fabric-loom' version '1.0-SNAPSHOT'
+    id 'fabric-loom' version '1.5-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -16,6 +16,11 @@ repositories {
     maven {
         name "Mod Menu Maven Repo"
         url "https://maven.terraformersmc.com/releases"
+    }
+    maven {
+        // Nexus repository manager is broken so I'm making a local repo for CatConfigMC in this project
+        name "Local"
+        url projectDir.toPath().resolve("catconfigmc-repo")
     }
 }
 
@@ -32,6 +37,7 @@ dependencies {
     include catConfigMc
 
     implementation "ca.weblite:java-objc-bridge:1.0.0"
+    implementation 'io.github.lgatodu47:catconfig:0.3.0'
 }
 
 processResources {
@@ -41,6 +47,10 @@ processResources {
     filesMatching("fabric.mod.json") {
         expand "version": project.version
     }
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/screenshot_viewer.accesswidener")
 }
 
 def targetJavaVersion = 17

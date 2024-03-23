@@ -167,7 +167,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
     }
 
     private void renderBackground(DrawContext context, int mouseX, int mouseY, int viewportY, int viewportBottom) {
