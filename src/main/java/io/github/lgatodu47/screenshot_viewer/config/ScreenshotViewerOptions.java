@@ -29,6 +29,7 @@ public class ScreenshotViewerOptions {
     public static final ConfigOption<ScreenshotListOrder> DEFAULT_LIST_ORDER = BUILDER.createEnum("default_list_order", ScreenshotListOrder.class, ScreenshotListOrder.ASCENDING);
     public static final ConfigOption<Boolean> PROMPT_WHEN_DELETING_SCREENSHOT = BUILDER.createBool("prompt_when_deleting_screenshot", true);
     public static final ConfigOption<Boolean> ENABLE_SCREENSHOT_ENLARGEMENT_ANIMATION = BUILDER.createBool("enable_screenshot_enlargement_animation", true);
+    public static final ConfigOption<Boolean> INVERT_ZOOM_DIRECTION = BUILDER.createBool("invert_zoom_direction", false);
     public static final ConfigOption<Integer> INITIAL_SCREENSHOT_AMOUNT_PER_ROW = BUILDER.createInt("initial_screenshot_amount_per_row", 4, 2, 8);
     public static final ConfigOption<Integer> SCREEN_SCROLL_SPEED = BUILDER.createInt("screen_scroll_speed", 10, 1, 50);
     public static final ConfigOption<Integer> SCREENSHOT_ELEMENT_BACKGROUND_OPACITY = BUILDER.createInt("screenshot_element_background_opacity", 100, 0, 100);

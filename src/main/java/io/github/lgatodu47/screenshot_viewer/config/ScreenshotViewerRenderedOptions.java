@@ -18,6 +18,7 @@ public class ScreenshotViewerRenderedOptions {
         BUILDER.ofEnum(ScreenshotViewerOptions.DEFAULT_LIST_ORDER, ScreenshotListOrder.class).setCommonTranslationKey(ScreenshotViewer.translation("config", "default_list_order")).build();
         BUILDER.ofBoolean(ScreenshotViewerOptions.PROMPT_WHEN_DELETING_SCREENSHOT).setCommonTranslationKey(ScreenshotViewer.translation("config", "prompt_when_deleting_screenshot")).build();
         BUILDER.ofBoolean(ScreenshotViewerOptions.ENABLE_SCREENSHOT_ENLARGEMENT_ANIMATION).setCommonTranslationKey(ScreenshotViewer.translation("config", "enable_screenshot_enlargement_animation")).build();
+        BUILDER.ofBoolean(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION).setCommonTranslationKey(ScreenshotViewer.translation("config", "invert_zoom_direction")).build();
         BUILDER.ofInt(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW).setCommonTranslationKey(ScreenshotViewer.translation("config", "initial_screenshot_amount_per_row")).build();
         BUILDER.ofInt(ScreenshotViewerOptions.SCREEN_SCROLL_SPEED).setCommonTranslationKey(ScreenshotViewer.translation("config", "screen_scroll_speed")).build();
         BUILDER.ofInt(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_BACKGROUND_OPACITY).setCommonTranslationKey(ScreenshotViewer.translation("config", "screenshot_element_background_opacity")).build();
