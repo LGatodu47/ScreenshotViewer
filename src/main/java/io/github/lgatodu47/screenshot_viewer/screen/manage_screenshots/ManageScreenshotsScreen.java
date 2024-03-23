@@ -13,6 +13,8 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.FocusedTooltipPositioner;
+import net.minecraft.client.gui.tooltip.HoveredTooltipPositioner;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipPositioner;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -347,7 +349,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             if (!this.visible) {
                 return;
             }
-            this.renderButton(context, mouseX, mouseY, delta);
+            this.renderWidget(context, mouseX, mouseY, delta);
         }
 
         @Override
@@ -382,7 +384,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             if (!this.visible) {
                 return;
             }
-            this.renderButton(context, mouseX, mouseY, delta);
+            this.renderWidget(context, mouseX, mouseY, delta);
             applyTooltip();
         }
 
@@ -403,9 +405,9 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
             return tooltip;
         }
 
-        @Override
         protected TooltipPositioner getTooltipPositioner() {
-            return offsetTooltip ? (screen_width, screen_height, x, y, w, h) -> super.getTooltipPositioner().getPosition(screen_width, screen_height, x, y + height, w, h) : super.getTooltipPositioner();
+            TooltipPositioner positioner = isFocused() ? new FocusedTooltipPositioner(getNavigationFocus()) : HoveredTooltipPositioner.INSTANCE;
+            return offsetTooltip ? (screen_width, screen_height, x, y, w, h) -> positioner.getPosition(screen_width, screen_height, x, y + height, w, h) : positioner;
         }
 
         @Nullable
@@ -414,7 +416,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         }
 
         @Override
-        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+        public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
             ButtonTextures textures = getTextures();
             if(textures == null) {
                 context.fill(getX(), getY(), getX() + width, getY() + height, 0xFFFFFF);

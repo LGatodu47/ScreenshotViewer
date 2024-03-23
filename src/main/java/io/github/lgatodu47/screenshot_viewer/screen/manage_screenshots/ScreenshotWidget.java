@@ -2,6 +2,7 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
+import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -128,6 +129,10 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             );
             RenderSystem.disableBlend();
         }
+        VisibilityState textVisibility = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY, VisibilityState.VISIBLE);
+        if(VisibilityState.HIDDEN.equals(textVisibility) || VisibilityState.SHOW_ON_HOVER.equals(textVisibility) && !hovered) {
+            return;
+        }
         float scaleFactor = (float) (client.getWindow().getScaledHeight() / 96) / ctx.screenshotsPerRow();
         int textY = getY() + (int) (height / 1.08) - spacing;
         if (textY > viewportY && (float) textY + scaleFactor * (client.textRenderer.fontHeight) < viewportBottom) {
@@ -162,7 +167,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
     }
 
     private void renderBackground(DrawContext context, int mouseX, int mouseY, int viewportY, int viewportBottom) {

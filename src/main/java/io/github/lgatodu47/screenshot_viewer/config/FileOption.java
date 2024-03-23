@@ -4,6 +4,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import io.github.lgatodu47.catconfig.ConfigAccess;
 import io.github.lgatodu47.catconfig.ConfigOption;
+import io.github.lgatodu47.catconfig.ValueSerializationHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -13,16 +14,17 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-public record FileOption(String name, @Nullable Supplier<File> defValue) implements ConfigOption<File> {
+public record FileOption(String name, @Nullable Supplier<File> defValue, @Nullable String optCategory) implements ConfigOption<File> {
     @Override
     @Nullable
     public File defaultValue() {
@@ -30,12 +32,22 @@ public record FileOption(String name, @Nullable Supplier<File> defValue) impleme
     }
 
     @Override
-    public void write(JsonWriter writer, @NotNull File value) throws IOException {
+    public Optional<String> category() {
+        return Optional.ofNullable(optCategory);
+    }
+
+    @Override
+    public Class<File> type() {
+        return File.class;
+    }
+
+    @Override
+    public void write(JsonWriter writer, @NotNull File value, ValueSerializationHelper helper) throws IOException {
         writer.value(value.getAbsolutePath());
     }
 
     @Override
-    public File read(JsonReader reader) throws IOException {
+    public File read(JsonReader reader, ValueSerializationHelper helper) throws IOException {
         return new File(reader.nextString());
     }
 

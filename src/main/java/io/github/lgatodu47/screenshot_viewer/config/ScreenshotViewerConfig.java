@@ -5,15 +5,15 @@ import io.github.lgatodu47.catconfig.CatConfigLogger;
 import io.github.lgatodu47.catconfig.ConfigOptionAccess;
 import io.github.lgatodu47.catconfigmc.MinecraftConfigSides;
 import net.fabricmc.loader.api.FabricLoader;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 
 public class ScreenshotViewerConfig extends CatConfig {
     public ScreenshotViewerConfig() {
-        super(MinecraftConfigSides.CLIENT, "screenshot_viewer", CatConfigLogger.delegate(LogManager.getLogger("Screenshot Viewer Config")));
+        super(MinecraftConfigSides.CLIENT, "screenshot_viewer", CatConfigLogger.delegate(LoggerFactory.getLogger("Screenshot Viewer Config")));
     }
 
     @Override

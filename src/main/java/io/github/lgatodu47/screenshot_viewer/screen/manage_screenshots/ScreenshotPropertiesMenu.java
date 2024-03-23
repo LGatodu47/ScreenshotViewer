@@ -26,7 +26,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -259,7 +258,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+        public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
             RenderSystem.enableDepthTest();
             context.drawTexture(TEXTURE, this.getX(), this.getY(), isHovered() ? BUTTON_SIZE : BUTTON_SIZE * 2, 0, this.width, this.height, 128, 128);
             context.drawTexture(TEXTURE, this.getX(), this.getY(), this.imgU, this.imgV, this.width, this.height, 128, 128);
@@ -345,7 +344,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
             return DataFlavor.imageFlavor.equals(flavor);
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
             if(!isDataFlavorSupported(flavor)) {

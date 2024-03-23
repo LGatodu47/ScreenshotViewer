@@ -4,6 +4,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import io.github.lgatodu47.catconfig.ConfigAccess;
 import io.github.lgatodu47.catconfig.ConfigOption;
+import io.github.lgatodu47.catconfig.ValueSerializationHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
 import net.minecraft.client.MinecraftClient;
@@ -12,7 +13,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import org.jetbrains.annotations.NotNull;
@@ -21,32 +21,40 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Locale;
+import java.util.Optional;
 
-public record ColorOption(String name, @Nullable TextColor defaultValue) implements ConfigOption<TextColor> {
+public record ColorOption(String name, @Nullable TextColor defaultValue, @Nullable String optCategory) implements ConfigOption<TextColor> {
     @Override
-    public void write(JsonWriter writer, @NotNull TextColor value) throws IOException {
+    public Optional<String> category() {
+        return Optional.ofNullable(optCategory);
+    }
+
+    @Override
+    public Class<TextColor> type() {
+        return TextColor.class;
+    }
+
+    @Override
+    public void write(JsonWriter writer, @NotNull TextColor value, ValueSerializationHelper helper) throws IOException {
         writer.value(getHexCode(value));
     }
 
     @Override
-    public TextColor read(JsonReader reader) throws IOException {
-        return TextColor.parse(reader.nextString());
+    public TextColor read(JsonReader reader, ValueSerializationHelper helper) throws IOException {
+        return TextColor.parse(reader.nextString()).result().orElse(null);
     }
 
     public static ClickableWidget createWidget(ConfigAccess config, ConfigOption<TextColor> option) {
         ColorTextField widget = new ColorTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 60, 20, Text.empty());
         widget.setMaxLength(7);
         widget.setText(config.get(option).map(ColorOption::getHexCode).orElse("#"));
-        widget.setTextPredicate(s -> s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parse(s) != null));
+        widget.setTextPredicate(s -> s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parse(s).result().isPresent()));
         widget.setChangedListener(s -> {
             if(s.isEmpty() || s.substring(1).isEmpty()) {
                 config.put(option, null);
                 return;
             }
-            TextColor color = TextColor.parse(s);
-            if(color != null) {
-                config.put(option, color);
-            }
+            TextColor.parse(s).result().ifPresent(color -> config.put(option, color));
         });
         return widget;
     }
@@ -84,8 +92,8 @@ public record ColorOption(String name, @Nullable TextColor defaultValue) impleme
         }
 
         @Override
-        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
-            super.renderButton(context, mouseX, mouseY, delta);
+        public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+            super.renderWidget(context, mouseX, mouseY, delta);
             if(this.isVisible()) {
                 String text = getText();
                 if(!text.isEmpty()) {
