@@ -184,7 +184,19 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
             matrices.translate(0, 0, 1);
             if (childScreen == null) {
                 final int spacing = 2;
-                context.fill(x, y, x + width, y + height, 0xFF424242);
+                int backgroundColor = 0xff51493a;
+                int highlightColor = 0xff6b614c;
+                int shadowColor = 0xff373737;
+                int cornerColor = 0xff51493a;
+
+                context.fill(x, y, x+width, y+height, backgroundColor);
+                context.drawVerticalLine(x, y, y + height-1, highlightColor); // left
+                context.drawHorizontalLine(x, x+width-2, y, highlightColor); // top
+                context.drawHorizontalLine(x+1, x+width-1, y+height-1, shadowColor); // bottom
+                context.drawVerticalLine(x+width-1, y, y + height, shadowColor); // right
+                context.fill(x, y+height-1, x, y+height, cornerColor);
+                context.fill(x+width-1, y, x+width, y, cornerColor);
+
                 context.drawTextWithShadow(mcSupplier.get().textRenderer, fileName, x + spacing, y + spacing, 0xFFFFFFFF);
                 for (ClickableWidget widget : buttons) {
                     widget.render(context, mouseX, mouseY, delta);
