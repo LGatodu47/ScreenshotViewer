@@ -2,7 +2,7 @@
   "modmenu.summaryTranslation.screenshot_viewer": "Экран сурәтегезне уенда карагыз һәм җитәкләгез.",
   "modmenu.descriptionTranslation.screenshot_viewer": "Сезгә Сезнең экран сурәтен уенда карарга һәм җитәкләргә рөхсәт итә торган мод.",
   "screen.screenshot_viewer.manage_screenshots": "Экран сурәтләрен җитәкләү...",
-  "screen.screenshot_viewer.screenshot_manager.zoom": "Зурайту шарты (CTRL тотыгыз)",
+  "screen.screenshot_viewer.screenshot_manager.zoom": "Зурайту (CTRL тотыгыз)",
   "screen.screenshot_viewer.screenshot_manager.no_screenshots": "Сездә экран сурәтләре дә юк, ахрысы!",
   "screen.screenshot_viewer.button.refresh": "Экран сурәтләрен яңарту",
   "screen.screenshot_viewer.button.config": "Көйләү...",
