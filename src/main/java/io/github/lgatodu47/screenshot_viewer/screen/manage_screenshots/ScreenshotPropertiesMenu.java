@@ -184,7 +184,33 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
             matrices.translate(0, 0, 1);
             if (childScreen == null) {
                 final int spacing = 2;
-                context.fill(x, y, x + width, y + height, 0xFF424242);
+                Identifier backgroundTexture = new Identifier(
+                        ScreenshotViewer.MODID, "textures/gui/screenshot_properties_background.png");
+
+                //corners
+                context.drawTexture(backgroundTexture, x, y, 0, 0,
+                        2, 2, 8, 8);
+                context.drawTexture(backgroundTexture, x+width-2, y, 6, 0,
+                        2, 2, 8, 8);
+                context.drawTexture(backgroundTexture, x, y+height-2, 0, 6,
+                        2, 2, 8, 8);
+                context.drawTexture(backgroundTexture, x+width-2, y+height-2, 6, 6,
+                        2, 2, 8, 8);
+                //sides
+                context.drawTexture(backgroundTexture, x+2, y, (float) (width * 3) /2, 0,
+                        width-4, 2, width*4, 8);
+                context.drawTexture(backgroundTexture, x, y+2, 0, (float) (height * 3) /2,
+                        2, height-4, 8, height*4);
+                context.drawTexture(backgroundTexture, x+2, y+height-2, (float) (width * 3) /2, 6,
+                        width-4, 2, width*4, 8);
+                context.drawTexture(backgroundTexture, x+width-2, y+2, 6, (float) (height * 3) /2,
+                        2, height-4, 8, height*4);
+                //center
+                context.drawTexture(backgroundTexture, x+2, y+2,
+                        (float) (width * 3) /2, (float) (height * 3) /2,
+                        width-4, height-4,
+                        width*4, height*4);
+
                 context.drawTextWithShadow(mcSupplier.get().textRenderer, fileName, x + spacing, y + spacing, 0xFFFFFFFF);
                 for (ClickableWidget widget : buttons) {
                     widget.render(context, mouseX, mouseY, delta);
