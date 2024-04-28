@@ -101,6 +101,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         renderBackground(context, mouseX, mouseY, viewportY, viewportBottom);
         final int spacing = 2;
 
+        VisibilityState textVisibility = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY, VisibilityState.VISIBLE);
         NativeImageBackedTexture image = texture();
         if (image != null && image.getImage() != null) {
             RenderSystem.setShader(GameRenderer::getPositionTexProgram);
@@ -108,7 +109,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             RenderSystem.setShaderTexture(0, image.getGlId());
             RenderSystem.enableBlend();
             int renderY = Math.max(getY() + spacing, viewportY);
-            int imgHeight = (int) (height / 1.08 - spacing * 3);
+            int imgHeight = (int) (height / (VisibilityState.HIDDEN.equals(textVisibility) ? 1 : 1.08) - spacing * 3);
             int topOffset = Math.max(0, viewportY - getY() - spacing);
             int bottomOffset = Math.max(0, getY() + spacing + imgHeight - viewportBottom);
             int topV = topOffset * image.getImage().getHeight() / imgHeight;
@@ -129,7 +130,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             );
             RenderSystem.disableBlend();
         }
-        VisibilityState textVisibility = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY, VisibilityState.VISIBLE);
+
         if(VisibilityState.HIDDEN.equals(textVisibility) || VisibilityState.SHOW_ON_HOVER.equals(textVisibility) && !hovered) {
             return;
         }

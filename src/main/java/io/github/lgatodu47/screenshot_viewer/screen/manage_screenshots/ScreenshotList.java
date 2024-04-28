@@ -3,6 +3,7 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotListOrder;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
+import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -29,8 +30,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     private int scrollSpeedFactor;
     private int screenshotsPerRow;
     private int spacing, childWidth, childHeight;
-    private boolean invertedOrder;
-    private boolean invertedScroll;
+    private boolean invertedOrder, invertedScroll, namesHidden;
     private File screenshotsFolder;
 
     ScreenshotList(ManageScreenshotsScreen mainScreen, int x, int y, int width, int height) {
@@ -44,6 +44,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
         this.screenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewer::getVanillaScreenshotsFolder);
         this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION, false);
+        this.namesHidden = ManageScreenshotsScreen.CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY).filter(VisibilityState.HIDDEN::equals).isPresent();
         updateVariables();
     }
 
@@ -57,6 +58,8 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     void onConfigUpdate() {
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREEN_SCROLL_SPEED, 10);
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
+        this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION, false);
+        this.namesHidden = ManageScreenshotsScreen.CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY).filter(VisibilityState.HIDDEN::equals).isPresent();
         File currentScreenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewer::getVanillaScreenshotsFolder);
         if(screenshotsFolder != currentScreenshotsFolder) {
             screenshotsFolder = currentScreenshotsFolder;
@@ -67,7 +70,6 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             invertOrder();
             return;
         }
-        this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION, false);
         updateChildren();
     }
 
@@ -174,7 +176,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         final int scrollbarSpacing = 2;
         spacing = 4;
         childWidth = (width - (screenshotsPerRow + 1) * spacing - scrollbarWidth - scrollbarSpacing) / screenshotsPerRow;
-        childHeight = (int) (1.08 * childWidth / windowAspect);
+        childHeight = (int) ((namesHidden ? 1 : 1.08) * childWidth / windowAspect);
     }
 
     private void clearChildren() {
