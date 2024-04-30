@@ -4,7 +4,7 @@ import io.github.lgatodu47.catconfig.ConfigOption;
 import io.github.lgatodu47.catconfig.ConfigOptionAccess;
 import io.github.lgatodu47.catconfig.ConfigOptionBuilder;
 import io.github.lgatodu47.catconfigmc.MinecraftConfigSides;
-import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
+import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import net.minecraft.text.TextColor;
 
 import java.io.File;
@@ -25,10 +25,11 @@ public class ScreenshotViewerOptions {
     static {
         BUILDER.inCategory("ingui");
     }
-    public static final ConfigOption<File> SCREENSHOTS_FOLDER = BUILDER.put(new FileOption("screenshots_folder", ScreenshotViewer::getVanillaScreenshotsFolder, "ingui"));
+    public static final ConfigOption<File> SCREENSHOTS_FOLDER = BUILDER.put(new FileOption("screenshots_folder", ScreenshotViewerUtils::getVanillaScreenshotsFolder, "ingui"));
     public static final ConfigOption<ScreenshotListOrder> DEFAULT_LIST_ORDER = BUILDER.createEnum("default_list_order", ScreenshotListOrder.class, ScreenshotListOrder.ASCENDING);
     public static final ConfigOption<Boolean> PROMPT_WHEN_DELETING_SCREENSHOT = BUILDER.createBool("prompt_when_deleting_screenshot", true);
     public static final ConfigOption<Boolean> ENABLE_SCREENSHOT_ENLARGEMENT_ANIMATION = BUILDER.createBool("enable_screenshot_enlargement_animation", true);
+    public static final ConfigOption<Boolean> DISPLAY_HINT_TOOLTIP = BUILDER.createBool("display_hint_tooltip", true);
     public static final ConfigOption<Boolean> INVERT_ZOOM_DIRECTION = BUILDER.createBool("invert_zoom_direction", false);
     public static final ConfigOption<Integer> INITIAL_SCREENSHOT_AMOUNT_PER_ROW = BUILDER.createInt("initial_screenshot_amount_per_row", 4, 2, 8);
     public static final ConfigOption<Integer> SCREEN_SCROLL_SPEED = BUILDER.createInt("screen_scroll_speed", 10, 1, 50);

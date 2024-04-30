@@ -21,7 +21,7 @@ public class MainMixin {
      */
     @Inject(method = "main", at = @At("HEAD"), remap = false)
     private static void screenshot_viewer$inject_main(String[] args, CallbackInfo ci) {
-        if(!System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac")) {
+        if(!System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac") && !System.getProperties().containsKey("screenshot_viewer.debug.disable_headless_hook")) {
             System.out.println("Screenshot Viewer sets 'java.awt.headless' to false!");
             System.setProperty("java.awt.headless", "false");
         }

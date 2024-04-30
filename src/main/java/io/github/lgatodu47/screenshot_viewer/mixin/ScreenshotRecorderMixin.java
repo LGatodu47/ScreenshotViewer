@@ -3,6 +3,7 @@ package io.github.lgatodu47.screenshot_viewer.mixin;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotClickEvent;
+import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.ScreenshotRecorder;
@@ -31,7 +32,7 @@ public class ScreenshotRecorderMixin {
         }
         mutable.styled(style -> style
                 .withClickEvent(new ScreenshotClickEvent(new File(text.getStyle().getClickEvent().getValue())))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, ScreenshotViewer.translatable("tooltip", "redirect_to_screenshot_manager")) {
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, ScreenshotViewerTexts.REDIRECT_TO_SCREENSHOT_MANAGER) {
                     @Nullable
                     @Override
                     public <T> T getValue(Action<T> action) {

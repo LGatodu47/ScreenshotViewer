@@ -3,7 +3,7 @@
   "id": "screenshot_viewer",
   "version": "${version}",
   "name": "Screenshot Viewer",
-  "description": "A mod that allows you to see and manage your screenshots in game!",
+  "description": "A mod that allows you to see and manage (through right-clicking) your screenshots in game!",
   "authors": [
     "LGatodu47"
   ],

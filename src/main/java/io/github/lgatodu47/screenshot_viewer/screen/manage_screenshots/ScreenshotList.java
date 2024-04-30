@@ -1,9 +1,10 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
-import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
+import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotListOrder;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
+import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -16,7 +17,7 @@ import java.util.*;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
-final class ScreenshotList extends AbstractParentElement implements Drawable, Selectable, ScreenshotImageList {
+final class ScreenshotList extends AbstractParentElement implements Drawable, Selectable, ScreenshotImageList, ScreenshotWidget.Context {
     private final ManageScreenshotsScreen mainScreen;
     private final MinecraftClient client;
     private final int x, y;
@@ -42,7 +43,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         this.height = height;
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREEN_SCROLL_SPEED, 10);
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
-        this.screenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewer::getVanillaScreenshotsFolder);
+        this.screenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewerUtils::getVanillaScreenshotsFolder);
         this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION, false);
         this.namesHidden = ManageScreenshotsScreen.CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY).filter(VisibilityState.HIDDEN::equals).isPresent();
         updateVariables();
@@ -60,7 +61,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
         this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION, false);
         this.namesHidden = ManageScreenshotsScreen.CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY).filter(VisibilityState.HIDDEN::equals).isPresent();
-        File currentScreenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewer::getVanillaScreenshotsFolder);
+        File currentScreenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewerUtils::getVanillaScreenshotsFolder);
         if(screenshotsFolder != currentScreenshotsFolder) {
             screenshotsFolder = currentScreenshotsFolder;
             init();
@@ -70,7 +71,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             invertOrder();
             return;
         }
-        updateChildren();
+        updateChildren(true);
     }
 
     /**
@@ -89,10 +90,9 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             int childY = y + spacing;
             int xOff = 0;
 
-            ScreenshotWidget.Context context = ScreenshotWidget.Context.create(() -> screenshotsPerRow, screenshotWidgets::indexOf);
             for (File file : files) {
                 if (file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))) {
-                    ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, context, file);
+                    ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, this, file);
                     this.screenshotWidgets.add(widget);
                     this.elements.add(widget);
 
@@ -128,13 +128,13 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
                 screenshotsPerRow = Math.max(2, screenshotsPerRow - 1);
             }
         }
-        updateChildren();
+        updateChildren(false);
     }
 
     /**
      * Updates the children positions.
      */
-    void updateChildren() {
+    void updateChildren(boolean configUpdated) {
         scrollY = 0;
         updateVariables();
         final int maxXOff = screenshotsPerRow - 1;
@@ -148,6 +148,9 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             widget.updateBaseY(childY);
             widget.setWidth(childWidth);
             widget.setHeight(childHeight);
+            if(configUpdated) {
+                widget.onConfigUpdate();
+            }
 
             if (xOff == maxXOff) {
                 xOff = 0;
@@ -161,10 +164,12 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         scrollbar.repositionScrollbar(x, y, width, height, spacing, getTotalHeightOfChildren());
     }
 
-    void removeEntry(ScreenshotWidget widget) {
-        screenshotWidgets.remove(widget);
-        elements.remove(widget);
-        updateChildren();
+    List<ScreenshotWidget> deletionList() {
+        return mainScreen.isFastDeleteToggled() ? screenshotWidgets.stream().filter(ScreenshotWidget::isSelectedForDeletion).toList() : List.of();
+    }
+
+    void resetDeleteSelection() {
+        screenshotWidgets.forEach(ScreenshotWidget::deselectForDeletion);
     }
 
     /**
@@ -199,7 +204,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     void render(DrawContext context, int mouseX, int mouseY, float delta, boolean updateHoverState) {
         context.fill(x, y, x + width, y + height, ColorHelper.Argb.getArgb((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
-            context.drawCenteredTextWithShadow(client.textRenderer, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
+            context.drawCenteredTextWithShadow(client.textRenderer, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }
         for (ScreenshotWidget screenshotWidget : screenshotWidgets) {
             screenshotWidget.updateY(scrollY);
@@ -213,7 +218,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             screenshotWidget.render(context, mouseX, mouseY, delta, viewportY, viewportBottom);
         }
         if (canScroll()) {
-            scrollbar.render(context, mouseX, mouseY, scrollY, scrollbarClicked);
+            scrollbar.render(context, mouseX, mouseY, scrollY, updateHoverState, scrollbarClicked);
         }
     }
 
@@ -239,13 +244,32 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         return screenshotWidgets.size();
     }
 
+    /// ScreenshotWidget.Context implementations ///
+
+    @Override
+    public int screenshotsPerRow() {
+        return screenshotsPerRow;
+    }
+
+    @Override
+    public int currentIndex(ScreenshotWidget widget) {
+        return this.screenshotWidgets.indexOf(widget);
+    }
+
+    @Override
+    public void removeEntry(ScreenshotWidget widget) {
+        screenshotWidgets.remove(widget);
+        elements.remove(widget);
+        updateChildren(false);
+    }
+
     /// List order ///
 
     void invertOrder() {
         Collections.reverse(screenshotWidgets);
         invertedOrder = !invertedOrder;
         int previousScrollY = scrollY;
-        updateChildren();
+        updateChildren(false);
         scrollY = previousScrollY;
     }
 
@@ -333,6 +357,11 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return screenshotWidgets.stream().anyMatch(widget -> widget.keyPressed(keyCode, scanCode, modifiers));
+    }
+
     /// Random implementation methods ///
 
     @Override
@@ -365,10 +394,10 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
         }
 
-        void render(DrawContext context, double mouseX, double mouseY, int scrollOffset, boolean clicked) {
+        void render(DrawContext context, double mouseX, double mouseY, int scrollOffset, boolean updateHoverState, boolean clicked) {
             int y = scrollbarYGetter.applyAsInt(scrollOffset);
             context.fill(trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
-            context.fill(x, y, x + width, y + height, isHovered(mouseX, mouseY, y) || clicked ? 0xFF6D6D6D : 0xFF1E1E1E);
+            context.fill(x, y, x + width, y + height, clicked ? 0xFFFFFFFF : (isHovered(mouseX, mouseY, y) && updateHoverState) ? 0xFF6D6D6D : 0xFF1E1E1E);
         }
 
         boolean mouseClicked(double mouseX, double mouseY, double button, int scrollOffset) {
