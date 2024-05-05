@@ -2,6 +2,7 @@ package io.github.lgatodu47.screenshot_viewer;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
+import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
 import net.minecraft.client.MinecraftClient;
@@ -14,6 +15,7 @@ import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.gui.tooltip.TooltipPositioner;
 import net.minecraft.client.render.*;
+import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
@@ -41,6 +43,7 @@ public class ScreenshotViewerUtils {
     private static final Logger LOGGER = LogUtils.getLogger();
     @Nullable
     private static final Clipboard AWT_CLIPBOARD = tryGetAWTClipboard();
+    private static final SystemToast.Type COPY_SCREENSHOT = new SystemToast.Type(3000);
 
     public static File getVanillaScreenshotsFolder() {
         return new File(MinecraftClient.getInstance().runDirectory, "screenshots");
@@ -84,14 +87,22 @@ public class ScreenshotViewerUtils {
         }
         if(AWT_CLIPBOARD != null && screenshotFile.exists()) {
             CompletableFuture.runAsync(() -> {
+                Text toastText;
                 try {
                     BufferedImage img = ImageIO.read(screenshotFile);
                     BufferedImage rgbImg = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
                     rgbImg.createGraphics().drawImage(img, 0, 0, img.getWidth(), img.getHeight(), null);
                     ImageTransferable imageTransferable = new ImageTransferable(rgbImg);
                     AWT_CLIPBOARD.setContents(imageTransferable, null);
+                    toastText = ScreenshotViewerTexts.TOAST_COPY_SUCCESS;
                 } catch (Throwable t) {
                     LOGGER.error("Failed to copy screenshot image to clipboard!", t);
+                    toastText = ScreenshotViewerTexts.translatable("toast", "copy_fail", t.getClass().getSimpleName());
+                }
+
+                MinecraftClient client = MinecraftClient.getInstance();
+                if(client != null) {
+                    SystemToast.show(client.getToastManager(), COPY_SCREENSHOT, toastText, Text.literal(screenshotFile.getName()));
                 }
             }, Util.getMainWorkerExecutor());
         }

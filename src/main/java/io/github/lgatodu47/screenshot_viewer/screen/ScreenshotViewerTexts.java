@@ -29,8 +29,10 @@ public class ScreenshotViewerTexts {
     public static final Text SCREENSHOT_NAME_INPUT = translatable("screen", "field.screenshot_name");
     public static final Text REDIRECT_TO_SCREENSHOT_MANAGER = translatable("screen", "redirect_to_screenshot_manager");
 
-    public static MutableText translatable(String prefix, String suffix) {
-        return Text.translatable(translation(prefix, suffix));
+    public static final Text TOAST_COPY_SUCCESS = translatable("toast", "copy_success");
+
+    public static MutableText translatable(String prefix, String suffix, Object... args) {
+        return Text.translatable(translation(prefix, suffix), args);
     }
 
     public static String translation(String prefix, String suffix) {

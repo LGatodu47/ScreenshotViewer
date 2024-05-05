@@ -57,9 +57,14 @@
   "config.screenshot_viewer.invert_zoom_direction.desc": "If enabled, it inverts the scroll direction during zoom in the Screenshot Viewer menu",
   "config.screenshot_viewer.display_hint_tooltip": "Display Hint Tooltip",
   "config.screenshot_viewer.display_hint_tooltip.desc": "Controls whether a tooltip giving useful info should appear when hovering a screenshot for a prolonged period.",
+  "config.screenshot_viewer.render_wide_properties_button": "Render Wide Properties Button",
+  "config.screenshot_viewer.render_wide_properties_button.desc": "Whether the properties buttons should be rendered wide or square.",
 
   "config_category.screenshot_viewer.ingame": "Screenshot Viewer Hooks",
   "config_category.screenshot_viewer.ingui": "Screenshot Manager Customization",
+
+  "toast.screenshot_viewer.copy_success": "Successfully copied screenshot!",
+  "toast.screenshot_viewer.copy_fail": "Failed to copy screenshot: %s",
 
   "key.screenshot_viewer.open_screenshots_screen": "Open Screenshot Manager"
 }
