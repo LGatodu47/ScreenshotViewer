@@ -41,20 +41,23 @@ public record ColorOption(String name, @Nullable TextColor defaultValue, @Nullab
 
     @Override
     public TextColor read(JsonReader reader, ValueSerializationHelper helper) throws IOException {
-        return TextColor.parse(reader.nextString()).result().orElse(null);
+        return TextColor.parse(reader.nextString());
     }
 
     public static ClickableWidget createWidget(ConfigAccess config, ConfigOption<TextColor> option) {
         ColorTextField widget = new ColorTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 60, 20, Text.empty());
         widget.setMaxLength(7);
         widget.setText(config.get(option).map(ColorOption::getHexCode).orElse("#"));
-        widget.setTextPredicate(s -> s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parse(s).result().isPresent()));
+        widget.setTextPredicate(s -> s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parse(s) != null));
         widget.setChangedListener(s -> {
             if(s.isEmpty() || s.substring(1).isEmpty()) {
                 config.put(option, null);
                 return;
             }
-            TextColor.parse(s).result().ifPresent(color -> config.put(option, color));
+            TextColor color = TextColor.parse(s);
+            if(color != null) {
+                config.put(option, color);
+            }
         });
         return widget;
     }
@@ -92,8 +95,8 @@ public record ColorOption(String name, @Nullable TextColor defaultValue, @Nullab
         }
 
         @Override
-        public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-            super.renderWidget(context, mouseX, mouseY, delta);
+        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+            super.renderButton(context, mouseX, mouseY, delta);
             if(this.isVisible()) {
                 String text = getText();
                 if(!text.isEmpty()) {

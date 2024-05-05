@@ -11,7 +11,6 @@ import net.minecraft.client.gui.AbstractParentElement;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
@@ -26,15 +25,15 @@ import java.util.function.Supplier;
 
 class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable {
     private static final Identifier BACKGROUND_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/screenshot_properties_background.png");
-    static final Identifier OPEN_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/open_folder");
-    static final Identifier COPY_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/copy");
-    static final Identifier DELETE_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/delete");
-    static final Identifier RENAME_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/rename");
-    private static final Identifier CLOSE_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/close");
+    static final Identifier OPEN_ICON = new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/open_folder.png");
+    static final Identifier COPY_ICON = new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/copy.png");
+    static final Identifier DELETE_ICON = new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/delete.png");
+    static final Identifier RENAME_ICON = new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/rename.png");
+    private static final Identifier CLOSE_ICON = new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/close.png");
     private static final int BUTTON_SIZE = 19;
 
     private final Supplier<MinecraftClient> mcSupplier;
-    private final List<ClickableWidget> buttons = new ArrayList<>();
+    private final List<Button> buttons = new ArrayList<>();
 
     private int x, y, width, height;
     private ScreenshotImageHolder targetScreenshot;
@@ -80,7 +79,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         for (int i = 0; i < this.buttons.size(); i++) {
-            this.buttons.get(i).setDimensionsAndPosition(width - 2 * spacing, BUTTON_SIZE, this.x + spacing, this.y + spacing * 2 + font.fontHeight + BUTTON_SIZE * i);
+            this.buttons.get(i).setDimensionsAndPosition(width - 2 * spacing, this.x + spacing, this.y + spacing * 2 + font.fontHeight + BUTTON_SIZE * i);
         }
 
         shouldRender = true;
@@ -163,16 +162,9 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
     }
 
     private static final class Button extends IconButtonWidget {
-        private static final ButtonTextures BUTTON_TEXTURES = new ButtonTextures(
-                new Identifier(ScreenshotViewer.MODID, "widget/properties_button_enabled"),
-                new Identifier(ScreenshotViewer.MODID, "widget/properties_button"),
-                new Identifier(ScreenshotViewer.MODID, "widget/properties_button_hovered")
-        );
-        private static final ButtonTextures TEXTURES_FOR_WIDE = new ButtonTextures(
-                new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_enabled.png"),
-                new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button.png"),
-                new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_hovered.png")
-        );
+        private static final Identifier BUTTON_ENABLED = new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_enabled.png");
+        private static final Identifier BUTTON_DISABLED = new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button.png");
+        private static final Identifier BUTTON_HOVERED = new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_hovered.png");
 
         private boolean renderWide = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_WIDE_PROPERTIES_BUTTON, true);
 
@@ -180,29 +172,31 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
             super(0, 0, BUTTON_SIZE, BUTTON_SIZE, title, texture, pressAction);
         }
 
-        @Override
-        public void setDimensionsAndPosition(int width, int height, int x, int y) {
+        public void setDimensionsAndPosition(int width, int x, int y) {
             this.renderWide = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_WIDE_PROPERTIES_BUTTON, true);
             // provided width is for wide while current width is for squared.
-            super.setDimensionsAndPosition(renderWide ? width : getWidth(), height, x, y);
+            if(renderWide) {
+                setWidth(width);
+            }
+            setPosition(x, y);
         }
 
         @Override
-        protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+        protected void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
             context.setShaderColor(1, 1, 1, this.alpha);
             RenderSystem.enableBlend();
             RenderSystem.enableDepthTest();
-            Identifier backgroundTexture = getBackgroundTexture().get(this.active, isSelected());
+            Identifier backgroundTexture = getBackgroundTexture(this.active, isSelected());
             if (renderWide) {
                 context.drawTexture(backgroundTexture, getX(), getY(), 0, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE);
                 context.drawTexture(backgroundTexture, getX() + 1, getY(), getWidth() - 2, getHeight(), 1, 0, BUTTON_SIZE - 2, BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE);
                 context.drawTexture(backgroundTexture, getX() + getWidth() - 1, getY(), 18, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE);
             } else {
-                context.drawGuiTexture(backgroundTexture, getX(), getY(), getWidth(), getHeight());
+                context.drawTexture(backgroundTexture, getX(), getY(), 0, 0, getWidth(), getHeight(), BUTTON_SIZE, BUTTON_SIZE);
             }
             Identifier icon = getIconTexture();
             if(icon != null) {
-                context.drawGuiTexture(icon, getX(), getY(), BUTTON_SIZE, getHeight());
+                context.drawTexture(icon, getX(), getY(), 0, 0, BUTTON_SIZE, getHeight(), BUTTON_SIZE, BUTTON_SIZE);
             }
             context.setShaderColor(1, 1, 1, 1);
         }
@@ -212,9 +206,8 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
             return isHovered();
         }
 
-        @Override
-        public ButtonTextures getBackgroundTexture() {
-            return renderWide ? TEXTURES_FOR_WIDE : BUTTON_TEXTURES;
+        public Identifier getBackgroundTexture(boolean enabled, boolean focused) {
+            return !enabled ? BUTTON_DISABLED : focused ? BUTTON_HOVERED : BUTTON_ENABLED;
         }
     }
 }

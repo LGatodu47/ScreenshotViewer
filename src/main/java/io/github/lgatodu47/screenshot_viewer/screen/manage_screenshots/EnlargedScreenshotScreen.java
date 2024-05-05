@@ -115,7 +115,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderBackground(DrawContext context) {
         context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
@@ -157,14 +157,14 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double verticalAmount) {
         if (verticalAmount > 0) {
             nextScreenshot();
         }
         if (verticalAmount < 0) {
             previousScreenshot();
         }
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        return super.mouseScrolled(mouseX, mouseY, verticalAmount);
     }
 
     @Override

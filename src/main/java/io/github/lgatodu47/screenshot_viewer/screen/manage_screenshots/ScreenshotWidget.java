@@ -75,6 +75,10 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         setY(baseY - scrollY);
     }
 
+    void setHeight(int height) {
+        this.height = height;
+    }
+
     void deleteScreenshot() {
         if (screenshotFile.exists() && !screenshotFile.delete()) {
             LOGGER.error("Failed to delete 'screenshot' file at location '{}'", screenshotFile.toPath().toAbsolutePath());
@@ -166,7 +170,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
     }
 
     private void renderBackground(DrawContext context, int viewportY, int viewportBottom) {

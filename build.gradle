@@ -17,11 +17,6 @@ repositories {
         name "Mod Menu Maven Repo"
         url "https://maven.terraformersmc.com/releases"
     }
-    maven {
-        // Nexus repository manager is broken so I'm making a local repo for CatConfigMC in this project
-        name "Local"
-        url projectDir.toPath().resolve("catconfigmc-repo")
-    }
 }
 
 dependencies {

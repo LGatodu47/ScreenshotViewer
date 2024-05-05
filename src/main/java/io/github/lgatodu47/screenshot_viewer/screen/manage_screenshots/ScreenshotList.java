@@ -301,7 +301,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double verticalAmount) {
         if (canScroll()) {
             final int scrollSpeed = Math.abs((int) (scrollSpeedFactor * (6.0f / screenshotsPerRow) * verticalAmount));
             if (scrollY > 0 && verticalAmount > 0) {
@@ -317,7 +317,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             }
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        return super.mouseScrolled(mouseX, mouseY, verticalAmount);
     }
 
     private boolean scrollbarClicked;

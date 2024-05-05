@@ -37,6 +37,6 @@
   "accessWidener": "screenshot_viewer.accesswidener",
   "depends": {
     "fabric": "*",
-    "minecraft": ">=1.20.4"
+    "minecraft": ">=1.20"
   }
 }

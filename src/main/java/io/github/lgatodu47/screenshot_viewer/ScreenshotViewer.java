@@ -18,7 +18,7 @@ import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.TextIconButtonWidget;
+import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
@@ -52,7 +52,7 @@ public class ScreenshotViewer implements ClientModInitializer {
     }
 
     private static final Identifier DELAYED_PHASE = new Identifier(MODID, "delayed");
-    private static final Identifier SCREENSHOT_VIEWER_ICON = new Identifier(MODID, "widget/icons/screenshot_viewer");
+    private static final Identifier SCREENSHOT_VIEWER_ICON = new Identifier(MODID, "textures/gui/sprites/widget/icons/screenshot_viewer.png");
 
     private void registerEvents() {
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
@@ -73,8 +73,8 @@ public class ScreenshotViewer implements ClientModInitializer {
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_ON_TITLE_SCREEN, true) && screen instanceof TitleScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
                 Optional<ClickableWidget> accessibilityWidgetOpt = buttons.stream()
-                        .filter(TextIconButtonWidget.class::isInstance)
-                        .filter(widget -> widget.getMessage().equals(Text.translatable("options.accessibility")))
+                        .filter(TexturedButtonWidget.class::isInstance)
+                        .filter(widget -> widget.getMessage().equals(Text.translatable("narrator.button.accessibility")))
                         .findFirst();
 
                 int x = accessibilityWidgetOpt.map(ClickableWidget::getX).orElse(screen.width / 2 + 104);

@@ -1,15 +1,15 @@
 package io.github.lgatodu47.screenshot_viewer.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector2i;
 
 public class IconButtonWidget extends ButtonWidget {
+    private static final Vector2i DEFAULT_SIZE = new Vector2i(20, 20);
     @Nullable
     private final Identifier iconTexture;
 
@@ -23,20 +23,32 @@ public class IconButtonWidget extends ButtonWidget {
         return iconTexture;
     }
 
-    public ButtonTextures getBackgroundTexture() {
-        return ManageScreenshotsScreen.DEFAULT_BUTTON_TEXTURES;
+    public Vector2i getIconTextureSize() {
+        return DEFAULT_SIZE;
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
         context.setShaderColor(1, 1, 1, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
-        context.drawGuiTexture(getBackgroundTexture().get(this.active, isSelected()), getX(), getY(), getWidth(), getHeight());
+        context.drawNineSlicedTexture(WIDGETS_TEXTURE, getX(), getY(), getWidth(), getHeight(), 20, 4, 200, 20, 0, getTextureY());
         Identifier icon = getIconTexture();
         if(icon != null) {
-            context.drawGuiTexture(icon, getX(), getY(), getWidth(), getHeight());
+            Vector2i iconTexSize = getIconTextureSize();
+            context.drawTexture(icon, getX(), getY(), 0, 0, getWidth(), getHeight(), iconTexSize.x(), iconTexSize.y());
         }
         context.setShaderColor(1, 1, 1, 1);
+    }
+
+    protected int getTextureY() {
+        int i = 1;
+        if (!this.active) {
+            i = 0;
+        } else if (this.isSelected()) {
+            i = 2;
+        }
+
+        return 46 + i * 20;
     }
 }

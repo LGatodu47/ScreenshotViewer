@@ -2,6 +2,7 @@ package io.github.lgatodu47.screenshot_viewer;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
+import io.github.lgatodu47.screenshot_viewer.screen.CopyScreenshotToast;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
@@ -15,7 +16,6 @@ import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.gui.tooltip.TooltipPositioner;
 import net.minecraft.client.render.*;
-import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
@@ -43,7 +43,6 @@ public class ScreenshotViewerUtils {
     private static final Logger LOGGER = LogUtils.getLogger();
     @Nullable
     private static final Clipboard AWT_CLIPBOARD = tryGetAWTClipboard();
-    private static final SystemToast.Type COPY_SCREENSHOT = new SystemToast.Type(3000);
 
     public static File getVanillaScreenshotsFolder() {
         return new File(MinecraftClient.getInstance().runDirectory, "screenshots");
@@ -102,7 +101,7 @@ public class ScreenshotViewerUtils {
 
                 MinecraftClient client = MinecraftClient.getInstance();
                 if(client != null) {
-                    SystemToast.show(client.getToastManager(), COPY_SCREENSHOT, toastText, Text.literal(screenshotFile.getName()));
+                    CopyScreenshotToast.show(client.getToastManager(), toastText, Text.literal(screenshotFile.getName()), 3000L);
                 }
             }, Util.getMainWorkerExecutor());
         }
