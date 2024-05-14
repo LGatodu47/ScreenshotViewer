@@ -1,7 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer.mixin;
 
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
-import io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen;
+import io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots.ManageScreenshotsScreen;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotClickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;

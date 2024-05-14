@@ -1,6 +1,7 @@
-package io.github.lgatodu47.screenshot_viewer.screens;
+package io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots;
 
-import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
+import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
+import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -17,7 +18,7 @@ import java.io.File;
 import java.util.*;
 import java.util.function.IntUnaryOperator;
 
-final class ScreenshotList extends AbstractContainerEventHandler implements Renderable, NarratableEntry, ScreenshotImageList {
+final class ScreenshotList extends AbstractContainerEventHandler implements Renderable, NarratableEntry, ScreenshotImageList, ScreenshotWidget.Context {
     private final ManageScreenshotsScreen mainScreen;
     private final Minecraft client;
     private final int x, y;
@@ -31,7 +32,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     private int scrollSpeedFactor;
     private int screenshotsPerRow;
     private int spacing, childWidth, childHeight;
-    private boolean invertedOrder;
+    private boolean invertedOrder, invertedScroll, namesHidden;
     private File screenshotsFolder;
 
     ScreenshotList(ManageScreenshotsScreen mainScreen, int x, int y, int width, int height) {
@@ -43,7 +44,10 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
         this.height = height;
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.screenScrollSpeed.get();
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.initialScreenshotAmountPerRow.get();
+        this.invertedOrder = ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted();
         this.screenshotsFolder = new File(ManageScreenshotsScreen.CONFIG.screenshotsFolder.get());
+        this.invertedScroll = ManageScreenshotsScreen.CONFIG.invertZoomDirection.get();
+        this.namesHidden = ManageScreenshotsScreen.CONFIG.screenshotElementTextVisibility.get() == VisibilityState.HIDDEN;
         updateVariables();
     }
 
@@ -57,16 +61,19 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     void configUpdated() {
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.screenScrollSpeed.get();
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.initialScreenshotAmountPerRow.get();
+        this.invertedScroll = ManageScreenshotsScreen.CONFIG.invertZoomDirection.get();
+        this.namesHidden = ManageScreenshotsScreen.CONFIG.screenshotElementTextVisibility.get() == VisibilityState.HIDDEN;
         File currentScreenshotFolder = new File(ManageScreenshotsScreen.CONFIG.screenshotsFolder.get());
         if(!Objects.equals(screenshotsFolder, currentScreenshotFolder)) {
             screenshotsFolder = currentScreenshotFolder;
+            init();
             return;
         }
         if (invertedOrder != ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
             invertOrder();
             return;
         }
-        updateChildren();
+        updateChildren(true);
     }
 
     /**
@@ -77,6 +84,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
 
         File[] files = screenshotsFolder.listFiles();
         if (files != null) {
+            Arrays.sort(files, invertedOrder ? Comparator.reverseOrder() : Comparator.naturalOrder());
             updateVariables();
             final int maxXOff = screenshotsPerRow - 1;
 
@@ -84,10 +92,9 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             int childY = y + spacing;
             int xOff = 0;
 
-            ScreenshotWidget.Context context = ScreenshotWidget.Context.create(() -> screenshotsPerRow, screenshotWidgets::indexOf);
             for (File file : files) {
                 if (file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))) {
-                    ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, context, file);
+                    ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, this, file);
                     this.screenshotWidgets.add(widget);
                     this.elements.add(widget);
 
@@ -103,9 +110,6 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             }
         }
         scrollbar.repositionScrollbar(x, y, width, height, spacing, getTotalHeightOfChildren());
-        if (ManageScreenshotsScreen.CONFIG.defaultListOrder.get().isInverted()) {
-            invertOrder();
-        }
     }
 
     /**
@@ -114,6 +118,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
      * @param scrollAmount A value that determines the scrolling direction and intensity (value from -1.0 to 1.0).
      */
     void updateScreenshotsPerRow(double scrollAmount) {
+        scrollAmount = invertedScroll ? -scrollAmount : scrollAmount;
         if (scrollAmount > 0) {
             if (screenshotsPerRow < 8) {
                 screenshotsPerRow = Math.min(8, screenshotsPerRow + 1);
@@ -123,13 +128,13 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
                 screenshotsPerRow = Math.max(2, screenshotsPerRow - 1);
             }
         }
-        updateChildren();
+        updateChildren(false);
     }
 
     /**
      * Updates the children positions.
      */
-    void updateChildren() {
+    void updateChildren(boolean configUpdated) {
         scrollY = 0;
         updateVariables();
         final int maxXOff = screenshotsPerRow - 1;
@@ -143,6 +148,9 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             widget.updateBaseY(childY);
             widget.setWidth(childWidth);
             widget.setHeight(childHeight);
+            if(configUpdated) {
+                widget.onConfigUpdate();
+            }
 
             if (xOff == maxXOff) {
                 xOff = 0;
@@ -156,10 +164,12 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
         scrollbar.repositionScrollbar(x, y, width, height, spacing, getTotalHeightOfChildren());
     }
 
-    void removeEntry(ScreenshotWidget widget) {
-        screenshotWidgets.remove(widget);
-        elements.remove(widget);
-        updateChildren();
+    List<ScreenshotWidget> deletionList() {
+        return mainScreen.isFastDeleteToggled() ? screenshotWidgets.stream().filter(ScreenshotWidget::isSelectedForDeletion).toList() : List.of();
+    }
+
+    void resetDeleteSelection() {
+        screenshotWidgets.forEach(ScreenshotWidget::deselectForDeletion);
     }
 
     /**
@@ -171,7 +181,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
         final int scrollbarSpacing = 2;
         spacing = 4;
         childWidth = (width - (screenshotsPerRow + 1) * spacing - scrollbarWidth - scrollbarSpacing) / screenshotsPerRow;
-        childHeight = (int) (1.08 * childWidth / windowAspect);
+        childHeight = (int) ((namesHidden ? 1 : 1.08) * childWidth / windowAspect);
     }
 
     private void clearChildren() {
@@ -194,7 +204,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     void render(GuiGraphics graphics, int mouseX, int mouseY, float delta, boolean updateHoverState) {
         graphics.fill(x, y, x + width, y + height, FastColor.ARGB32.color((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
-            graphics.drawCenteredString(client.font, ScreenshotViewer.translatable("screen", "screenshot_manager.no_screenshots"), (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
+            graphics.drawCenteredString(client.font, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }
         for (ScreenshotWidget screenshotWidget : screenshotWidgets) {
             screenshotWidget.updateY(scrollY);
@@ -208,7 +218,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             screenshotWidget.render(graphics, mouseX, mouseY, delta, viewportY, viewportBottom);
         }
         if (canScroll()) {
-            scrollbar.render(graphics, mouseX, mouseY, scrollY, scrollbarClicked);
+            scrollbar.render(graphics, mouseX, mouseY, scrollY, updateHoverState, scrollbarClicked);
         }
     }
 
@@ -234,13 +244,32 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
         return screenshotWidgets.size();
     }
 
+    /// ScreenshotWidget.Context implementations ///
+
+    @Override
+    public int screenshotsPerRow() {
+        return screenshotsPerRow;
+    }
+
+    @Override
+    public int currentIndex(ScreenshotWidget widget) {
+        return this.screenshotWidgets.indexOf(widget);
+    }
+
+    @Override
+    public void removeEntry(ScreenshotWidget widget) {
+        screenshotWidgets.remove(widget);
+        elements.remove(widget);
+        updateChildren(false);
+    }
+
     /// List order ///
 
     void invertOrder() {
         Collections.reverse(screenshotWidgets);
         invertedOrder = !invertedOrder;
         int previousScrollY = scrollY;
-        updateChildren();
+        updateChildren(false);
         scrollY = previousScrollY;
     }
 
@@ -328,6 +357,11 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return screenshotWidgets.stream().anyMatch(widget -> widget.keyPressed(keyCode, scanCode, modifiers));
+    }
+
     /// Random implementation methods ///
 
     @Override
@@ -360,10 +394,10 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
         }
 
-        void render(GuiGraphics graphics, double mouseX, double mouseY, int scrollOffset, boolean clicked) {
+        void render(GuiGraphics graphics, double mouseX, double mouseY, int scrollOffset, boolean updateHoverState, boolean clicked) {
             int y = scrollbarYGetter.applyAsInt(scrollOffset);
             graphics.fill(trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
-            graphics.fill(x, y, x + width, y + height, isHovered(mouseX, mouseY, y) || clicked ? 0xFF6D6D6D : 0xFF1E1E1E);
+            graphics.fill(x, y, x + width, y + height, clicked ? 0xFFFFFFFF : (isHovered(mouseX, mouseY, y) && updateHoverState) ? 0xFF6D6D6D : 0xFF1E1E1E);
         }
 
         boolean mouseClicked(double mouseX, double mouseY, double button, int scrollOffset) {

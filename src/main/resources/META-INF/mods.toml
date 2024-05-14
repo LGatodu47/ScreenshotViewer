@@ -9,9 +9,9 @@ version="${file.jarVersion}"
 displayName="Screenshot Viewer"
 logoFile="icon.png"
 authors="LGatodu47"
-credits="Ocelot5836 for screenshot lazy loading, Wudji for zn_cn lang"
+credits="Ocelot5836, Wudji, MeDustyy, mrlulu51, Amirhan-Taipovjan-Greatest-I, akkini1, Szedann"
 displayTest="IGNORE_ALL_VERSION"
-description="A mod that allows you to see and manage your screenshots in game!"
+description="A mod that allows you to see and manage (through right-clicking) your screenshots in game!"
 
 [[dependencies.screenshot_viewer]]
 modId="forge"

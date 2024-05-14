@@ -1,7 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer.mixin;
 
 import com.mojang.blaze3d.platform.Window;
-import io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen;
+import io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots.ManageScreenshotsScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Final;

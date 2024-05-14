@@ -1,4 +1,4 @@
-package io.github.lgatodu47.screenshot_viewer.screens;
+package io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots;
 
 import java.io.File;
 import java.util.Optional;

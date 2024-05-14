@@ -1,10 +1,12 @@
 package io.github.lgatodu47.screenshot_viewer.config;
 
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
+import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import net.minecraft.network.chat.TextColor;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
+import net.minecraftforge.common.ForgeConfigSpec.EnumValue;
 import net.minecraftforge.common.ForgeConfigSpec.IntValue;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -26,6 +28,10 @@ public final class ScreenshotViewerConfig {
     public final IntValue pauseMenuButtonOffset;
     public final ConfigValue<String> screenshotsFolder;
     public final BooleanValue redirectScreenshotChatLinks;
+    public final EnumValue<VisibilityState> screenshotElementTextVisibility;
+    public final BooleanValue invertZoomDirection;
+    public final BooleanValue displayHintTooltip;
+    public final BooleanValue renderWidePropertiesButton;
 
     private ScreenshotViewerConfig(ForgeConfigSpec.Builder builder) {
         showButtonInGamePauseMenu = builder.comment("Shows a button to access screenshots directly in the pause menu.")
@@ -63,10 +69,22 @@ public final class ScreenshotViewerConfig {
                 .defineInRange("pauseMenuButtonOffset", 4, 0, Integer.MAX_VALUE);
         screenshotsFolder = builder.comment("The path to the folder containing the screenshots images that will be displayed in the screen.")
                 .translation("config.screenshot_viewer.screenshots_folder")
-                .define("screenshotsFolder", () -> ScreenshotViewer.getVanillaScreenshotsFolder().getAbsolutePath(), this::validDirectory);
+                .define("screenshotsFolder", () -> ScreenshotViewerUtils.getVanillaScreenshotsFolder().getAbsolutePath(), this::validDirectory);
         redirectScreenshotChatLinks = builder.comment("If enabled, clicking on the link printed in the chat when taking a screenshot will open it directly in the screenshot manager.")
                 .translation("config.screenshot_viewer.redirect_screenshot_chat_links")
                 .define("redirectScreenshotChatLinks", false);
+        screenshotElementTextVisibility = builder.comment("The visibility state of the screenshots names.")
+                .translation("config.screenshot_viewer.screenshot_element_text_visibility")
+                .defineEnum("screenshotElementTextVisibility", VisibilityState.VISIBLE);
+        invertZoomDirection = builder.comment("If enabled, it inverts the scroll direction during zoom in the Screenshot Viewer menu")
+                .translation("config.screenshot_viewer.invert_zoom_direction")
+                .define("invertZoomDirection", false);
+        displayHintTooltip = builder.comment("Controls whether a tooltip giving useful info should appear when hovering a screenshot for a prolonged period.")
+                .translation("config.screenshot_viewer.display_hint_tooltip")
+                .define("displayHintTooltip", true);
+        renderWidePropertiesButton = builder.comment("Whether the properties buttons should be rendered wide or square.")
+                .translation("config.screenshot_viewer.render_wide_properties_button")
+                .define("renderWidePropertiesButton", true);
     }
 
     private boolean validColorString(Object obj) {

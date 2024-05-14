@@ -3,8 +3,10 @@ package io.github.lgatodu47.screenshot_viewer;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfigListener;
-import io.github.lgatodu47.screenshot_viewer.screens.ManageScreenshotsScreen;
+import io.github.lgatodu47.screenshot_viewer.screens.IconButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotClickEvent;
+import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
+import io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots.ManageScreenshotsScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
@@ -38,7 +40,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +69,7 @@ public class ScreenshotViewer {
     }
 
     private void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        openScreenshotsScreenKey = Util.make(new KeyMapping(translation("key", "open_screenshots_screen"), KeyConflictContext.IN_GAME, InputConstants.UNKNOWN, KeyMapping.CATEGORY_MISC), event::register);
+        openScreenshotsScreenKey = Util.make(new KeyMapping(ScreenshotViewerTexts.translation("key", "open_screenshots_screen"), KeyConflictContext.IN_GAME, InputConstants.UNKNOWN, KeyMapping.CATEGORY_MISC), event::register);
     }
 
     private void onConfigReloaded(ModConfigEvent.Reloading event) {
@@ -87,7 +88,7 @@ public class ScreenshotViewer {
         }
     }
 
-    private static final ResourceLocation MANAGE_SCREENSHOTS_BUTTON_TEXTURE = new ResourceLocation(MODID, "textures/gui/screenshots_button.png");
+    private static final ResourceLocation SCREENSHOT_VIEWER_ICON = new ResourceLocation(MODID, "textures/gui/sprites/widget/icons/screenshot_viewer.png");
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onScreenPostInit(ScreenEvent.Init.Post event) {
@@ -97,9 +98,9 @@ public class ScreenshotViewer {
 
         if(config.showButtonInGamePauseMenu.get() && screen instanceof PauseScreen) {
             buttons.stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).findFirst().ifPresent(topButton -> {
-                event.addListener(Util.make(new ImageButton(topButton.getX() + topButton.getWidth() + config.pauseMenuButtonOffset.get(), topButton.getY(), topButton.getHeight(), topButton.getHeight(), 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+                event.addListener(Util.make(new IconButtonWidget(topButton.getX() + topButton.getWidth() + config.pauseMenuButtonOffset.get(), topButton.getY(), topButton.getHeight(), topButton.getHeight(), ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
-                }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.create(translatable("screen", "manage_screenshots")))));
+                }), btn -> btn.setTooltip(Tooltip.create(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
             });
         }
         if(config.showButtonOnTitleScreen.get() && screen instanceof TitleScreen) {
@@ -113,9 +114,9 @@ public class ScreenshotViewer {
             int y = accessibilityWidgetOpt.map(AbstractWidget::getY).orElse(screen.height / 4 + 132);
             int width = accessibilityWidgetOpt.map(ImageButton::getWidth).orElse(20);
             int height = accessibilityWidgetOpt.map(ImageButton::getHeight).orElse(20);
-            event.addListener(Util.make(new ImageButton(x + width + 4, y, width, height, 0, 0, 20, MANAGE_SCREENSHOTS_BUTTON_TEXTURE, 32, 64, button -> {
+            event.addListener(Util.make(new IconButtonWidget(x + width + 4, y, width, height, ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
                 client.setScreen(new ManageScreenshotsScreen(screen));
-            }, translatable("screen", "manage_screenshots")), btn -> btn.setTooltip(Tooltip.create(translatable("screen", "manage_screenshots")))));
+            }), btn -> btn.setTooltip(Tooltip.create(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
         }
     }
 
@@ -126,7 +127,7 @@ public class ScreenshotViewer {
                         .withStyle(ChatFormatting.UNDERLINE)
                         .withStyle((style) -> style
                                 .withClickEvent(new ScreenshotClickEvent(event.getScreenshotFile()))
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, translatable("tooltip", "redirect_to_screenshot_manager")) {
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, ScreenshotViewerTexts.REDIRECT_TO_SCREENSHOT_MANAGER) {
                                     @Nullable
                                     @Override
                                     public <T> T getValue(@Nonnull Action<T> action) {
@@ -164,17 +165,5 @@ public class ScreenshotViewer {
         }
 
         return instance;
-    }
-
-    public static String translation(String prefix, String suffix) {
-        return prefix + '.' + MODID + '.' + suffix;
-    }
-
-    public static Component translatable(String prefix, String suffix) {
-        return Component.translatable(translation(prefix, suffix));
-    }
-
-    public static File getVanillaScreenshotsFolder() {
-        return new File(Minecraft.getInstance().gameDirectory.toPath().normalize().toAbsolutePath().toFile(), "screenshots");
     }
 }
