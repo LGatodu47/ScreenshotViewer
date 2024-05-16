@@ -43,6 +43,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
         this.height = height;
         this.scrollSpeedFactor = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREEN_SCROLL_SPEED, 10);
         this.screenshotsPerRow = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INITIAL_SCREENSHOT_AMOUNT_PER_ROW, 4);
+        this.invertedOrder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.DEFAULT_LIST_ORDER, ScreenshotListOrder.ASCENDING).isInverted();
         this.screenshotsFolder = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewerUtils::getVanillaScreenshotsFolder);
         this.invertedScroll = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.INVERT_ZOOM_DIRECTION, false);
         this.namesHidden = ManageScreenshotsScreen.CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY).filter(VisibilityState.HIDDEN::equals).isPresent();
@@ -82,7 +83,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
 
         File[] files = screenshotsFolder.listFiles();
         if (files != null) {
-            Arrays.sort(files);
+            Arrays.sort(files, invertedOrder ? Comparator.reverseOrder() : Comparator.naturalOrder());
             updateVariables();
             final int maxXOff = screenshotsPerRow - 1;
 
@@ -108,9 +109,6 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             }
         }
         scrollbar.repositionScrollbar(x, y, width, height, spacing, getTotalHeightOfChildren());
-        if(ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.DEFAULT_LIST_ORDER, ScreenshotListOrder.ASCENDING).isInverted()) {
-            invertOrder();
-        }
     }
 
     /**

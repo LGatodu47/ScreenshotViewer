@@ -27,7 +27,7 @@ public class ScreenshotViewerTexts {
     public static final Text DELETE_MULTIPLE_WARNING_MESSAGE = translatable("screen", "delete_n_screenshots.message");
     public static final Text RENAME_PROMPT = translatable("screen", "rename_screenshot");
     public static final Text SCREENSHOT_NAME_INPUT = translatable("screen", "field.screenshot_name");
-    public static final Text REDIRECT_TO_SCREENSHOT_MANAGER = translatable("screen", "redirect_to_screenshot_manager");
+    public static final Text REDIRECT_TO_SCREENSHOT_MANAGER = translatable("tooltip", "redirect_to_screenshot_manager");
 
     public static final Text TOAST_COPY_SUCCESS = translatable("toast", "copy_success");
 
