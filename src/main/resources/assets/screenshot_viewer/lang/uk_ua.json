@@ -1,13 +1,16 @@
 {
   "screen.screenshot_viewer.manage_screenshots": "Керування знімками екрана...",
   "screen.screenshot_viewer.screenshot_manager.zoom": "Режим наближення (утримуйте CTRL)",
+  "screen.screenshot_viewer.screenshot_manager.fast_delete": "Режим швидкого видалення",
   "screen.screenshot_viewer.screenshot_manager.no_screenshots": "Схоже, що у вас поки немає жодного знімка!",
+  "screen.screenshot_viewer.screenshot_manager.delete_n_screenshots": "Видалити знімки: %d",
   "screen.screenshot_viewer.button.refresh": "Оновити знімки",
   "screen.screenshot_viewer.button.config": "Налаштування...",
   "screen.screenshot_viewer.button.order": "Сортування",
   "screen.screenshot_viewer.button.order.ascending": "Сортування за зростанням",
   "screen.screenshot_viewer.button.order.descending": "Сортування за спаданням",
   "screen.screenshot_viewer.button.screenshot_folder": "Відкрити теку знімків",
+  "screen.screenshot_viewer.button.fast_delete": "Перемкнути швидке видалення",
   "screen.screenshot_viewer.button.delete_screenshot": "Видалити",
   "screen.screenshot_viewer.button.open_file": "Відкрити файл",
   "screen.screenshot_viewer.button.rename_file": "Перейменувати",
@@ -15,9 +18,11 @@
   "screen.screenshot_viewer.button.copy_screenshot": "Копіювати",
   "screen.screenshot_viewer.delete_prompt": "Видалення «%s»",
   "screen.screenshot_viewer.delete_prompt.message": "Ви впевнені, що бажаєте видалити цей знімок екрана?",
+  "screen.screenshot_viewer.delete_n_screenshots.message": "Ви впевнені, що бажаєте видалити ці знімки екрана? (їх буде втрачено назавжди!)",
   "screen.screenshot_viewer.rename_screenshot": "Уведіть нову назву для цього знімка екрана:",
   "screen.screenshot_viewer.field.screenshot_name": "Нова назва знімка екрана",
   "tooltip.screenshot_viewer.redirect_to_screenshot_manager": "Відкрити у панелі керування знімками екрана...",
+  "tooltip.screenshot_viewer.menu_hint": "ПКМ, щоб керувати \nCTRL+C, щоб копіювати",
 
   "screen.screenshot_viewer.config": "Налаштування Screenshot Viewer",
   "config.screenshot_viewer.show_button_in_game_pause_menu": "Показувати кнопку у меню павзи",
@@ -46,6 +51,20 @@
   "config.screenshot_viewer.screenshots_folder.desc": "Шлях до теки, що містить знімки екрана.",
   "config.screenshot_viewer.redirect_screenshot_chat_links": "Переадресування посилань на знімки",
   "config.screenshot_viewer.redirect_screenshot_chat_links.desc": "Якщо увімкнено, посилання, що надсилаються у чат після створення знімків, відкриватимуть панель керування знімками.",
+  "config.screenshot_viewer.screenshot_element_text_visibility": "Видимість назв знімків",
+  "config.screenshot_viewer.screenshot_element_text_visibility.desc": "Режим видимості назв знімків",
+  "config.screenshot_viewer.invert_zoom_direction": "Інфертувати напрямки збільшення",
+  "config.screenshot_viewer.invert_zoom_direction.desc": "Якщо увімкнено, інвертує напрямки збільшення знімків у панелі керування знімками.",
+  "config.screenshot_viewer.display_hint_tooltip": "Показувати підказку при наведенні",
+  "config.screenshot_viewer.display_hint_tooltip.desc": "Визначає, чи з’являтиметься підказка з корисною інформацією при тривалому наведенні курсору на знімок екрана.",
+  "config.screenshot_viewer.render_wide_properties_button": "Показувати широку кнопку властивостей",
+  "config.screenshot_viewer.render_wide_properties_button.desc": "Визначає, якими мають бути кнопки властивостей (широкими чи квадратними).",
 
+  "config_category.screenshot_viewer.ingame": "Гуки Screenshot Viewer",
+  "config_category.screenshot_viewer.ingui": "Персоналізація панелі керування знімками",
+  
+  "toast.screenshot_viewer.copy_success": "Знімок успішно скопійовано!",
+  "toast.screenshot_viewer.copy_fail": "Не вдалося скопіювати знімок «%s»",
+  
   "key.screenshot_viewer.open_screenshots_screen": "Панель керування знімками екрана"
 }
