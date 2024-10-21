@@ -59,9 +59,14 @@
   "config.screenshot_viewer.display_hint_tooltip.desc": "Controls whether a tooltip giving useful info should appear when hovering a screenshot for a prolonged period.",
   "config.screenshot_viewer.render_wide_properties_button": "Render Wide Properties Button",
   "config.screenshot_viewer.render_wide_properties_button.desc": "Whether the properties buttons should be rendered wide or square.",
+  "config.screenshot_viewer.thumbnail_folder": "Thumbnail Folder",
+  "config.screenshot_viewer.thumbnail_folder.desc": "The path to the folder containing the screenshots thumbnails that will be displayed in the screen.",
+  "config.screenshot_viewer.compression_ratio": "Compression Ratio",
+  "config.screenshot_viewer.compression_ratio.desc": "If set to none, will not generate any thumbnails. Controls the downscale ratio between a screenshot image and its thumbnail.",
 
   "config_category.screenshot_viewer.ingame": "Screenshot Viewer Hooks",
   "config_category.screenshot_viewer.ingui": "Screenshot Manager Customization",
+  "config_category.screenshot_viewer.screenshot_thumbnails": "Screenshot Thumbnails",
 
   "toast.screenshot_viewer.copy_success": "Successfully copied screenshot!",
   "toast.screenshot_viewer.copy_fail": "Failed to copy screenshot: %s",

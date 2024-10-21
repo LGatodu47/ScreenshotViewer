@@ -36,11 +36,13 @@ public class ScreenshotViewer implements ClientModInitializer {
     private static ScreenshotViewer instance;
 
     private CatConfig config;
+    private ScreenshotThumbnailManager thumbnailManager;
     private KeyBinding openScreenshotsScreenKey;
 
     @Override
     public void onInitializeClient() {
         config = new ScreenshotViewerConfig();
+        thumbnailManager = new ScreenshotThumbnailManager(config);
 
         initKeyBindings();
         registerEvents();
@@ -91,6 +93,10 @@ public class ScreenshotViewer implements ClientModInitializer {
 
     public CatConfig getConfig() {
         return config;
+    }
+
+    public ScreenshotThumbnailManager getThumbnailManager() {
+        return thumbnailManager;
     }
 
     public KeyBinding getOpenScreenshotsScreenKey() {

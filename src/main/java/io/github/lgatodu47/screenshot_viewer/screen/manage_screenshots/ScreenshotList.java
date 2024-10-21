@@ -81,9 +81,9 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     void init() {
         clearChildren();
 
-        File[] files = screenshotsFolder.listFiles();
-        if (files != null) {
-            Arrays.sort(files, invertedOrder ? Comparator.reverseOrder() : Comparator.naturalOrder());
+        List<File> files = ScreenshotViewerUtils.getScreenshotFiles(screenshotsFolder);
+        if (!files.isEmpty()) {
+            files.sort(invertedOrder ? Comparator.reverseOrder() : Comparator.naturalOrder());
             updateVariables();
             final int maxXOff = screenshotsPerRow - 1;
 
@@ -92,19 +92,17 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             int xOff = 0;
 
             for (File file : files) {
-                if (file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))) {
-                    ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, this, file);
-                    this.screenshotWidgets.add(widget);
-                    this.elements.add(widget);
+                ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, this, file);
+                this.screenshotWidgets.add(widget);
+                this.elements.add(widget);
 
-                    if (xOff == maxXOff) {
-                        xOff = 0;
-                        childX = x + spacing;
-                        childY += childHeight + spacing;
-                    } else {
-                        xOff++;
-                        childX += childWidth + spacing;
-                    }
+                if (xOff == maxXOff) {
+                    xOff = 0;
+                    childX = x + spacing;
+                    childY += childHeight + spacing;
+                } else {
+                    xOff++;
+                    childX += childWidth + spacing;
                 }
             }
         }

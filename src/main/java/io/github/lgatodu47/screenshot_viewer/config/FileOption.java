@@ -51,15 +51,15 @@ public record FileOption(String name, @Nullable Supplier<File> defValue, @Nullab
         return new File(reader.nextString());
     }
 
-    public static ClickableWidget createScreenshotsDirectoryWidget(ConfigAccess config) {
+    public static ClickableWidget createDirectoryWidget(ConfigAccess config, ConfigOption<File> option) {
         FilePathWidget widget = new FilePathWidget(MinecraftClient.getInstance().textRenderer, 0, 0, 200, 20, Text.empty());
-        Supplier<File> defaultValue = () -> Objects.requireNonNull(ScreenshotViewerOptions.SCREENSHOTS_FOLDER.defaultValue());
-        widget.setText(config.get(ScreenshotViewerOptions.SCREENSHOTS_FOLDER).orElseGet(defaultValue).getAbsolutePath());
+        Supplier<File> defaultValue = () -> Objects.requireNonNull(option.defaultValue());
+        widget.setText(config.get(option).orElseGet(defaultValue).getAbsolutePath());
         AtomicBoolean corrected = new AtomicBoolean(false);
         widget.setAcceptChangesListener(() -> {
             File target = new File(widget.getText());
             if(target.exists() && target.isAbsolute() && target.isDirectory() && target.canRead()) {
-                config.put(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, target);
+                config.put(option, target);
                 corrected.set(false);
                 return;
             }

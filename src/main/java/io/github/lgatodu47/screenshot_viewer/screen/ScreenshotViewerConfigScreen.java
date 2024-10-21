@@ -11,6 +11,7 @@ public class ScreenshotViewerConfigScreen extends ModConfigScreen {
 
     public ScreenshotViewerConfigScreen(Screen parent) {
         super(ScreenshotViewerTexts.translatable("screen", "config"), parent, ScreenshotViewer.getInstance().getConfig(), ScreenshotViewerRenderedOptions.access());
+        this.listeners = ScreenshotViewer.getInstance().getThumbnailManager();
         withBackgroundTexture(BACKGROUND_TEXTURE);
     }
 }

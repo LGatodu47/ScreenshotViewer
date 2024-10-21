@@ -34,6 +34,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -47,6 +48,18 @@ public class ScreenshotViewerUtils {
 
     public static File getVanillaScreenshotsFolder() {
         return new File(MinecraftClient.getInstance().runDirectory, "screenshots");
+    }
+
+    public static File getDefaultThumbnailFolder() {
+        return new File(MinecraftClient.getInstance().runDirectory, "screenshots/thumbnails");
+    }
+
+    public static List<File> getScreenshotFiles(File screenshotsFolder) {
+        File[] files = screenshotsFolder.listFiles();
+        if(files == null) {
+            return List.of();
+        }
+        return Arrays.stream(files).filter(file -> file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))).collect(Collectors.toList());
     }
 
     public static void drawTexture(DrawContext context, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {

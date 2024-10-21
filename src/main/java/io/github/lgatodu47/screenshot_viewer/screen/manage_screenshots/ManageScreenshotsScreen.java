@@ -3,6 +3,7 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.catconfig.CatConfig;
 import io.github.lgatodu47.catconfigmc.screen.ConfigListener;
+import io.github.lgatodu47.screenshot_viewer.ScreenshotThumbnailManager;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
@@ -36,6 +37,7 @@ import java.util.function.Supplier;
 public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     // Package-private config instance accessible in all the package classes
     static final CatConfig CONFIG = ScreenshotViewer.getInstance().getConfig();
+    static final ScreenshotThumbnailManager THUMBNAILS = ScreenshotViewer.getInstance().getThumbnailManager();
     static final Logger LOGGER = LogUtils.getLogger();
 
     public static final ButtonTextures DEFAULT_BUTTON_TEXTURES = new ButtonTextures(new Identifier("widget/button"), new Identifier("widget/button_disabled"), new Identifier("widget/button_highlighted"));
@@ -151,6 +153,8 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
                     setDialogScreen(new ConfirmDeletionScreen(value -> {
                         if(value) {
                             toDelete.forEach(ScreenshotWidget::deleteScreenshot);
+                        } else {
+                            list.resetDeleteSelection();
                         }
                         setDialogScreen(null);
                         }, Text.translatable("screen." + ScreenshotViewer.MODID + ".screenshot_manager.delete_n_screenshots", toDelete.size()),

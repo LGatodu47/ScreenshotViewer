@@ -25,17 +25,13 @@ import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.CONFIG;
-import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.LOGGER;
+import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.*;
 
 final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, ScreenshotImageHolder {
     private final ManageScreenshotsScreen mainScreen;
@@ -48,10 +44,9 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     private boolean renderTextShadow, promptOnDelete;
     private List<TooltipComponent> hintTooltip;
 
+    private final ImageLoader screenshotImage = new ImageLoader("screenshot");
+    private final ImageLoader thumbnailImage = new ImageLoader("thumbnail");
     private File screenshotFile;
-    private CompletableFuture<NativeImage> image;
-    @Nullable
-    private NativeImageBackedTexture texture;
     private boolean selectedForDeletion;
     private float hoverTime;
     private int baseY;
@@ -63,7 +58,10 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         this.baseY = y;
         this.ctx = ctx;
         this.screenshotFile = screenshotFile;
-        this.image = getImage(screenshotFile);
+        THUMBNAILS.getThumbnail(screenshotFile).ifPresentOrElse(thumbnailFile -> {
+            this.screenshotImage.file = CompletableFuture.completedFuture(screenshotFile);
+            this.thumbnailImage.load(thumbnailFile);
+        }, () -> this.screenshotImage.load(CompletableFuture.completedFuture(screenshotFile)));
         onConfigUpdate();
     }
 
@@ -76,10 +74,9 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     void deleteScreenshot() {
-        if (screenshotFile.exists() && !screenshotFile.delete()) {
-            LOGGER.error("Failed to delete 'screenshot' file at location '{}'", screenshotFile.toPath().toAbsolutePath());
-            return;
-        }
+        close();
+        screenshotImage.deleteFile();
+        THUMBNAILS.removeThumbnail(screenshotFile);
         ctx.removeEntry(this);
     }
 
@@ -111,7 +108,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         renderBackground(context, viewportY, viewportBottom);
         final int spacing = 2;
 
-        NativeImageBackedTexture image = texture();
+        NativeImageBackedTexture image = thumbnailTexture();
         if (image != null && image.getImage() != null) {
             RenderSystem.setShader(GameRenderer::getPositionTexProgram);
             RenderSystem.setShaderColor(1, 1, 1, 1);
@@ -190,44 +187,22 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     private void updateScreenshotFile(File screenshotFile) {
+        THUMBNAILS.removeThumbnail(this.screenshotFile); // remove old thumbnail first
         this.screenshotFile = screenshotFile;
-        if (texture != null) {
-            texture.close();
-        } else if (image != null) {
-            image.thenAcceptAsync(image -> {
-                if (image != null) {
-                    image.close();
-                }
-            }, this.client);
-        }
-        texture = null;
-        image = getImage(screenshotFile);
-    }
-
-    private CompletableFuture<NativeImage> getImage(File file) {
-        return CompletableFuture.supplyAsync(() -> {
-            try (InputStream inputStream = new FileInputStream(file)) {
-                return NativeImage.read(inputStream);
-            } catch (Exception e) {
-                LOGGER.error("Failed to load screenshot: {}", file.getName(), e);
-            }
-            return null;
-        }, Util.getMainWorkerExecutor());
+        THUMBNAILS.getThumbnail(screenshotFile).ifPresentOrElse(thumbnailFile -> {
+            this.screenshotImage.close();
+            this.screenshotImage.file = CompletableFuture.completedFuture(screenshotFile);
+            this.thumbnailImage.setImage(thumbnailFile);
+        }, () -> this.screenshotImage.setImage(CompletableFuture.completedFuture(screenshotFile)));
     }
 
     @Nullable
-    public NativeImageBackedTexture texture() {
-        if (texture != null) {
-            return texture;
+    public NativeImageBackedTexture thumbnailTexture() {
+        if(!thumbnailImage.file.isDone()) {
+            return screenshotImage.texture();
         }
-        if (image == null) {
-            image = getImage(screenshotFile);
-        }
-        NativeImage nativeImage;
-        if (image.isDone() && (nativeImage = image.join()) != null) {
-            return texture = new NativeImageBackedTexture(nativeImage);
-        }
-        return null;
+        NativeImageBackedTexture texture = thumbnailImage.texture();
+        return texture == null ? screenshotImage.texture() : texture;
     }
 
     /// ScreenshotImageHolder implementations ///
@@ -284,17 +259,14 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
     @Override
     public int imageId() {
-        NativeImageBackedTexture texture = texture();
+        NativeImageBackedTexture texture = screenshotImage.texture();
         return texture != null ? texture.getGlId() : 0;
     }
 
     @Nullable
     @Override
     public NativeImage image() {
-        if (image == null) {
-            image = getImage(screenshotFile);
-        }
-        return image.getNow(null);
+        return screenshotImage.image();
     }
 
     /// Common Widget implementations ///
@@ -344,17 +316,8 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
     @Override
     public void close() {
-        if (texture != null) {
-            texture.close(); // Also closes the image
-        } else if(image != null) {
-            image.thenAcceptAsync(image -> {
-                if (image != null) {
-                    image.close();
-                }
-            }, this.client);
-        }
-        image = null;
-        texture = null;
+        this.screenshotImage.close();
+        this.thumbnailImage.close();
     }
 
     interface Context {
@@ -363,5 +326,101 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         int currentIndex(ScreenshotWidget widget);
 
         void removeEntry(ScreenshotWidget widget);
+    }
+
+    class ImageLoader implements AutoCloseable {
+        private final String imageType;
+        private CompletableFuture<File> file = new CompletableFuture<>();
+        private CompletableFuture<NativeImage> image;
+        @Nullable
+        private NativeImageBackedTexture texture;
+
+        ImageLoader(String imageType) {
+            this.imageType = imageType;
+        }
+
+        public void load(CompletableFuture<File> file) {
+            this.file = file;
+            this.image = getImage();
+        }
+
+        public void setImage(CompletableFuture<File> file) {
+            if(!this.file.isDone()) {
+                this.file.cancel(true);
+            }
+            this.file = file;
+            if (texture != null) {
+                texture.close();
+            } else if (image != null) {
+                image.thenAcceptAsync(image -> {
+                    if (image != null) {
+                        image.close();
+                    }
+                }, client);
+            }
+            texture = null;
+            image = getImage();
+        }
+
+        public void deleteFile() {
+            File f = file.getNow(null);
+            if (f != null && f.exists() && !f.delete()) {
+                LOGGER.error("Failed to delete '{}' file at location '{}'", imageType, f.toPath().toAbsolutePath());
+            }
+        }
+
+        private CompletableFuture<NativeImage> getImage() {
+            return file.thenApplyAsync(file -> {
+                try (InputStream inputStream = new FileInputStream(file)) {
+                    return NativeImage.read(inputStream);
+                } catch (FileNotFoundException e) {
+                    // ignore thumbnails not found errors
+                    if(imageType.equalsIgnoreCase("screenshot")) {
+                        LOGGER.error("Could not find screenshot with name {}:", file.getName(), e);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Failed to load {}: {}", imageType, file.getName(), e);
+                }
+                return null;
+            }, Util.getMainWorkerExecutor());
+        }
+
+        @Nullable
+        public NativeImageBackedTexture texture() {
+            if (texture != null) {
+                return texture;
+            }
+            if (image == null) {
+                image = getImage();
+            }
+            NativeImage nativeImage;
+            if (image.isDone() && (nativeImage = image.join()) != null) {
+                return texture = new NativeImageBackedTexture(nativeImage);
+            }
+            return null;
+        }
+
+        @Nullable
+        public NativeImage image() {
+            if (image == null) {
+                image = getImage();
+            }
+            return image.getNow(null);
+        }
+
+        @Override
+        public void close() {
+            if (texture != null) {
+                texture.close(); // Also closes the image
+            } else if(image != null) {
+                image.thenAcceptAsync(image -> {
+                    if (image != null) {
+                        image.close();
+                    }
+                }, client);
+            }
+            image = null;
+            texture = null;
+        }
     }
 }
