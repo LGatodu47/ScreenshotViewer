@@ -53,8 +53,8 @@ public class ScreenshotViewer implements ClientModInitializer {
         openScreenshotsScreenKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(ScreenshotViewerTexts.translation("key", "open_screenshots_screen"), InputUtil.UNKNOWN_KEY.getCode(), KeyBinding.MISC_CATEGORY));
     }
 
-    private static final Identifier DELAYED_PHASE = new Identifier(MODID, "delayed");
-    private static final Identifier SCREENSHOT_VIEWER_ICON = new Identifier(MODID, "widget/icons/screenshot_viewer");
+    private static final Identifier DELAYED_PHASE = Identifier.of(MODID, "delayed");
+    private static final Identifier SCREENSHOT_VIEWER_ICON = Identifier.of(MODID, "widget/icons/screenshot_viewer");
 
     private void registerEvents() {
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
@@ -67,7 +67,7 @@ public class ScreenshotViewer implements ClientModInitializer {
         ScreenEvents.AFTER_INIT.register(DELAYED_PHASE, (client, screen, scaledWidth, scaledHeight) -> {
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && screen instanceof GameMenuScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
-                ClickableWidget topButton = buttons.get(0);
+                ClickableWidget topButton = buttons.getFirst();
                 buttons.add(Util.make(new IconButtonWidget(topButton.getX() + topButton.getWidth() + config.getOrFallback(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_OFFSET, 4), topButton.getY(), topButton.getHeight(), topButton.getHeight(), ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
                 }), btn -> btn.setTooltip(Tooltip.of(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));

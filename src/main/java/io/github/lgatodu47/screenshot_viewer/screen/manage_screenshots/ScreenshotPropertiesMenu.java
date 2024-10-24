@@ -25,12 +25,12 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable {
-    private static final Identifier BACKGROUND_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/screenshot_properties_background.png");
-    static final Identifier OPEN_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/open_folder");
-    static final Identifier COPY_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/copy");
-    static final Identifier DELETE_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/delete");
-    static final Identifier RENAME_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/rename");
-    private static final Identifier CLOSE_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/close");
+    private static final Identifier BACKGROUND_TEXTURE = Identifier.of(ScreenshotViewer.MODID, "textures/gui/screenshot_properties_background.png");
+    static final Identifier OPEN_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/open_folder");
+    static final Identifier COPY_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/copy");
+    static final Identifier DELETE_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/delete");
+    static final Identifier RENAME_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/rename");
+    private static final Identifier CLOSE_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/close");
     private static final int BUTTON_SIZE = 19;
 
     private final Supplier<MinecraftClient> mcSupplier;
@@ -164,14 +164,14 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
 
     private static final class Button extends IconButtonWidget {
         private static final ButtonTextures BUTTON_TEXTURES = new ButtonTextures(
-                new Identifier(ScreenshotViewer.MODID, "widget/properties_button_enabled"),
-                new Identifier(ScreenshotViewer.MODID, "widget/properties_button"),
-                new Identifier(ScreenshotViewer.MODID, "widget/properties_button_hovered")
+                Identifier.of(ScreenshotViewer.MODID, "widget/properties_button_enabled"),
+                Identifier.of(ScreenshotViewer.MODID, "widget/properties_button"),
+                Identifier.of(ScreenshotViewer.MODID, "widget/properties_button_hovered")
         );
         private static final ButtonTextures TEXTURES_FOR_WIDE = new ButtonTextures(
-                new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_enabled.png"),
-                new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button.png"),
-                new Identifier(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_hovered.png")
+                Identifier.of(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_enabled.png"),
+                Identifier.of(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button.png"),
+                Identifier.of(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_hovered.png")
         );
 
         private boolean renderWide = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_WIDE_PROPERTIES_BUTTON, true);

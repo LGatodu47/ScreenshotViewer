@@ -7,11 +7,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Identifier;
 
 public class ScreenshotViewerConfigScreen extends ModConfigScreen {
-    private static final Identifier BACKGROUND_TEXTURE = new Identifier("minecraft", "textures/block/cyan_terracotta.png");
-
     public ScreenshotViewerConfigScreen(Screen parent) {
         super(ScreenshotViewerTexts.translatable("screen", "config"), parent, ScreenshotViewer.getInstance().getConfig(), ScreenshotViewerRenderedOptions.access());
         this.listeners = ScreenshotViewer.getInstance().getThumbnailManager();
-        withBackgroundTexture(BACKGROUND_TEXTURE);
     }
 }

@@ -71,12 +71,11 @@ public class ScreenshotViewerUtils {
         float v2 = (v + (float) regionHeight) / (float) textureHeight;
 
         Matrix4f matrix4f = context.getMatrices().peek().getPositionMatrix();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        bufferBuilder.vertex(matrix4f, x, y, 0).texture(u1, v1).next();
-        bufferBuilder.vertex(matrix4f, x, y2, 0).texture(u1, v2).next();
-        bufferBuilder.vertex(matrix4f, x2, y2, 0).texture(u2, v2).next();
-        bufferBuilder.vertex(matrix4f, x2, y, 0).texture(u2, v1).next();
+        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+        bufferBuilder.vertex(matrix4f, x, y, 0).texture(u1, v1);
+        bufferBuilder.vertex(matrix4f, x, y2, 0).texture(u1, v2);
+        bufferBuilder.vertex(matrix4f, x2, y2, 0).texture(u2, v2);
+        bufferBuilder.vertex(matrix4f, x2, y, 0).texture(u2, v1);
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
     }
 

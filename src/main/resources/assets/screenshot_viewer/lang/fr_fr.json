@@ -59,9 +59,14 @@
   "config.screenshot_viewer.display_hint_tooltip.desc": "Contrôle si l'aide concernant la gestion des captures d'écran doit apparaître.",
   "config.screenshot_viewer.render_wide_properties_button": "Elargir les bouttons des propriétés",
   "config.screenshot_viewer.render_wide_properties_button.desc": "Si les bouttons du menu des propriétés sont élargis ou normaux (carrés).",
+  "config.screenshot_viewer.thumbnail_folder": "Dossier des miniatures",
+  "config.screenshot_viewer.thumbnail_folder.desc": "Un chemin d'accès vers le dossier qui contiendra les miniatures de vos captures d'écran.",
+  "config.screenshot_viewer.compression_ratio": "Taux de compression",
+  "config.screenshot_viewer.compression_ratio.desc": "Contrôle le taux de compression des miniatures. Si 'None' est sélectionné, aucune miniature ne sera générée.",
 
   "config_category.screenshot_viewer.ingame": "Accès au gestionnaire de captures d'écran",
   "config_category.screenshot_viewer.ingui": "Personalisation du gestionnaire de captures d'écran",
+  "config_category.screenshot_viewer.screenshot_thumbnails": "Miniatures de captures d'écran",
 
   "toast.screenshot_viewer.copy_success": "Capture copiée avec succès!",
   "toast.screenshot_viewer.copy_fail": "La capture n'a pas pu être copiée: %s",

@@ -40,14 +40,14 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
     static final ScreenshotThumbnailManager THUMBNAILS = ScreenshotViewer.getInstance().getThumbnailManager();
     static final Logger LOGGER = LogUtils.getLogger();
 
-    public static final ButtonTextures DEFAULT_BUTTON_TEXTURES = new ButtonTextures(new Identifier("widget/button"), new Identifier("widget/button_disabled"), new Identifier("widget/button_highlighted"));
-    private static final Identifier CONFIG_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/config");
-    private static final Identifier REFRESH_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/refresh");
-    private static final Identifier ASCENDING_ORDER_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/ascending_order");
-    private static final Identifier DESCENDING_ORDER_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/descending_order");
-    private static final Identifier OPEN_FOLDER_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/open_folder");
-    private static final Identifier FAST_DELETE_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/delete");
-    private static final Identifier FAST_DELETE_ENABLED_ICON = new Identifier(ScreenshotViewer.MODID, "widget/icons/fast_delete_enabled");
+    public static final ButtonTextures DEFAULT_BUTTON_TEXTURES = new ButtonTextures(Identifier.ofVanilla("widget/button"), Identifier.ofVanilla("widget/button_disabled"), Identifier.ofVanilla("widget/button_highlighted"));
+    private static final Identifier CONFIG_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/config");
+    private static final Identifier REFRESH_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/refresh");
+    private static final Identifier ASCENDING_ORDER_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/ascending_order");
+    private static final Identifier DESCENDING_ORDER_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/descending_order");
+    private static final Identifier OPEN_FOLDER_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/open_folder");
+    private static final Identifier FAST_DELETE_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/delete");
+    private static final Identifier FAST_DELETE_ENABLED_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/fast_delete_enabled");
 
     private final Screen parent;
     private final EnlargedScreenshotScreen enlargedScreenshot;
