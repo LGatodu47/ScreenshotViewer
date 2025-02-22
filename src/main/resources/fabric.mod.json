@@ -15,7 +15,9 @@
     "Amirhan-Taipovjan-Greatest-I",
     "akkini1",
     "Szedann",
-    "TheLegendofSaram"
+    "TheLegendofSaram",
+    "blryface",
+    "Redls07"
   ],
   "contact": {
     "sources": "https://github.com/LGatodu47/ScreenshotViewer",
@@ -38,6 +40,6 @@
   "accessWidener": "screenshot_viewer.accesswidener",
   "depends": {
     "fabric": "*",
-    "minecraft": ">=1.21"
+    "minecraft": ">=1.21.2"
   }
 }

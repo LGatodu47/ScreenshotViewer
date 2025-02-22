@@ -7,8 +7,22 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Identifier;
 
 public class ScreenshotViewerConfigScreen extends ModConfigScreen {
+    // used by WidgetPositionOption, temporary solution
+    private static ScreenshotViewerConfigScreen currentInstance;
+
     public ScreenshotViewerConfigScreen(Screen parent) {
         super(ScreenshotViewerTexts.translatable("screen", "config"), parent, ScreenshotViewer.getInstance().getConfig(), ScreenshotViewerRenderedOptions.access());
         this.listeners = ScreenshotViewer.getInstance().getThumbnailManager();
+        currentInstance = this;
+    }
+
+    public static ScreenshotViewerConfigScreen getCurrentInstance() {
+        return currentInstance;
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        currentInstance = null;
     }
 }

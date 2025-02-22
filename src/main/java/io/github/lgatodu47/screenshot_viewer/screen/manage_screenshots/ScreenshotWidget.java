@@ -8,11 +8,11 @@ import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
@@ -110,10 +110,12 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
         NativeImageBackedTexture image = thumbnailTexture();
         if (image != null && image.getImage() != null) {
-            RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
             RenderSystem.setShaderColor(1, 1, 1, 1);
             RenderSystem.setShaderTexture(0, image.getGlId());
             RenderSystem.enableBlend();
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthFunc(515);
             int renderY = Math.max(getY() + spacing, viewportY);
             int imgHeight = (int) (height / (VisibilityState.HIDDEN.equals(textVisibility) ? 1 : 1.08) - spacing * 3);
             int topOffset = Math.max(0, viewportY - getY() - spacing);
@@ -121,6 +123,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             int topV = topOffset * image.getImage().getHeight() / imgHeight;
             int bottomV = bottomOffset * image.getImage().getHeight() / imgHeight;
 
+            context.getMatrices().translate(0, 0, 1);
             ScreenshotViewerUtils.drawTexture(
                     context,
                     getX() + spacing,
@@ -137,6 +140,8 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             if(mainScreen.isFastDeleteToggled() && selectedForDeletion) {
                 context.fill(getX() + spacing, renderY, getX() + width - spacing, renderY + imgHeight - topOffset - bottomOffset, 0x50FF0000);
             }
+            context.getMatrices().translate(0, 0, -1);
+            RenderSystem.disableDepthTest();
             RenderSystem.disableBlend();
         }
 
@@ -156,9 +161,9 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         }
 
         if(!mainScreen.isFastDeleteToggled() && !hintTooltip.isEmpty() && hoverTime > 20) {
-            context.setShaderColor(1, 1, 1, Math.min(hoverTime - 20, 10) / 10 * 0.7f);
+            RenderSystem.setShaderColor(1, 1, 1, Math.min(hoverTime - 20, 10) / 10 * 0.7f);
             ScreenshotViewerUtils.renderTooltip(context, client.textRenderer, hintTooltip, mouseX, mouseY);
-            context.setShaderColor(1, 1, 1, 1);
+            RenderSystem.setShaderColor(1, 1, 1, 1);
         }
     }
 
@@ -169,7 +174,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     private void renderBackground(DrawContext context, int viewportY, int viewportBottom) {
         int renderY = Math.max(getY(), viewportY);
         int renderHeight = Math.min(getY() + height, viewportBottom);
-        context.fill(getX(), renderY, getX() + width, renderHeight, ColorHelper.Argb.getArgb((int) ((Math.min(hoverTime, 10) / 10) * backgroundOpacityPercentage * 255), 255, 255, 255));
+        context.fill(getX(), renderY, getX() + width, renderHeight, ColorHelper.getWhite((Math.min(hoverTime, 10) / 10) * backgroundOpacityPercentage));
     }
 
     /// Utility methods ///

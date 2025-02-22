@@ -14,10 +14,12 @@ import net.minecraft.client.gui.tooltip.HoveredTooltipPositioner;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.gui.tooltip.TooltipPositioner;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.render.*;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.NotNull;
@@ -131,8 +133,8 @@ public class ScreenshotViewerUtils {
         if(DRAW_TOOLTIP == null) {
             try {
                 MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
-                String methodName = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_332", "method_51435", "(Lnet/minecraft/class_327;Ljava/util/List;IILnet/minecraft/class_8000;)V");
-                DRAW_TOOLTIP = DrawContext.class.getDeclaredMethod(methodName, TextRenderer.class, List.class, int.class, int.class, TooltipPositioner.class);
+                String methodName = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_332", "method_51435", "(Lnet/minecraft/class_327;Ljava/util/List;IILnet/minecraft/class_8000;Lnet/minecraft/class_2960;)V");
+                DRAW_TOOLTIP = DrawContext.class.getDeclaredMethod(methodName, TextRenderer.class, List.class, int.class, int.class, TooltipPositioner.class, Identifier.class);
             } catch (NoSuchMethodException e) {
                 if(!errorLogged) {
                     LOGGER.error("Failed to render Screenshot Viewer tooltip", e);
@@ -143,11 +145,39 @@ public class ScreenshotViewerUtils {
             DRAW_TOOLTIP.setAccessible(true);
         }
         try {
-            DRAW_TOOLTIP.invoke(context, textRenderer, tooltipComponents, posX, posY, HoveredTooltipPositioner.INSTANCE);
+            DRAW_TOOLTIP.invoke(context, textRenderer, tooltipComponents, posX, posY, HoveredTooltipPositioner.INSTANCE, null);
         } catch (Exception e) {
             if(!errorLogged) {
                 LOGGER.error("Failed to render Screenshot Viewer tooltip", e);
                 errorLogged = true;
+            }
+        }
+    }
+
+    private static Method RENDER_WIDGET;
+    private static boolean errorLogged1;
+
+    public static void renderWidget(ClickableWidget widget, DrawContext context, int mouseX, int mouseY, float delta) {
+        if(RENDER_WIDGET == null) {
+            try {
+                MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
+                String methodName = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_339", "method_48579", "(Lnet/minecraft/class_332;IIF)V");
+                RENDER_WIDGET = ClickableWidget.class.getDeclaredMethod(methodName, DrawContext.class, int.class, int.class, float.class);
+            } catch (NoSuchMethodException e) {
+                if(!errorLogged1) {
+                    LOGGER.error("Failed to render widget", e);
+                    errorLogged1 = true;
+                }
+                return;
+            }
+            RENDER_WIDGET.setAccessible(true);
+        }
+        try {
+            RENDER_WIDGET.invoke(widget, context, mouseX, mouseY, delta);
+        } catch (Exception e) {
+            if(!errorLogged1) {
+                LOGGER.error("Failed to render widget", e);
+                errorLogged1 = true;
             }
         }
     }
@@ -173,7 +203,7 @@ public class ScreenshotViewerUtils {
         }
 
         @Override
-        public int getHeight() {
+        public int getHeight(TextRenderer textRenderer) {
             return 10;
         }
 
@@ -185,7 +215,7 @@ public class ScreenshotViewerUtils {
             }
             // game tweaks the alpha value for some reason (see TextRenderer#tweakTransparency)
             int alpha = Math.max((int) (colors[3] * 255), 5);
-            int textColor = ColorHelper.Argb.getArgb(alpha, (int) (colors[0] * 255), (int) (colors[1] * 255), (int) (colors[2] * 255));
+            int textColor = ColorHelper.getArgb(alpha, (int) (colors[0] * 255), (int) (colors[1] * 255), (int) (colors[2] * 255));
             textRenderer.draw(this.text, x, y, textColor, true, matrix, vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, 0xF000F0);
         }
     }

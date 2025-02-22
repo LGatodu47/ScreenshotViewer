@@ -5,11 +5,11 @@ import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.ExtendedButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.ExtendedTexturedButtonWidget;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.screen.ScreenTexts;
@@ -143,14 +143,20 @@ class EnlargedScreenshotScreen extends Screen {
 
             NativeImage image = showing.image();
             if (image != null) {
-                RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+                RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
                 RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
                 RenderSystem.setShaderTexture(0, showing.imageId());
+                RenderSystem.enableDepthTest();
+                RenderSystem.depthFunc(515);
                 RenderSystem.enableBlend();
                 float imgRatio = (float) image.getWidth() / image.getHeight();
                 int texHeight = height - spacing * 3 - 20;
                 int texWidth = (int) (texHeight * imgRatio);
+
+                context.getMatrices().translate(0, 0, 1);
                 ScreenshotViewerUtils.drawTexture(context, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
+                context.getMatrices().translate(0, 0, -1);
+                RenderSystem.disableDepthTest();
                 RenderSystem.disableBlend();
             }
         }

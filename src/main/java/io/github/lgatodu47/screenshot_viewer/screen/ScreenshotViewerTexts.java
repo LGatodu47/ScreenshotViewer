@@ -29,6 +29,11 @@ public class ScreenshotViewerTexts {
     public static final Text SCREENSHOT_NAME_INPUT = translatable("screen", "field.screenshot_name");
     public static final Text REDIRECT_TO_SCREENSHOT_MANAGER = translatable("tooltip", "redirect_to_screenshot_manager");
 
+    public static final Text EDIT_WIDGET_PLACEMENT = translatable("screen", "button_placement.edit");
+    public static final Text BUTTON_PLACEMENT_MOVEMENT = translatable("screen", "button_placement.movement");
+    public static final Text BUTTON_PLACEMENT_CONFIRM = translatable("screen", "button_placement.confirm");
+    public static final Text BUTTON_PLACEMENT_SNAP_TO_GRID = translatable("screen", "button_placement.snap_to_grid");
+
     public static final Text TOAST_COPY_SUCCESS = translatable("toast", "copy_success");
 
     public static MutableText translatable(String prefix, String suffix, Object... args) {

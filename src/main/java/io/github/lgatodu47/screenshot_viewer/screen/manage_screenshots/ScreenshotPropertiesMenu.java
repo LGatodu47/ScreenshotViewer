@@ -13,10 +13,12 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -104,25 +106,25 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
             final int spacing = 2;
 
             //corners
-            context.drawTexture(BACKGROUND_TEXTURE, x, y, 0, 0,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y, 0, 0,
                     2, 2, 8, 8);
-            context.drawTexture(BACKGROUND_TEXTURE, x+width-2, y, 6, 0,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x+width-2, y, 6, 0,
                     2, 2, 8, 8);
-            context.drawTexture(BACKGROUND_TEXTURE, x, y+height-2, 0, 6,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y+height-2, 0, 6,
                     2, 2, 8, 8);
-            context.drawTexture(BACKGROUND_TEXTURE, x+width-2, y+height-2, 6, 6,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x+width-2, y+height-2, 6, 6,
                     2, 2, 8, 8);
             //sides
-            context.drawTexture(BACKGROUND_TEXTURE, x+2, y, (float) (width * 3) /2, 0,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x+2, y, (float) (width * 3) /2, 0,
                     width-4, 2, width*4, 8);
-            context.drawTexture(BACKGROUND_TEXTURE, x, y+2, 0, (float) (height * 3) /2,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y+2, 0, (float) (height * 3) /2,
                     2, height-4, 8, height*4);
-            context.drawTexture(BACKGROUND_TEXTURE, x+2, y+height-2, (float) (width * 3) /2, 6,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x+2, y+height-2, (float) (width * 3) /2, 6,
                     width-4, 2, width*4, 8);
-            context.drawTexture(BACKGROUND_TEXTURE, x+width-2, y+2, 6, (float) (height * 3) /2,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x+width-2, y+2, 6, (float) (height * 3) /2,
                     2, height-4, 8, height*4);
             //center
-            context.drawTexture(BACKGROUND_TEXTURE, x+2, y+2,
+            context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x+2, y+2,
                     (float) (width * 3) /2, (float) (height * 3) /2,
                     width-4, height-4,
                     width*4, height*4);
@@ -189,22 +191,20 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
 
         @Override
         protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-            context.setShaderColor(1, 1, 1, this.alpha);
             RenderSystem.enableBlend();
             RenderSystem.enableDepthTest();
             Identifier backgroundTexture = getBackgroundTexture().get(this.active, isSelected());
             if (renderWide) {
-                context.drawTexture(backgroundTexture, getX(), getY(), 0, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE);
-                context.drawTexture(backgroundTexture, getX() + 1, getY(), getWidth() - 2, getHeight(), 1, 0, BUTTON_SIZE - 2, BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE);
-                context.drawTexture(backgroundTexture, getX() + getWidth() - 1, getY(), 18, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE);
+                context.drawTexture(RenderLayer::getGuiTextured, backgroundTexture, getX(), getY(), 0, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
+                context.drawTexture(RenderLayer::getGuiTextured, backgroundTexture, getX() + 1, getY(), 1, 0, getWidth() - 2, getHeight(), BUTTON_SIZE - 2, BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
+                context.drawTexture(RenderLayer::getGuiTextured, backgroundTexture, getX() + getWidth() - 1, getY(), 18, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
             } else {
-                context.drawGuiTexture(backgroundTexture, getX(), getY(), getWidth(), getHeight());
+                context.drawGuiTexture(RenderLayer::getGuiTextured, backgroundTexture, getX(), getY(), BUTTON_SIZE, getHeight(), ColorHelper.getWhite(this.alpha));
             }
             Identifier icon = getIconTexture();
             if(icon != null) {
-                context.drawGuiTexture(icon, getX(), getY(), BUTTON_SIZE, getHeight());
+                context.drawGuiTexture(RenderLayer::getGuiTextured, icon, getX(), getY(), BUTTON_SIZE, getHeight(), ColorHelper.getWhite(this.alpha));
             }
-            context.setShaderColor(1, 1, 1, 1);
         }
 
         @Override

@@ -198,7 +198,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
 
     // The boolean added controls whether the screenshot widgets should update its `hovered` state.
     void render(DrawContext context, int mouseX, int mouseY, float delta, boolean updateHoverState) {
-        context.fill(x, y, x + width, y + height, ColorHelper.Argb.getArgb((int) (0.7f * 255), 0, 0, 0));
+        context.fill(x, y, x + width, y + height, ColorHelper.getArgb((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
             context.drawCenteredTextWithShadow(client.textRenderer, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }

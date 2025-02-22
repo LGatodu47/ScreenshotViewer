@@ -3,6 +3,7 @@ package io.github.lgatodu47.screenshot_viewer;
 import io.github.lgatodu47.catconfig.CatConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
+import io.github.lgatodu47.screenshot_viewer.config.WidgetPositionOption;
 import io.github.lgatodu47.screenshot_viewer.screen.IconButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
@@ -68,7 +69,11 @@ public class ScreenshotViewer implements ClientModInitializer {
             if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && screen instanceof GameMenuScreen) {
                 List<ClickableWidget> buttons = Screens.getButtons(screen);
                 ClickableWidget topButton = buttons.getFirst();
-                buttons.add(Util.make(new IconButtonWidget(topButton.getX() + topButton.getWidth() + config.getOrFallback(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_OFFSET, 4), topButton.getY(), topButton.getHeight(), topButton.getHeight(), ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
+
+                Optional<WidgetPositionOption.WidgetPosition> optionalWidgetPos = config.get(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_POSITION);
+                int x = optionalWidgetPos.map(WidgetPositionOption.WidgetPosition::x).orElse(topButton.getX() + topButton.getWidth() + 4);
+                int y = optionalWidgetPos.map(WidgetPositionOption.WidgetPosition::y).orElse(topButton.getY());
+                buttons.add(Util.make(new IconButtonWidget(x, y, topButton.getHeight(), topButton.getHeight(), ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
                 }), btn -> btn.setTooltip(Tooltip.of(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
             }
@@ -79,11 +84,12 @@ public class ScreenshotViewer implements ClientModInitializer {
                         .filter(widget -> widget.getMessage().equals(Text.translatable("options.accessibility")))
                         .findFirst();
 
-                int x = accessibilityWidgetOpt.map(ClickableWidget::getX).orElse(screen.width / 2 + 104);
-                int y = accessibilityWidgetOpt.map(ClickableWidget::getY).orElse(screen.height / 4 + 132);
+                Optional<WidgetPositionOption.WidgetPosition> optionalWidgetPos = config.get(ScreenshotViewerOptions.TITLE_SCREEN_BUTTON_POSITION);
                 int width = accessibilityWidgetOpt.map(ClickableWidget::getWidth).orElse(20);
                 int height = accessibilityWidgetOpt.map(ClickableWidget::getHeight).orElse(20);
-                buttons.add(Util.make(new IconButtonWidget(x + width + 4, y, width, height, ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
+                int x = optionalWidgetPos.map(WidgetPositionOption.WidgetPosition::x).or(() -> accessibilityWidgetOpt.map(ClickableWidget::getX).map(v -> v + width + 4)).orElse(screen.width / 2 + 104 + width + 4);
+                int y = optionalWidgetPos.map(WidgetPositionOption.WidgetPosition::y).or(() -> accessibilityWidgetOpt.map(ClickableWidget::getY)).orElse(screen.height / 4 + 132);
+                buttons.add(Util.make(new IconButtonWidget(x, y, width, height, ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
                 }), btn -> btn.setTooltip(Tooltip.of(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
             }
