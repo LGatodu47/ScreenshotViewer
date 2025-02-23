@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class ManageScreenshotsScreen extends Screen implements ConfigListener {
+public class ManageScreenshotsScreen extends Screen implements ConfigListener, OldParentElementMethods {
     // Package-private config instance accessible in all the package classes
     static final CatConfig CONFIG = ScreenshotViewer.getInstance().getConfig();
     static final ScreenshotThumbnailManager THUMBNAILS = ScreenshotViewer.getInstance().getThumbnailManager();
@@ -392,7 +392,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener {
         if(enlargedScreenshot.renders()) {
             return enlargedScreenshot.mouseClicked(mouseX, mouseY, button);
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return OldParentElementMethods.super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override

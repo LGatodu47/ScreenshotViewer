@@ -306,11 +306,6 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    protected boolean clicked(double mouseX, double mouseY) {
-        return false;
-    }
-
-    @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         return isHovered();
     }

@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
-final class ScreenshotList extends AbstractParentElement implements Drawable, Selectable, ScreenshotImageList, ScreenshotWidget.Context {
+final class ScreenshotList extends AbstractParentElement implements Drawable, Selectable, ScreenshotImageList, ScreenshotWidget.Context, OldParentElementMethods {
     private final ManageScreenshotsScreen mainScreen;
     private final MinecraftClient client;
     private final int x, y;
@@ -325,7 +325,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             scrollbarClicked = true;
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return OldParentElementMethods.super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
