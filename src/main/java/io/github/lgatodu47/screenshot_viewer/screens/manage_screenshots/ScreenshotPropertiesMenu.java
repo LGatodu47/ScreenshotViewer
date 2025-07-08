@@ -24,12 +24,12 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements Renderable {
-    private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/screenshot_properties_background.png");
-    static final ResourceLocation OPEN_ICON = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/open_folder.png");
-    static final ResourceLocation COPY_ICON = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/copy.png");
-    static final ResourceLocation DELETE_ICON = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/delete.png");
-    static final ResourceLocation RENAME_ICON = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/rename.png");
-    private static final ResourceLocation CLOSE_ICON = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/close.png");
+    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/screenshot_properties_background.png");
+    static final ResourceLocation OPEN_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/open_folder.png");
+    static final ResourceLocation COPY_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/copy.png");
+    static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/delete.png");
+    static final ResourceLocation RENAME_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/rename.png");
+    private static final ResourceLocation CLOSE_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/close.png");
     private static final int BUTTON_SIZE = 19;
 
     private final Supplier<Minecraft> mcSupplier;
@@ -162,9 +162,9 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
     }
 
     private static final class Button extends IconButtonWidget {
-        private static final ResourceLocation BUTTON_ENABLED = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_enabled.png");
-        private static final ResourceLocation BUTTON_DISABLED = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button.png");
-        private static final ResourceLocation BUTTON_HOVERED = new ResourceLocation(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_hovered.png");
+        private static final ResourceLocation BUTTON_ENABLED = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_enabled.png");
+        private static final ResourceLocation BUTTON_DISABLED = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button.png");
+        private static final ResourceLocation BUTTON_HOVERED = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_hovered.png");
 
         private boolean renderWide = ManageScreenshotsScreen.CONFIG.renderWidePropertiesButton.get();
 

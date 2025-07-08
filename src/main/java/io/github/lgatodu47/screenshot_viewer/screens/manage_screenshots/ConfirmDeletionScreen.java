@@ -11,7 +11,7 @@ final class ConfirmDeletionScreen extends ConfirmScreen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics context) {
+    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
         context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
     }
 }

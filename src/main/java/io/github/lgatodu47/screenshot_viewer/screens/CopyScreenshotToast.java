@@ -6,10 +6,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CopyScreenshotToast implements Toast {
+    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("toast/system");
+
     private final int width;
     private final long displayDuration;
     private Component title;
@@ -35,7 +38,7 @@ public class CopyScreenshotToast implements Toast {
 
         int width = this.width();
         if (width == 160) {
-            context.blit(TEXTURE, 0, 0, 0, 64, width, this.height());
+            context.blitSprite(TEXTURE, 0, 0, width, this.height());
         } else {
             int height = this.height();
             this.drawPart(context, width, 0, 0, 28);
@@ -60,13 +63,13 @@ public class CopyScreenshotToast implements Toast {
     private void drawPart(GuiGraphics context, int width, int textureV, int y, int height) {
         int i = textureV == 0 ? 20 : 5;
         int j = Math.min(60, width - i);
-        context.blit(TEXTURE, 0, y, 0, 64 + textureV, i, height);
+        context.blitSprite(TEXTURE, 160, 32, 0, textureV, 0, y, i, height);
 
         for(int k = i; k < width - j; k += 64) {
-            context.blit(TEXTURE, k, y, 32, 64 + textureV, Math.min(64, width - k - j), height);
+            context.blitSprite(TEXTURE, 160, 32, 32, textureV, k, y, Math.min(64, width - k - j), height);
         }
 
-        context.blit(TEXTURE, width - j, y, 160 - j, 64 + textureV, j, height);
+        context.blitSprite(TEXTURE, 160, 32, 160 - j, textureV, width - j, y, j, height);
     }
 
     public void setContent(Component  title, @Nullable Component  description) {

@@ -19,7 +19,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -34,6 +34,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -48,6 +49,18 @@ public class ScreenshotViewerUtils {
         return new File(Minecraft.getInstance().gameDirectory, "screenshots");
     }
 
+    public static File getDefaultThumbnailFolder() {
+        return new File(Minecraft.getInstance().gameDirectory, "screenshots/thumbnails");
+    }
+
+    public static List<File> getScreenshotFiles(File screenshotsFolder) {
+        File[] files = screenshotsFolder.listFiles();
+        if(files == null) {
+            return List.of();
+        }
+        return Arrays.stream(files).filter(file -> file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))).collect(Collectors.toList());
+    }
+
     public static void drawTexture(GuiGraphics context, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
         int x2 = x + width;
         int y2 = y + height;
@@ -57,13 +70,12 @@ public class ScreenshotViewerUtils {
         float v2 = (v + (float) regionHeight) / (float) textureHeight;
 
         Matrix4f matrix4f = context.pose().last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferBuilder.vertex(matrix4f, x, y, 0).uv(u1, v1).endVertex();
-        bufferBuilder.vertex(matrix4f, x, y2, 0).uv(u1, v2).endVertex();
-        bufferBuilder.vertex(matrix4f, x2, y2, 0).uv(u2, v2).endVertex();
-        bufferBuilder.vertex(matrix4f, x2, y, 0).uv(u2, v1).endVertex();
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        bufferBuilder.addVertex(matrix4f, x, y, 0).setUv(u1, v1);
+        bufferBuilder.addVertex(matrix4f, x, y2, 0).setUv(u1, v2);
+        bufferBuilder.addVertex(matrix4f, x2, y2, 0).setUv(u2, v2);
+        bufferBuilder.addVertex(matrix4f, x2, y, 0).setUv(u2, v1);
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
     }
 
     @Nullable
@@ -114,7 +126,8 @@ public class ScreenshotViewerUtils {
 
     public static void renderTooltip(GuiGraphics context, Font textRenderer, List<ClientTooltipComponent> tooltipComponents, int posX, int posY) {
         if(DRAW_TOOLTIP == null) {
-            DRAW_TOOLTIP = ObfuscationReflectionHelper.findMethod(GuiGraphics.class, "m_280497_", Font.class, List.class, int.class, int.class, ClientTooltipPositioner.class);
+            // mods are no longer re-obfuscated when compiled, as neoforge runs by default in a de-obfuscated environment
+            DRAW_TOOLTIP = ObfuscationReflectionHelper.findMethod(GuiGraphics.class, "renderTooltipInternal", Font.class, List.class, int.class, int.class, ClientTooltipPositioner.class);
             DRAW_TOOLTIP.setAccessible(true);
         }
         try {

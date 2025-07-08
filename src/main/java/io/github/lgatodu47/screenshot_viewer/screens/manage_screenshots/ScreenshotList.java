@@ -1,5 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots;
 
+import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import net.minecraft.client.Minecraft;
@@ -82,9 +83,9 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     void init() {
         clearChildren();
 
-        File[] files = screenshotsFolder.listFiles();
-        if (files != null) {
-            Arrays.sort(files, invertedOrder ? Comparator.reverseOrder() : Comparator.naturalOrder());
+        List<File> files = ScreenshotViewerUtils.getScreenshotFiles(screenshotsFolder);
+        if (!files.isEmpty()) {
+            files.sort(invertedOrder ? Comparator.reverseOrder() : Comparator.naturalOrder());
             updateVariables();
             final int maxXOff = screenshotsPerRow - 1;
 
@@ -93,19 +94,17 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             int xOff = 0;
 
             for (File file : files) {
-                if (file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))) {
-                    ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, this, file);
-                    this.screenshotWidgets.add(widget);
-                    this.elements.add(widget);
+                ScreenshotWidget widget = new ScreenshotWidget(mainScreen, childX, childY, childWidth, childHeight, this, file);
+                this.screenshotWidgets.add(widget);
+                this.elements.add(widget);
 
-                    if (xOff == maxXOff) {
-                        xOff = 0;
-                        childX = x + spacing;
-                        childY += childHeight + spacing;
-                    } else {
-                        xOff++;
-                        childX += childWidth + spacing;
-                    }
+                if (xOff == maxXOff) {
+                    xOff = 0;
+                    childX = x + spacing;
+                    childY += childHeight + spacing;
+                } else {
+                    xOff++;
+                    childX += childWidth + spacing;
                 }
             }
         }
@@ -301,13 +300,13 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (canScroll()) {
-            final int scrollSpeed = Math.abs((int) (scrollSpeedFactor * (6.0f / screenshotsPerRow) * amount));
-            if (scrollY > 0 && amount > 0) {
+            final int scrollSpeed = Math.abs((int) (scrollSpeedFactor * (6.0f / screenshotsPerRow) * verticalAmount));
+            if (scrollY > 0 && verticalAmount > 0) {
                 scrollY = Math.max(0, scrollY - scrollSpeed);
             }
-            if (canScrollDown() && amount < 0) {
+            if (canScrollDown() && verticalAmount < 0) {
                 final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
                 final int viewHeight = height - 2 * spacing;
                 // Maximum offset from the top
@@ -317,7 +316,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             }
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, amount);
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     private boolean scrollbarClicked;

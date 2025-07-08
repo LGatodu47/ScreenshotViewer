@@ -32,23 +32,12 @@ public class IconButtonWidget extends Button {
         context.setColor(1, 1, 1, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
-        context.blitNineSliced(WIDGETS_LOCATION, getX(), getY(), getWidth(), getHeight(), 20, 4, 200, 20, 0, getTextureY());
+        context.blitSprite(SPRITES.get(this.active, isHoveredOrFocused()), getX(), getY(), getWidth(), getHeight());
         ResourceLocation icon = getIconTexture();
+        Vector2i iconTexSize = getIconTextureSize();
         if(icon != null) {
-            Vector2i iconTexSize = getIconTextureSize();
             context.blit(icon, getX(), getY(), 0, 0, getWidth(), getHeight(), iconTexSize.x(), iconTexSize.y());
         }
         context.setColor(1, 1, 1, 1);
-    }
-
-    protected int getTextureY() {
-        int i = 1;
-        if (!this.active) {
-            i = 0;
-        } else if (this.isHoveredOrFocused()) {
-            i = 2;
-        }
-
-        return 46 + i * 20;
     }
 }

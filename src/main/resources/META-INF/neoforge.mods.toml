@@ -1,28 +1,30 @@
 modLoader="javafml"
-loaderVersion="[47,)"
+loaderVersion="[1,)"
 license="MIT"
 issueTrackerURL="https://github.com/LGatodu47/ScreenshotViewer/issues"
 
 [[mods]]
 modId="screenshot_viewer"
-version="${file.jarVersion}"
+version="${mod_version}"
 displayName="Screenshot Viewer"
 logoFile="icon.png"
 authors="LGatodu47"
 credits="Ocelot5836, Wudji, MeDustyy, mrlulu51, Amirhan-Taipovjan-Greatest-I, akkini1, Szedann"
-displayTest="IGNORE_ALL_VERSION"
 description="A mod that allows you to see and manage (through right-clicking) your screenshots in game!"
 
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
 [[dependencies.screenshot_viewer]]
-modId="forge"
-mandatory=true
-versionRange="[47,)"
+modId="neoforge"
+type="required"
+versionRange="[21.1,)"
 ordering="NONE"
 side="CLIENT"
 
 [[dependencies.screenshot_viewer]]
 modId="minecraft"
-mandatory=true
-versionRange="[1.20,1.21)"
+type="required"
+versionRange="[1.21,1.22)"
 ordering="NONE"
 side="CLIENT"

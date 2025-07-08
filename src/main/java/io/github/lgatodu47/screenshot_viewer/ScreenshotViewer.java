@@ -12,7 +12,7 @@ import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.SpriteIconButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -21,21 +21,19 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.client.event.ScreenshotEvent;
-import net.minecraftforge.client.settings.KeyConflictContext;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.forgespi.language.IModInfo;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.client.event.ScreenshotEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.client.settings.KeyConflictContext;
+import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -43,8 +41,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
+@SuppressWarnings("unused")
 @Mod(ScreenshotViewer.MODID)
 public class ScreenshotViewer {
     public static final String MODID = "screenshot_viewer";
@@ -52,24 +50,29 @@ public class ScreenshotViewer {
 
     private final List<ScreenshotViewerConfigListener> configListeners = new ArrayList<>();
     private final ScreenshotViewerConfig config;
-    private final IModInfo modInfo;
+    private final ScreenshotThumbnailManager thumbnailManager;
+    private final ModContainer modContainer;
     private KeyMapping openScreenshotsScreenKey;
 
-    public ScreenshotViewer() {
-        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+    public ScreenshotViewer(@NotNull IEventBus bus, @NotNull ModContainer container) {
         bus.addListener(this::registerKeyMappings);
+        bus.addListener(this::onConfigLoaded);
         bus.addListener(this::onConfigReloaded);
 
-        ModLoadingContext mlc = ModLoadingContext.get();
-        this.config = ScreenshotViewerConfig.registerConfig(mlc);
-        this.modInfo = mlc.getActiveContainer().getModInfo();
+        this.config = ScreenshotViewerConfig.registerConfig(container);
+        this.thumbnailManager = new ScreenshotThumbnailManager(this, config);
+        this.modContainer = container;
 
-        MinecraftForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this);
         instance = this;
     }
 
     private void registerKeyMappings(RegisterKeyMappingsEvent event) {
         openScreenshotsScreenKey = Util.make(new KeyMapping(ScreenshotViewerTexts.translation("key", "open_screenshots_screen"), KeyConflictContext.IN_GAME, InputConstants.UNKNOWN, KeyMapping.CATEGORY_MISC), event::register);
+    }
+
+    private void onConfigLoaded(ModConfigEvent.Loading event) {
+        this.configListeners.forEach(ScreenshotViewerConfigListener::onConfigReloaded);
     }
 
     private void onConfigReloaded(ModConfigEvent.Reloading event) {
@@ -88,7 +91,7 @@ public class ScreenshotViewer {
         }
     }
 
-    private static final ResourceLocation SCREENSHOT_VIEWER_ICON = new ResourceLocation(MODID, "textures/gui/sprites/widget/icons/screenshot_viewer.png");
+    private static final ResourceLocation SCREENSHOT_VIEWER_ICON = ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/sprites/widget/icons/screenshot_viewer.png");
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onScreenPostInit(ScreenEvent.Init.Post event) {
@@ -98,23 +101,23 @@ public class ScreenshotViewer {
 
         if(config.showButtonInGamePauseMenu.get() && screen instanceof PauseScreen) {
             buttons.stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).findFirst().ifPresent(topButton -> {
-                event.addListener(Util.make(new IconButtonWidget(topButton.getX() + topButton.getWidth() + config.pauseMenuButtonOffset.get(), topButton.getY(), topButton.getHeight(), topButton.getHeight(), ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
+                event.addListener(Util.make(new IconButtonWidget(topButton.getX() + topButton.getWidth() + 4, topButton.getY() + config.pauseMenuButtonVerticalOffset.get(), topButton.getHeight(), topButton.getHeight(), ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
                 }), btn -> btn.setTooltip(Tooltip.create(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
             });
         }
         if(config.showButtonOnTitleScreen.get() && screen instanceof TitleScreen) {
-            Optional<ImageButton> accessibilityWidgetOpt = buttons.stream()
-                    .filter(ImageButton.class::isInstance)
-                    .map(ImageButton.class::cast)
-                    .filter(widget -> widget.getMessage().equals(Component.translatable("narrator.button.accessibility")))
+            Optional<SpriteIconButton> accessibilityWidgetOpt = buttons.stream()
+                    .filter(SpriteIconButton.class::isInstance)
+                    .map(SpriteIconButton.class::cast)
+                    .filter(widget -> widget.getMessage().equals(Component.translatable("options.accessibility")))
                     .findFirst();
 
             int x = accessibilityWidgetOpt.map(AbstractWidget::getX).orElse(screen.width / 2 + 104);
             int y = accessibilityWidgetOpt.map(AbstractWidget::getY).orElse(screen.height / 4 + 132);
-            int width = accessibilityWidgetOpt.map(ImageButton::getWidth).orElse(20);
-            int height = accessibilityWidgetOpt.map(ImageButton::getHeight).orElse(20);
-            event.addListener(Util.make(new IconButtonWidget(x + width + 4, y, width, height, ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
+            int width = accessibilityWidgetOpt.map(SpriteIconButton::getWidth).orElse(20);
+            int height = accessibilityWidgetOpt.map(SpriteIconButton::getHeight).orElse(20);
+            event.addListener(Util.make(new IconButtonWidget(x + width + 4 + config.titleScreenButtonHorizontalOffset.get(), y, width, height, ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
                 client.setScreen(new ManageScreenshotsScreen(screen));
             }), btn -> btn.setTooltip(Tooltip.create(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
         }
@@ -142,12 +145,20 @@ public class ScreenshotViewer {
         return config;
     }
 
+    public ScreenshotThumbnailManager getThumbnailManager() {
+        return thumbnailManager;
+    }
+
     public KeyMapping getOpenScreenshotsScreenKey() {
         return openScreenshotsScreenKey;
     }
 
-    public Optional<BiFunction<Minecraft, Screen, Screen>> getConfigScreenFactory() {
-        return ConfigScreenHandler.getScreenFactoryFor(this.modInfo);
+    public Optional<IConfigScreenFactory> getConfigScreenFactory() {
+        return IConfigScreenFactory.getForMod(this.modContainer.getModInfo());
+    }
+
+    public ModContainer getModContainer() {
+        return modContainer;
     }
 
     public void registerConfigListener(ScreenshotViewerConfigListener listener) {
