@@ -99,14 +99,14 @@ public class ScreenshotViewer {
         Minecraft client = screen.getMinecraft();
         List<GuiEventListener> buttons = event.getListenersList();
 
-        if(config.showButtonInGamePauseMenu.get() && screen instanceof PauseScreen) {
+        if(screen instanceof PauseScreen && config.showButtonInGamePauseMenu.get()) {
             buttons.stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast).findFirst().ifPresent(topButton -> {
                 event.addListener(Util.make(new IconButtonWidget(topButton.getX() + topButton.getWidth() + 4, topButton.getY() + config.pauseMenuButtonVerticalOffset.get(), topButton.getHeight(), topButton.getHeight(), ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
                     client.setScreen(new ManageScreenshotsScreen(screen));
                 }), btn -> btn.setTooltip(Tooltip.create(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
             });
         }
-        if(config.showButtonOnTitleScreen.get() && screen instanceof TitleScreen) {
+        if(screen instanceof TitleScreen && config.showButtonOnTitleScreen.get()) {
             Optional<SpriteIconButton> accessibilityWidgetOpt = buttons.stream()
                     .filter(SpriteIconButton.class::isInstance)
                     .map(SpriteIconButton.class::cast)
