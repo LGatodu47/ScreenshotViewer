@@ -51,7 +51,7 @@ public class ScreenshotViewer implements ClientModInitializer {
     }
 
     private void initKeyBindings() {
-        openScreenshotsScreenKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(ScreenshotViewerTexts.translation("key", "open_screenshots_screen"), InputUtil.UNKNOWN_KEY.getCode(), KeyBinding.MISC_CATEGORY));
+        openScreenshotsScreenKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(ScreenshotViewerTexts.translation("key", "open_screenshots_screen"), InputUtil.UNKNOWN_KEY.getCode(), KeyBinding.Category.MISC));
     }
 
     private static final Identifier DELAYED_PHASE = Identifier.of(MODID, "delayed");

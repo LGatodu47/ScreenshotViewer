@@ -1,7 +1,7 @@
 import java.nio.file.Paths
 
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'fabric-loom' version '1.15-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -58,20 +58,26 @@ tasks.withType(JavaCompile).configureEach {
     }
 }
 
+base {
+    archivesName = project.archives_base_name
+    libsDirectory = layout.buildDirectory.dir("libs/${project.compatible_mc_version}")
+}
+
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
-    libsDirName = Paths.get(libsDirName).resolve("${project.compatible_mc_version}").toString()
-    archivesBaseName = project.archives_base_name
     version = version.concat("-${project.mod_loader}-mc${project.compatible_mc_version}")
     withSourcesJar()
 }
 
 jar {
+    def projectName = project.name
+    inputs.property "projectName", projectName
+
     from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
+        rename { "${it}_$projectName" }
     }
 
     duplicatesStrategy(DuplicatesStrategy.INCLUDE)

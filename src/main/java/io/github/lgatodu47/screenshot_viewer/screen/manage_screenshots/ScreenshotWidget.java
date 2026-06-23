@@ -1,6 +1,5 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
@@ -8,22 +7,26 @@ import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
+import org.joml.Matrix3x2fStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
+import net.minecraft.text.OrderedText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -108,62 +111,57 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         renderBackground(context, viewportY, viewportBottom);
         final int spacing = 2;
 
-        NativeImageBackedTexture image = thumbnailTexture();
-        if (image != null && image.getImage() != null) {
-            RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-            RenderSystem.setShaderColor(1, 1, 1, 1);
-            RenderSystem.setShaderTexture(0, image.getGlId());
-            RenderSystem.enableBlend();
-            RenderSystem.enableDepthTest();
-            RenderSystem.depthFunc(515);
+        NativeImage image = thumbnailImage.image();
+        if (image == null) {
+            image = screenshotImage.image();
+        }
+        if (image != null) {
             int renderY = Math.max(getY() + spacing, viewportY);
             int imgHeight = (int) (height / (VisibilityState.HIDDEN.equals(textVisibility) ? 1 : 1.08) - spacing * 3);
             int topOffset = Math.max(0, viewportY - getY() - spacing);
             int bottomOffset = Math.max(0, getY() + spacing + imgHeight - viewportBottom);
-            int topV = topOffset * image.getImage().getHeight() / imgHeight;
-            int bottomV = bottomOffset * image.getImage().getHeight() / imgHeight;
+            int topV = topOffset * image.getHeight() / imgHeight;
+            int bottomV = bottomOffset * image.getHeight() / imgHeight;
 
-            context.getMatrices().translate(0, 0, 1);
-            ScreenshotViewerUtils.drawTexture(
-                    context,
-                    getX() + spacing,
-                    renderY,
-                    width - spacing * 2,
-                    imgHeight - topOffset - bottomOffset,
-                    0,
-                    topV,
-                    image.getImage().getWidth(),
-                    image.getImage().getHeight() - topV - bottomV,
-                    image.getImage().getWidth(),
-                    image.getImage().getHeight()
-            );
+            Identifier texture = thumbnailTextureId();
+            if (texture != null) {
+                ScreenshotViewerUtils.drawTexture(
+                        context,
+                        texture,
+                        getX() + spacing,
+                        renderY,
+                        width - spacing * 2,
+                        imgHeight - topOffset - bottomOffset,
+                        0,
+                        topV,
+                        image.getWidth(),
+                        image.getHeight() - topV - bottomV,
+                        image.getWidth(),
+                        image.getHeight()
+                );
+            }
             if(mainScreen.isFastDeleteToggled() && selectedForDeletion) {
                 context.fill(getX() + spacing, renderY, getX() + width - spacing, renderY + imgHeight - topOffset - bottomOffset, 0x50FF0000);
             }
-            context.getMatrices().translate(0, 0, -1);
-            RenderSystem.disableDepthTest();
-            RenderSystem.disableBlend();
         }
 
         if(VisibilityState.VISIBLE.equals(textVisibility) || VisibilityState.SHOW_ON_HOVER.equals(textVisibility) && hovered) {
             float scaleFactor = (float) (client.getWindow().getScaledHeight() / 96) / ctx.screenshotsPerRow();
             int textY = getY() + (int) (height / 1.08) - spacing;
             if (textY > viewportY && (float) textY + scaleFactor * (client.textRenderer.fontHeight) < viewportBottom) {
-                MatrixStack matrices = context.getMatrices();
-                matrices.push();
-                matrices.translate(getX() + width / 2f, textY, 0);
-                matrices.scale(scaleFactor, scaleFactor, scaleFactor);
+                Matrix3x2fStack matrices = context.getMatrices();
+                matrices.pushMatrix();
+                matrices.translate(getX() + width / 2f, (float)textY);
+                matrices.scale(scaleFactor, scaleFactor);
                 Text message = getMessage();
                 float centerX = (float) (-client.textRenderer.getWidth(getMessage()) / 2);
-                context.drawText(client.textRenderer, message, (int) centerX, 0, textColor, renderTextShadow);
-                matrices.pop();
+                context.drawText(client.textRenderer, message, (int) centerX, 0, 0xFF000000 | textColor, renderTextShadow);
+                matrices.popMatrix();
             }
         }
 
         if(!mainScreen.isFastDeleteToggled() && !hintTooltip.isEmpty() && hoverTime > 20) {
-            RenderSystem.setShaderColor(1, 1, 1, Math.min(hoverTime - 20, 10) / 10 * 0.7f);
-            ScreenshotViewerUtils.renderTooltip(context, client.textRenderer, hintTooltip, mouseX, mouseY);
-            RenderSystem.setShaderColor(1, 1, 1, 1);
+            ScreenshotViewerUtils.renderCustomTooltip(context, client.textRenderer, hintTooltip, mouseX, mouseY, ColorHelper.getWhite(Math.min(hoverTime - 20, 10) / 10 * 0.7f));
         }
     }
 
@@ -202,12 +200,12 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Nullable
-    public NativeImageBackedTexture thumbnailTexture() {
+    private Identifier thumbnailTextureId() {
         if(!thumbnailImage.file.isDone()) {
-            return screenshotImage.texture();
+            return screenshotImage.textureId();
         }
-        NativeImageBackedTexture texture = thumbnailImage.texture();
-        return texture == null ? screenshotImage.texture() : texture;
+        Identifier texture = thumbnailImage.textureId();
+        return texture == null ? screenshotImage.textureId() : texture;
     }
 
     /// ScreenshotImageHolder implementations ///
@@ -263,9 +261,8 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    public int imageId() {
-        NativeImageBackedTexture texture = screenshotImage.texture();
-        return texture != null ? texture.getGlId() : 0;
+    public @Nullable Identifier textureId() {
+        return screenshotImage.textureId();
     }
 
     @Nullable
@@ -277,12 +274,12 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     /// Common Widget implementations ///
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(hovered && keyCode == InputUtil.GLFW_KEY_C && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+    public boolean keyPressed(KeyInput input) {
+        if(hovered && input.key() == InputUtil.GLFW_KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
             this.copyScreenshot();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
@@ -291,14 +288,14 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         if (isHovered()) {
             playDownSound(this.client.getSoundManager());
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (click.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 onClick();
             }
-            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                onRightClick(mouseX, mouseY);
+            if (click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                onRightClick(click.x(), click.y());
             }
             return true;
         }
@@ -333,7 +330,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         private CompletableFuture<File> file = new CompletableFuture<>();
         private CompletableFuture<NativeImage> image;
         @Nullable
-        private NativeImageBackedTexture texture;
+        private Identifier textureId;
 
         ImageLoader(String imageType) {
             this.imageType = imageType;
@@ -349,8 +346,9 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
                 this.file.cancel(true);
             }
             this.file = file;
-            if (texture != null) {
-                texture.close();
+            if (textureId != null) {
+                client.getTextureManager().destroyTexture(textureId);
+                textureId = null;
             } else if (image != null) {
                 image.thenAcceptAsync(image -> {
                     if (image != null) {
@@ -358,7 +356,6 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
                     }
                 }, client);
             }
-            texture = null;
             image = getImage();
         }
 
@@ -386,16 +383,20 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         }
 
         @Nullable
-        public NativeImageBackedTexture texture() {
-            if (texture != null) {
-                return texture;
+        public Identifier textureId() {
+            if (textureId != null) {
+                return textureId;
             }
             if (image == null) {
                 image = getImage();
             }
             NativeImage nativeImage;
             if (image.isDone() && (nativeImage = image.join()) != null) {
-                return texture = new NativeImageBackedTexture(nativeImage);
+                File f = file.getNow(null);
+                int hash = f != null ? java.util.Objects.hash(f.getAbsolutePath(), f.lastModified(), f.length()) : System.identityHashCode(nativeImage);
+                textureId = Identifier.of(ScreenshotViewer.MODID, "dynamic/" + imageType.toLowerCase() + "/" + Integer.toHexString(hash));
+                client.getTextureManager().registerTexture(textureId, new NativeImageBackedTexture(textureId::toString, nativeImage));
+                return textureId;
             }
             return null;
         }
@@ -410,8 +411,9 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
         @Override
         public void close() {
-            if (texture != null) {
-                texture.close(); // Also closes the image
+            if (textureId != null) {
+                client.getTextureManager().destroyTexture(textureId);
+                textureId = null;
             } else if(image != null) {
                 image.thenAcceptAsync(image -> {
                     if (image != null) {
@@ -420,7 +422,6 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
                 }, client);
             }
             image = null;
-            texture = null;
         }
     }
 }

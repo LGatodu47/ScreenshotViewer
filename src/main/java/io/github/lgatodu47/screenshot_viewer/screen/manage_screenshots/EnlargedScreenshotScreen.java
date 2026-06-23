@@ -1,11 +1,9 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.ExtendedButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.ExtendedTexturedButtonWidget;
-import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
@@ -15,6 +13,8 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -143,21 +143,14 @@ class EnlargedScreenshotScreen extends Screen {
 
             NativeImage image = showing.image();
             if (image != null) {
-                RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-                RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                RenderSystem.setShaderTexture(0, showing.imageId());
-                RenderSystem.enableDepthTest();
-                RenderSystem.depthFunc(515);
-                RenderSystem.enableBlend();
                 float imgRatio = (float) image.getWidth() / image.getHeight();
                 int texHeight = height - spacing * 3 - 20;
                 int texWidth = (int) (texHeight * imgRatio);
 
-                context.getMatrices().translate(0, 0, 1);
-                ScreenshotViewerUtils.drawTexture(context, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
-                context.getMatrices().translate(0, 0, -1);
-                RenderSystem.disableDepthTest();
-                RenderSystem.disableBlend();
+                Identifier texture = showing.textureId();
+                if (texture != null) {
+                    ScreenshotViewerUtils.drawTexture(context, texture, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
+                }
             }
         }
     }
@@ -174,29 +167,29 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == InputUtil.GLFW_KEY_LEFT) {
+    public boolean keyPressed(KeyInput input) {
+        if (input.key() == InputUtil.GLFW_KEY_LEFT) {
             previousScreenshot();
             return true;
         }
-        if (keyCode == InputUtil.GLFW_KEY_RIGHT) {
+        if (input.key() == InputUtil.GLFW_KEY_RIGHT) {
             nextScreenshot();
             return true;
         }
-        if(showing != null && keyCode == InputUtil.GLFW_KEY_C && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+        if(showing != null && input.key() == InputUtil.GLFW_KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
             showing.copyScreenshot();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(showing != null && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            this.properties.showProperties(mouseX, mouseY, showing);
+    public boolean mouseClicked(Click click, boolean doubled) {
+        if(showing != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            this.properties.showProperties(click.x(), click.y(), showing);
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubled);
     }
 
     @Override

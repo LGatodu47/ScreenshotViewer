@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.input.KeyInput;
 
 import java.io.File;
 import java.util.*;
@@ -319,26 +320,26 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     private boolean scrollbarClicked;
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         scrollbarClicked = false;
-        if(canScroll() && scrollbar.mouseClicked(mouseX, mouseY, button, scrollY)) {
+        if(canScroll() && scrollbar.mouseClicked(click.x(), click.y(), click.button(), scrollY)) {
             scrollbarClicked = true;
             return true;
         }
-        return OldParentElementMethods.super.mouseClicked(mouseX, mouseY, button);
+        return OldParentElementMethods.super.mouseClicked(click, doubled);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         scrollbarClicked = false;
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
         if(scrollbarClicked && canScroll()) {
             final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
-            int scrollDelta = scrollbar.getScrollOffsetDelta(deltaY, totalHeightOfTheChildrens);
+            int scrollDelta = scrollbar.getScrollOffsetDelta(offsetY, totalHeightOfTheChildrens);
             if (scrollY > 0 && scrollDelta > 0) {
                 scrollY = Math.max(0, scrollY - scrollDelta);
             }
@@ -350,12 +351,12 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
                 scrollY = Math.min(leftOver, scrollY - scrollDelta);
             }
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(click, offsetX, offsetY);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return screenshotWidgets.stream().anyMatch(widget -> widget.keyPressed(keyCode, scanCode, modifiers));
+    public boolean keyPressed(KeyInput input) {
+        return screenshotWidgets.stream().anyMatch(widget -> widget.keyPressed(input));
     }
 
     /// Random implementation methods ///

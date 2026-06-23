@@ -10,6 +10,12 @@ final class ConfirmDeletionScreen extends net.minecraft.client.gui.screen.Confir
     }
 
     @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        renderBackground(context, mouseX, mouseY, deltaTicks);
+        super.render(context, mouseX, mouseY, deltaTicks);
+    }
+
+    @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
     }

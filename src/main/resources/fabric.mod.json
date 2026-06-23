@@ -17,7 +17,8 @@
     "Szedann",
     "TheLegendofSaram",
     "blryface",
-    "Redls07"
+    "Redls07",
+    "CloverGit"
   ],
   "contact": {
     "sources": "https://github.com/LGatodu47/ScreenshotViewer",
@@ -40,6 +41,6 @@
   "accessWidener": "screenshot_viewer.accesswidener",
   "depends": {
     "fabric": "*",
-    "minecraft": ">=1.21.2"
+    "minecraft": ">=1.21.11"
   }
 }
