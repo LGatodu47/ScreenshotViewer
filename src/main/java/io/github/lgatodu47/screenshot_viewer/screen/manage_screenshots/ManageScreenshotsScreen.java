@@ -224,6 +224,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
         context.drawCenteredTextWithShadow(textRenderer, title,width / 2, 8, 0xFFFFFF);
         renderActionText(context);
         ScreenshotViewerUtils.forEachDrawable(this, drawable -> drawable.render(context, mouseX, mouseY, delta));
+
         Matrix3x2fStack matrices = context.getMatrices();
         if(enlargedScreenshot.renders()) {
             float animationTime = 1;
@@ -254,6 +255,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
                 }
             }
         }
+
         if(dialogScreen != null) {
             dialogScreen.render(context, mouseX, mouseY, delta);
         } else {
@@ -263,7 +265,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
 
     private void renderActionText(DrawContext context) {
         Text text = fastDelete ? ScreenshotViewerTexts.FAST_DELETE_MODE : ScreenshotViewerTexts.ZOOM_MODE;
-        context.drawTextWithShadow(textRenderer, text, width - textRenderer.getWidth(text) - 8, 8, fastDelete ? 0xEB4034 : isCtrlDown ? 0x18DE39 : 0xF0CA22);
+        context.drawTextWithShadow(textRenderer, text, width - textRenderer.getWidth(text) - 8, 8, fastDelete ? 0xFFEB4034 : isCtrlDown ? 0xFF18DE39 : 0xFFF0CA22);
     }
 
     /// Methods shared between the classes of the package ///

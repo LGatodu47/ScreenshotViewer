@@ -21,7 +21,7 @@ public interface OldParentElementMethods extends ParentElement {
         } while(!element.mouseClicked(click, doubled));
 
         setFocused(element);
-        if (!doubled) {
+        if (click.button() == 0) {
             setDragging(true);
         }
 

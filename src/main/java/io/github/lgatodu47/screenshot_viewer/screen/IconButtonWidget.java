@@ -28,10 +28,10 @@ public class IconButtonWidget extends ButtonWidget {
 
     @Override
     protected void drawIcon(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, getBackgroundTexture().get(this.active, isSelected()), getX(), getY(), getWidth(), getHeight());
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, getBackgroundTexture().get(this.active, isSelected()), getX(), getY(), getWidth(), getHeight(), getAlpha());
         Identifier icon = getIconTexture();
         if(icon != null) {
-            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), getWidth(), getHeight());
+            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), getWidth(), getHeight(), getAlpha());
         }
     }
 }

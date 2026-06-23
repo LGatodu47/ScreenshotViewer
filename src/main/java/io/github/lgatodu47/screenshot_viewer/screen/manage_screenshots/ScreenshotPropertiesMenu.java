@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable {
-    private static final Identifier BACKGROUND_TEXTURE = Identifier.of(ScreenshotViewer.MODID, "textures/gui/screenshot_properties_background.png");
+    private static final Identifier BACKGROUND_TEXTURE_ATLAS = Identifier.of(ScreenshotViewer.MODID, "screenshot_properties_background");
     static final Identifier OPEN_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/open_folder");
     static final Identifier COPY_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/copy");
     static final Identifier DELETE_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/delete");
@@ -103,18 +103,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         if (shouldRender) {
             final int spacing = 2;
 
-            //corners
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y, 2, 2, 0, 0, 2, 2, 8, 8);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x+width-2, y, 2, 2, 6, 0, 2, 2, 8, 8);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y+height-2, 2, 2, 0, 6, 2, 2, 8, 8);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x+width-2, y+height-2, 2, 2, 6, 6, 2, 2, 8, 8);
-            //sides
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x+2, y, width-4, 2, 3, 0, 2, 2, 8, 8);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y+2, 2, height-4, 0, 3, 2, 2, 8, 8);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x+2, y+height-2, width-4, 2, 3, 6, 2, 2, 8, 8);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x+width-2, y+2, 2, height-4, 6, 3, 2, 2, 8, 8);
-            //center
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x+2, y+2, width-4, height-4, 3, 3, 2, 2, 8, 8);
+            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE_ATLAS, x, y, width, height);
 
             context.drawTextWithShadow(mcSupplier.get().textRenderer, targetScreenshot.getScreenshotFile().getName(), x + spacing, y + spacing, 0xFFFFFFFF);
             for (ClickableWidget widget : buttons) {
@@ -173,13 +162,16 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        public net.minecraft.text.Text getMessage() {
-            return renderWide ? super.getMessage() : ScreenTexts.EMPTY;
-        }
-
-        @Override
         protected void drawIcon(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-            this.drawButton(context);
+            Identifier backgroundTexture = getBackgroundTexture().get(this.active, isSelected());
+            if (renderWide) {
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX(), getY(), 0, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX() + 1, getY(), 1, 0, getWidth() - 2, getHeight(), BUTTON_SIZE - 2, BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX() + getWidth() - 1, getY(), 18, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
+            } else {
+                context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX(), getY(), BUTTON_SIZE, getHeight(), ColorHelper.getWhite(this.alpha));
+            }
+
             Identifier icon = getIconTexture();
             if (icon != null) {
                 context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), BUTTON_SIZE, getHeight(), ColorHelper.getWhite(this.alpha));

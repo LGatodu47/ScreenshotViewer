@@ -58,6 +58,11 @@ tasks.withType(JavaCompile).configureEach {
     }
 }
 
+base {
+    archivesName = project.archives_base_name
+    libsDirectory = layout.buildDirectory.dir("libs/${project.compatible_mc_version}")
+}
+
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     if (JavaVersion.current() < javaVersion) {
@@ -68,8 +73,11 @@ java {
 }
 
 jar {
+    def projectName = project.name
+    inputs.property "projectName", projectName
+
     from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
+        rename { "${it}_$projectName" }
     }
 
     duplicatesStrategy(DuplicatesStrategy.INCLUDE)

@@ -2,25 +2,22 @@ package io.github.lgatodu47.screenshot_viewer;
 
 import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.HoveredTooltipPositioner;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.tooltip.TooltipComponent;
-import net.minecraft.client.gui.tooltip.TooltipPositioner;
+import net.minecraft.client.gui.tooltip.*;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.toast.SystemToast;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector2ic;
 import org.slf4j.Logger;
 
 import javax.imageio.ImageIO;
@@ -31,10 +28,13 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ScreenshotViewerUtils {
@@ -104,11 +104,81 @@ public class ScreenshotViewerUtils {
     }
 
     public static List<TooltipComponent> toColoredComponents(MinecraftClient client, Text text) {
-        return Tooltip.wrapLines(client, text).stream().map(ColoredTooltipComponent::new).collect(Collectors.toList());
+        return Tooltip.wrapLines(client, text).stream().map(ColoredTooltipComponents::new).collect(Collectors.toList());
     }
 
-    public static void renderTooltip(DrawContext context, TextRenderer textRenderer, List<OrderedText> text, int posX, int posY) {
-        context.drawTooltip(textRenderer, text, HoveredTooltipPositioner.INSTANCE, posX, posY, false);
+    private static Field TOOLTIP_DRAWER_FIELD;
+
+    public static void renderCustomTooltip(DrawContext context, TextRenderer textRenderer, List<TooltipComponent> text, int posX, int posY, int color) {
+        if(TOOLTIP_DRAWER_FIELD == null) {
+            try {
+                String fieldName = FabricLoader.getInstance().getMappingResolver().mapFieldName("intermediary", "net.minecraft.class_332", "field_60305", "Ljava/lang/Runnable;");
+                TOOLTIP_DRAWER_FIELD = DrawContext.class.getDeclaredField(fieldName);
+                TOOLTIP_DRAWER_FIELD.setAccessible(true);
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        try {
+            Object tooltipDrawer = TOOLTIP_DRAWER_FIELD.get(context);
+            if(tooltipDrawer == null) {
+                TOOLTIP_DRAWER_FIELD.set(context, (Runnable) () -> drawCustomTooltip(context, textRenderer, text, posX, posY, color));
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final Identifier DEFAULT_TOOLTIP_BACKGROUND_TEXTURE = Identifier.ofVanilla("tooltip/background");
+    private static final Identifier DEFAULT_TOOLTIP_FRAME_TEXTURE = Identifier.ofVanilla("tooltip/frame");
+
+    private static void drawCustomTooltip(DrawContext context, TextRenderer textRenderer, List<TooltipComponent> text, int posX, int posY, int color) {
+        int totWidth = 0;
+        int totHeight = text.size() == 1 ? -2 : 0;
+
+        for (TooltipComponent comp : text) {
+            int compWidth = comp.getWidth(textRenderer);
+            if (compWidth > totWidth) {
+                totWidth = compWidth;
+            }
+
+            totHeight += comp.getHeight(textRenderer);
+        }
+
+        TooltipPositioner positioner = HoveredTooltipPositioner.INSTANCE;
+        Vector2ic vector2ic = positioner.getPosition(context.getScaledWindowWidth(), context.getScaledWindowHeight(), posX, posY, totWidth, totHeight);
+        int x = vector2ic.x();
+        int y = vector2ic.y();
+        context.getMatrices().pushMatrix();
+
+        int bgX = x - 3 - 9;
+        int bgY = y - 3 - 9;
+        int bgWidth = totWidth + 3 + 3 + 18;
+        int bgHeight = totHeight + 3 + 3 + 18;
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, DEFAULT_TOOLTIP_BACKGROUND_TEXTURE, bgX, bgY, bgWidth, bgHeight, color);
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, DEFAULT_TOOLTIP_FRAME_TEXTURE, bgX, bgY, bgWidth, bgHeight, color);
+
+        int drawY = y;
+
+        for (int q = 0; q < text.size(); q++) {
+            TooltipComponent comp = text.get(q);
+            if(comp instanceof ColoredTooltipComponents alpha) {
+                alpha.drawColoredText(context, textRenderer, x, drawY, color);
+            } else {
+                comp.drawText(context, textRenderer, x, drawY);
+            }
+            drawY += comp.getHeight(textRenderer) + (q == 0 ? 2 : 0);
+        }
+
+        drawY = y;
+
+        for (int q = 0; q < text.size(); q++) {
+            TooltipComponent comp = text.get(q);
+            comp.drawItems(textRenderer, x, drawY, totWidth, totHeight, context);
+            drawY += comp.getHeight(textRenderer) + (q == 0 ? 2 : 0);
+        }
+
+        context.getMatrices().popMatrix();
     }
 
     public static void renderWidget(ClickableWidget widget, DrawContext context, int mouseX, int mouseY, float delta) {
@@ -123,10 +193,10 @@ public class ScreenshotViewerUtils {
         screen.children().stream().filter(type::isInstance).map(type::cast).forEachOrdered(action);
     }
 
-    static class ColoredTooltipComponent implements TooltipComponent {
+    static class ColoredTooltipComponents implements TooltipComponent {
         private final OrderedText text;
 
-        public ColoredTooltipComponent(OrderedText text) {
+        public ColoredTooltipComponents(OrderedText text) {
             this.text = text;
         }
 
@@ -143,6 +213,10 @@ public class ScreenshotViewerUtils {
         @Override
         public void drawText(DrawContext context, TextRenderer textRenderer, int x, int y) {
             context.drawText(textRenderer, this.text, x, y, -1, true);
+        }
+
+        public void drawColoredText(DrawContext context, TextRenderer textRenderer, int x, int y, int color) {
+            context.drawText(textRenderer, this.text, x, y, color, true);
         }
     }
 
@@ -164,6 +238,34 @@ public class ScreenshotViewerUtils {
                 throw new UnsupportedFlavorException(flavor);
             }
             return image();
+        }
+    }
+
+    public static Text ofSupplied(Supplier<Text> textSupplier) {
+        return MutableText.of(new ClientSideSuppliedTextContent(textSupplier));
+    }
+
+    record ClientSideSuppliedTextContent(@NotNull Supplier<Text> s) implements PlainTextContent {
+        @Override
+        public String string() {
+            return "";
+        }
+
+        @Override
+        public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
+            Text r = s.get();
+            return r == null ? Optional.empty() : r.visit(visitor);
+        }
+
+        @Override
+        public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
+            Text r = s.get();
+            return r == null ? Optional.empty() : r.visit(visitor, style);
+        }
+
+        @Override
+        public String toString() {
+            return "clientsideSupplied{}";
         }
     }
 }

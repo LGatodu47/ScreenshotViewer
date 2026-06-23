@@ -22,7 +22,7 @@ public class ScreenshotViewerRenderedOptions {
                         PAUSE_MENU_BUTTON_POSITION,
                         () -> new GameMenuScreen(true),
                         ConfigureButtonPlacementScreen.WidgetRemover.ofPredicate(IconButtonWidget.class::isInstance),
-                        () -> MinecraftClient.getInstance().player != null && config.getOrFallback(SHOW_BUTTON_IN_GAME_PAUSE_MENU, true))
+                        () -> false && MinecraftClient.getInstance().player != null && config.getOrFallback(SHOW_BUTTON_IN_GAME_PAUSE_MENU, true)) // editing this in game is disabled for now
         ).setCommonTranslationKey(translation("config", "pause_menu_button_position")).build();
         BUILDER.ofBoolean(SHOW_BUTTON_ON_TITLE_SCREEN).setCommonTranslationKey(translation("config", "show_button_on_title_screen")).build();
         BUILDER.option(TITLE_SCREEN_BUTTON_POSITION).setWidgetFactory(config ->
@@ -30,7 +30,7 @@ public class ScreenshotViewerRenderedOptions {
                         TITLE_SCREEN_BUTTON_POSITION,
                         () -> new TitleScreen(false),
                         ConfigureButtonPlacementScreen.WidgetRemover.ofPredicate(IconButtonWidget.class::isInstance),
-                        () -> config.getOrFallback(SHOW_BUTTON_ON_TITLE_SCREEN, true))
+                        () -> false && config.getOrFallback(SHOW_BUTTON_ON_TITLE_SCREEN, true))
         ).setCommonTranslationKey(translation("config", "title_screen_button_position")).build();
         BUILDER.ofBoolean(REDIRECT_SCREENSHOT_CHAT_LINKS).setCommonTranslationKey(translation("config", "redirect_screenshot_chat_links")).build();
         BUILDER.withCategoryName("ingame", translatable("config_category", "ingame"));

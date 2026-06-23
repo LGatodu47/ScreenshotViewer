@@ -10,6 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -44,7 +45,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     private float backgroundOpacityPercentage;
     private int textColor;
     private boolean renderTextShadow, promptOnDelete;
-    private List<OrderedText> hintTooltip;
+    private List<TooltipComponent> hintTooltip;
 
     private final ImageLoader screenshotImage = new ImageLoader("screenshot");
     private final ImageLoader thumbnailImage = new ImageLoader("thumbnail");
@@ -88,7 +89,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         this.textColor = CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR).map(TextColor::getRgb).orElse(0xFFFFFF);
         this.renderTextShadow = CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW, true);
         this.promptOnDelete = CONFIG.getOrFallback(ScreenshotViewerOptions.PROMPT_WHEN_DELETING_SCREENSHOT, true);
-        this.hintTooltip = CONFIG.getOrFallback(ScreenshotViewerOptions.DISPLAY_HINT_TOOLTIP, false) ? Tooltip.wrapLines(client, ScreenshotViewerTexts.translatable("tooltip", "menu_hint").formatted(Formatting.GRAY)) : List.of();
+        this.hintTooltip = CONFIG.getOrFallback(ScreenshotViewerOptions.DISPLAY_HINT_TOOLTIP, false) ? ScreenshotViewerUtils.toColoredComponents(client, ScreenshotViewerTexts.translatable("tooltip", "menu_hint").formatted(Formatting.GRAY)) : List.of();
     }
 
     void updateHoverState(int mouseX, int mouseY, int viewportY, int viewportBottom, boolean updateHoverState) {
@@ -154,13 +155,13 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
                 matrices.scale(scaleFactor, scaleFactor);
                 Text message = getMessage();
                 float centerX = (float) (-client.textRenderer.getWidth(getMessage()) / 2);
-                context.drawText(client.textRenderer, message, (int) centerX, 0, textColor, renderTextShadow);
+                context.drawText(client.textRenderer, message, (int) centerX, 0, 0xFF000000 | textColor, renderTextShadow);
                 matrices.popMatrix();
             }
         }
 
         if(!mainScreen.isFastDeleteToggled() && !hintTooltip.isEmpty() && hoverTime > 20) {
-            ScreenshotViewerUtils.renderTooltip(context, client.textRenderer, hintTooltip, mouseX, mouseY);
+            ScreenshotViewerUtils.renderCustomTooltip(context, client.textRenderer, hintTooltip, mouseX, mouseY, ColorHelper.getWhite(Math.min(hoverTime - 20, 10) / 10 * 0.7f));
         }
     }
 
