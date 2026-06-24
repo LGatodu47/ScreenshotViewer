@@ -23,7 +23,7 @@
   "screen.screenshot_viewer.field.screenshot_name": "New screenshot name",
   "screen.screenshot_viewer.button_placement.edit": "Edit position",
   "screen.screenshot_viewer.button_placement.movement": "Right-click to move the widget to mouse position.",
-  "screen.screenshot_viewer.button_placement.confirm": "Type ENTER to confirm, ESCAPE to cancel, R to reset.",
+  "screen.screenshot_viewer.button_placement.confirm": "Type ENTER to confirm, ESCAPE to quit without saving, C to cancel, R to reset to default.",
   "tooltip.screenshot_viewer.redirect_to_screenshot_manager": "Open screenshot in the Screenshot Manager...",
   "tooltip.screenshot_viewer.menu_hint": "Right-click to manage \nHit CTRL-C to copy to clipboard",
 

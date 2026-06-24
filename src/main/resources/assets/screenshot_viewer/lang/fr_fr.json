@@ -23,6 +23,9 @@
   "screen.screenshot_viewer.field.screenshot_name": "Nouveau nom de capture d'écran",
   "tooltip.screenshot_viewer.redirect_to_screenshot_manager": "Ouvrir dans le gestionnaire de captures d'écran...",
   "tooltip.screenshot_viewer.menu_hint": "Click droit pour gérer \nCTRL-C pour copier directement",
+  "screen.screenshot_viewer.button_placement.edit": "Changer la position",
+  "screen.screenshot_viewer.button_placement.movement": "Click droit pour bouger l'élément à la position du curseur.",
+  "screen.screenshot_viewer.button_placement.confirm": "Tapez ENTREE pour confirmer, ECHAP pour quitter sans sauvegarger, C pour annuler, R pour réinitialiser à la valeur par défaut.",
 
   "screen.screenshot_viewer.config": "Config de Screenshot Viewer",
   "config.screenshot_viewer.show_button_in_game_pause_menu": "Afficher le bouton dans le menu Pause",
@@ -63,6 +66,10 @@
   "config.screenshot_viewer.thumbnail_folder.desc": "Un chemin d'accès vers le dossier qui contiendra les miniatures de vos captures d'écran.",
   "config.screenshot_viewer.compression_ratio": "Taux de compression",
   "config.screenshot_viewer.compression_ratio.desc": "Contrôle le taux de compression des miniatures. Si 'None' est sélectionné, aucune miniature ne sera générée.",
+  "config.screenshot_viewer.pause_menu_button_position": "Position du bouton dans le menu pause",
+  "config.screenshot_viewer.pause_menu_button_position.desc": "Position du bouton pour accéder au gestionnaire dans le menu pause.",
+  "config.screenshot_viewer.title_screen_button_position": "Position du bouton dans l'écran titre",
+  "config.screenshot_viewer.title_screen_button_position.desc": "Position du bouton pour accéder au gestionnaire dans l'écran titre.",
 
   "config_category.screenshot_viewer.ingame": "Accès au gestionnaire de captures d'écran",
   "config_category.screenshot_viewer.ingui": "Personalisation du gestionnaire de captures d'écran",

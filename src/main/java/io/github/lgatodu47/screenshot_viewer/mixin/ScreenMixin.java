@@ -29,6 +29,7 @@ public abstract class ScreenMixin {
                 return;
             }
             handleBasicClickEvent(new ClickEvent.OpenFile(ce.screenshotFile()), client, screenAfterRun);
+            ci.cancel();
         }
     }
 }
