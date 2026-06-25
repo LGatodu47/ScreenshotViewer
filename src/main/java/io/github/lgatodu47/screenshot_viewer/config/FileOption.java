@@ -5,16 +5,16 @@ import com.google.gson.stream.JsonWriter;
 import io.github.lgatodu47.catconfig.ConfigAccess;
 import io.github.lgatodu47.catconfig.ConfigOption;
 import io.github.lgatodu47.catconfig.ValueSerializationHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -53,30 +53,30 @@ public record FileOption(String name, @Nullable Supplier<File> defValue, @Nullab
         return new File(reader.nextString());
     }
 
-    public static ClickableWidget createDirectoryWidget(ConfigAccess config, ConfigOption<File> option) {
-        FilePathWidget widget = new FilePathWidget(MinecraftClient.getInstance().textRenderer, 0, 0, 200, 20, Text.empty());
+    public static AbstractWidget createDirectoryWidget(ConfigAccess config, ConfigOption<File> option) {
+        FilePathWidget widget = new FilePathWidget(Minecraft.getInstance().font, 0, 0, 200, 20, Component.empty());
         Supplier<File> defaultValue = () -> Objects.requireNonNull(option.defaultValue());
-        widget.setText(config.get(option).orElseGet(defaultValue).getAbsolutePath());
+        widget.setValue(config.get(option).orElseGet(defaultValue).getAbsolutePath());
         AtomicBoolean corrected = new AtomicBoolean(false);
-        widget.addFormatter((text, firstCharacterIndex) -> OrderedText.styledForwardsVisitedString(text, corrected.get() ? Style.EMPTY.withColor(Formatting.RED) : Style.EMPTY));
+        widget.addFormatter((text, firstCharacterIndex) -> FormattedCharSequence.forward(text, corrected.get() ? Style.EMPTY.withColor(ChatFormatting.RED) : Style.EMPTY));
         widget.setAcceptChangesListener(() -> {
-            File target = new File(widget.getText());
+            File target = new File(widget.getValue());
             if(target.exists() && target.isAbsolute() && target.isDirectory() && target.canRead()) {
                 config.put(option, target);
                 corrected.set(false);
                 return;
             }
-            widget.setText(defaultValue.get().getAbsolutePath());
+            widget.setValue(defaultValue.get().getAbsolutePath());
             corrected.set(true);
         });
         return widget;
     }
 
-    public static class FilePathWidget extends TextFieldWidget {
+    public static class FilePathWidget extends EditBox {
 //        protected static final Identifier OPEN_FOLDER_BUTTON_TEXTURE = new Identifier(ScreenshotViewer.MODID, "textures/gui/open_folder_button.png");
         protected Runnable acceptChangesListener;
 
-        public FilePathWidget(TextRenderer renderer, int x, int y, int width, int height, Text text) {
+        public FilePathWidget(Font renderer, int x, int y, int width, int height, Component text) {
             super(renderer, x, y, width /*- height*/, height, text);
             setMaxLength(Integer.MAX_VALUE);
         }
@@ -110,7 +110,7 @@ public record FileOption(String name, @Nullable Supplier<File> defValue, @Nullab
         }*/
 
         @Override
-        public boolean mouseClicked(Click click, boolean doubled) {
+        public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
             boolean res = super.mouseClicked(click, doubled);
             if(res && acceptChangesListener != null) {
                 acceptChangesListener.run();
@@ -119,8 +119,8 @@ public record FileOption(String name, @Nullable Supplier<File> defValue, @Nullab
         }
 
         @Override
-        public boolean keyPressed(KeyInput input) {
-            if(!isActive()) {
+        public boolean keyPressed(KeyEvent input) {
+            if(!canConsumeInput()) {
                 return false;
             }
             if(input.key() == GLFW.GLFW_KEY_ENTER && acceptChangesListener != null) {

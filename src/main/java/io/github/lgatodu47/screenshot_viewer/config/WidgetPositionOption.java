@@ -8,10 +8,10 @@ import io.github.lgatodu47.catconfig.ValueSerializationHelper;
 import io.github.lgatodu47.screenshot_viewer.screen.ConfigureButtonPlacementScreen;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerConfigScreen;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.AbstractWidget;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,9 +48,9 @@ public record WidgetPositionOption(String name, @Nullable WidgetPosition default
         return new WidgetPosition(x, y);
     }
 
-    public static ClickableWidget createWidget(ConfigAccess access, ConfigOption<WidgetPosition> option, Supplier<Screen> configuringScreenFactory, ConfigureButtonPlacementScreen.WidgetRemover remover, BooleanSupplier canEdit) {
-        ButtonWidget btn = new ButtonWidget.Builder(ScreenshotViewerTexts.EDIT_WIDGET_PLACEMENT, button -> {
-            MinecraftClient.getInstance().setScreen(new ConfigureButtonPlacementScreen(ScreenshotViewerConfigScreen.getCurrentInstance(), access, option, configuringScreenFactory, remover));
+    public static AbstractWidget createWidget(ConfigAccess access, ConfigOption<WidgetPosition> option, Supplier<Screen> configuringScreenFactory, ConfigureButtonPlacementScreen.WidgetRemover remover, BooleanSupplier canEdit) {
+        Button btn = new Button.Builder(ScreenshotViewerTexts.EDIT_WIDGET_PLACEMENT, button -> {
+            Minecraft.getInstance().setScreen(new ConfigureButtonPlacementScreen(ScreenshotViewerConfigScreen.getCurrentInstance(), access, option, configuringScreenFactory, remover));
         }).width(100).build();
         btn.active = canEdit.getAsBoolean();
         return btn;

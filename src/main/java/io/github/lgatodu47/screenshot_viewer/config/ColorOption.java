@@ -5,16 +5,16 @@ import com.google.gson.stream.JsonWriter;
 import io.github.lgatodu47.catconfig.ConfigAccess;
 import io.github.lgatodu47.catconfig.ConfigOption;
 import io.github.lgatodu47.catconfig.ValueSerializationHelper;
+import io.github.lgatodu47.catconfigmc.OldEditBox;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,20 +41,20 @@ public record ColorOption(String name, @Nullable TextColor defaultValue, @Nullab
 
     @Override
     public TextColor read(JsonReader reader, ValueSerializationHelper helper) throws IOException {
-        return TextColor.parse(reader.nextString()).result().orElse(null);
+        return TextColor.parseColor(reader.nextString()).result().orElse(null);
     }
 
-    public static ClickableWidget createWidget(ConfigAccess config, ConfigOption<TextColor> option) {
-        ColorTextField widget = new ColorTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 60, 20, Text.empty());
+    public static AbstractWidget createWidget(ConfigAccess config, ConfigOption<TextColor> option) {
+        ColorTextField widget = new ColorTextField(Minecraft.getInstance().font, 0, 0, 60, 20, Component.empty());
         widget.setMaxLength(7);
-        widget.setText(config.get(option).map(ColorOption::getHexCode).orElse("#"));
-        widget.setTextPredicate(s -> s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parse(s).result().isPresent()));
-        widget.setChangedListener(s -> {
+        widget.setValue(config.get(option).map(ColorOption::getHexCode).orElse("#"));
+        widget.setTextPredicate(s -> s.startsWith("#") && (s.substring(1).isEmpty() || TextColor.parseColor(s).result().isPresent()));
+        widget.setResponder(s -> {
             if(s.isEmpty() || s.substring(1).isEmpty()) {
                 config.put(option, null);
                 return;
             }
-            TextColor.parse(s).result().ifPresent(color -> config.put(option, color));
+            TextColor.parseColor(s).result().ifPresent(color -> config.put(option, color));
         });
         return widget;
     }
@@ -70,32 +70,32 @@ public record ColorOption(String name, @Nullable TextColor defaultValue, @Nullab
             } catch (Throwable ignored) {
             }
         }
-        return String.format(Locale.ROOT, "#%06X", textColor.getRgb());
+        return String.format(Locale.ROOT, "#%06X", textColor.getValue());
     }
 
-    public static class ColorTextField extends TextFieldWidget {
-        public ColorTextField(TextRenderer renderer, int x, int y, int width, int height, Text text) {
+    public static class ColorTextField extends OldEditBox {
+        public ColorTextField(Font renderer, int x, int y, int width, int height, Component text) {
             super(renderer, x, y, width, height, text);
         }
 
         @Override
-        public boolean keyPressed(KeyInput input) {
-            if (isActive() && input.isPaste()) {
-                String clipboard = MinecraftClient.getInstance().keyboard.getClipboard();
+        public boolean keyPressed(KeyEvent input) {
+            if (canConsumeInput() && input.isPaste()) {
+                String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
                 if(clipboard.startsWith("#") && clipboard.length() < 8) {
                     clipboard = clipboard.substring(1);
                 }
-                this.write(clipboard);
+                this.insertText(clipboard);
                 return true;
             }
             return super.keyPressed(input);
         }
 
         @Override
-        public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-            super.renderWidget(context, mouseX, mouseY, delta);
+        public void extractWidgetRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+            super.extractWidgetRenderState(context, mouseX, mouseY, delta);
             if(this.isVisible()) {
-                String text = getText();
+                String text = getValue();
                 if(!text.isEmpty()) {
                     try {
                         int color = Integer.parseInt(text.substring(1), 16);

@@ -1,20 +1,20 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.NativeImage;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.ExtendedButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.ExtendedTexturedButtonWidget;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -28,21 +28,21 @@ class EnlargedScreenshotScreen extends Screen {
     @Nullable
     private ScreenshotImageList imageList;
     private final PropertiesDisplay properties;
-    private final ClickableWidget doneBtn, nextBtn, prevBtn, openBtn, copyBtn, deleteBtn, renameBtn;
+    private final AbstractWidget doneBtn, nextBtn, prevBtn, openBtn, copyBtn, deleteBtn, renameBtn;
 
     EnlargedScreenshotScreen(PropertiesDisplay properties) {
-        super(Text.empty());
+        super(Component.empty());
         this.properties = properties;
-        this.doneBtn = new ExtendedButtonWidget(0, 0, 52, 20, ScreenTexts.DONE, btn -> close());
-        this.prevBtn = new ExtendedButtonWidget(0, 0, 20, 20, Text.literal("<"), btn -> previousScreenshot());
-        this.nextBtn = new ExtendedButtonWidget(0, 0, 20, 20, Text.literal(">"), btn -> nextScreenshot());
+        this.doneBtn = new ExtendedButtonWidget(0, 0, 52, 20, CommonComponents.GUI_DONE, btn -> onClose());
+        this.prevBtn = new ExtendedButtonWidget(0, 0, 20, 20, Component.literal("<"), btn -> previousScreenshot());
+        this.nextBtn = new ExtendedButtonWidget(0, 0, 20, 20, Component.literal(">"), btn -> nextScreenshot());
         this.openBtn = makeIconWidget(OPEN_ICON, ScreenshotViewerTexts.OPEN_FILE, ScreenshotImageHolder::openFile);
         this.copyBtn = makeIconWidget(COPY_ICON, ScreenshotViewerTexts.COPY, ScreenshotImageHolder::copyScreenshot);
         this.deleteBtn = makeIconWidget(DELETE_ICON, ScreenshotViewerTexts.DELETE, ScreenshotImageHolder::requestFileDeletion);
         this.renameBtn = makeIconWidget(RENAME_ICON, ScreenshotViewerTexts.RENAME_FILE, ScreenshotImageHolder::renameFile);
     }
 
-    private ClickableWidget makeIconWidget(Identifier texture, Text description, Consumer<ScreenshotImageHolder> action) {
+    private AbstractWidget makeIconWidget(Identifier texture, Component description, Consumer<ScreenshotImageHolder> action) {
         return new ExtendedTexturedButtonWidget(0, 0, 20, 20, texture, btn -> {
             if(showing != null) {
                 action.accept(showing);
@@ -60,7 +60,7 @@ class EnlargedScreenshotScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        clearChildren();
+        clearWidgets();
         int spacing = 4;
         addPositioned(doneBtn, (width - 52) / 2, height - 20 - spacing * 2);
         addPositioned(prevBtn, spacing * 2, (height - 20) / 2);
@@ -72,10 +72,10 @@ class EnlargedScreenshotScreen extends Screen {
         addPositioned(renameBtn, rightButtonsX, (height) - 20 * 2 - spacing * 3);
     }
 
-    private void addPositioned(ClickableWidget button, int x, int y) {
+    private void addPositioned(AbstractWidget button, int x, int y) {
         button.setX(x);
         button.setY(y);
-        addDrawableChild(button);
+        addRenderableWidget(button);
     }
 
     private void nextScreenshot() {
@@ -115,18 +115,18 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
-    public void render(DrawContext context, int mouseX, int mouseY, float partialTicks, boolean updateHoverState) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks, boolean updateHoverState) {
         this.children().forEach(element -> {
-            if(element instanceof Drawable drawable) {
-                drawable.render(context, mouseX, mouseY, partialTicks);
+            if(element instanceof Renderable drawable) {
+                drawable.extractRenderState(context, mouseX, mouseY, partialTicks);
             }
             if(element instanceof ManageScreenshotsScreen.CustomHoverState state) {
                 // feeding negative values updates the state by tricking it into thinking that it isn't hovered.
@@ -137,7 +137,7 @@ class EnlargedScreenshotScreen extends Screen {
         });
     }
 
-    public void renderImage(DrawContext context) {
+    public void renderImage(GuiGraphicsExtractor context) {
         if (showing != null) {
             final int spacing = 8;
 
@@ -167,16 +167,16 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if (input.key() == InputUtil.GLFW_KEY_LEFT) {
+    public boolean keyPressed(KeyEvent input) {
+        if (input.key() == InputConstants.KEY_LEFT) {
             previousScreenshot();
             return true;
         }
-        if (input.key() == InputUtil.GLFW_KEY_RIGHT) {
+        if (input.key() == InputConstants.KEY_RIGHT) {
             nextScreenshot();
             return true;
         }
-        if(showing != null && input.key() == InputUtil.GLFW_KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
+        if(showing != null && input.key() == InputConstants.KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
             showing.copyScreenshot();
             return true;
         }
@@ -184,7 +184,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         if(showing != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             this.properties.showProperties(click.x(), click.y(), showing);
             return true;
@@ -193,7 +193,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         showing = null;
         imageList = null;
     }

@@ -4,9 +4,9 @@ import io.github.lgatodu47.catconfigmc.RenderedConfigOptionAccess;
 import io.github.lgatodu47.catconfigmc.RenderedConfigOptionBuilder;
 import io.github.lgatodu47.screenshot_viewer.screen.ConfigureButtonPlacementScreen;
 import io.github.lgatodu47.screenshot_viewer.screen.IconButtonWidget;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.GameMenuScreen;
-import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
 
 import static io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions.*;
 import static io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts.translatable;
@@ -20,9 +20,9 @@ public class ScreenshotViewerRenderedOptions {
         BUILDER.option(PAUSE_MENU_BUTTON_POSITION).setWidgetFactory(config ->
                 WidgetPositionOption.createWidget(config,
                         PAUSE_MENU_BUTTON_POSITION,
-                        () -> new GameMenuScreen(true),
+                        () -> new PauseScreen(true),
                         ConfigureButtonPlacementScreen.WidgetRemover.ofPredicate(IconButtonWidget.class::isInstance),
-                        () -> MinecraftClient.getInstance().player != null && config.getOrFallback(SHOW_BUTTON_IN_GAME_PAUSE_MENU, true))
+                        () -> Minecraft.getInstance().player != null && config.getOrFallback(SHOW_BUTTON_IN_GAME_PAUSE_MENU, true))
         ).setCommonTranslationKey(translation("config", "pause_menu_button_position")).build();
         BUILDER.ofBoolean(SHOW_BUTTON_ON_TITLE_SCREEN).setCommonTranslationKey(translation("config", "show_button_on_title_screen")).build();
         BUILDER.option(TITLE_SCREEN_BUTTON_POSITION).setWidgetFactory(config ->

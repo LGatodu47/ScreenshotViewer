@@ -5,25 +5,30 @@ import io.github.lgatodu47.screenshot_viewer.config.ScreenshotListOrder;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
-import net.minecraft.client.input.KeyInput;
 
 import java.io.File;
 import java.util.*;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
-final class ScreenshotList extends AbstractParentElement implements Drawable, Selectable, ScreenshotImageList, ScreenshotWidget.Context, OldParentElementMethods {
+final class ScreenshotList extends AbstractContainerEventHandler implements Renderable, NarratableEntry, ScreenshotImageList, ScreenshotWidget.Context, OldParentElementMethods {
     private final ManageScreenshotsScreen mainScreen;
-    private final MinecraftClient client;
+    private final Minecraft client;
     private final int x, y;
     private final List<ScreenshotWidget> screenshotWidgets = new ArrayList<>();
-    private final List<Element> elements = new ArrayList<>();
+    private final List<GuiEventListener> elements = new ArrayList<>();
     private final Scrollbar scrollbar = new Scrollbar();
 
     private int width, height;
@@ -173,7 +178,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
      * Updates the list variables (width and height of children, etc.).
      */
     private void updateVariables() {
-        float windowAspect = (float) client.getWindow().getWidth() / (float) client.getWindow().getHeight();
+        float windowAspect = (float) client.getWindow().getScreenWidth() / (float) client.getWindow().getScreenHeight();
         final int scrollbarWidth = 6;
         final int scrollbarSpacing = 2;
         spacing = 4;
@@ -194,14 +199,14 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     /// Common Methods ///
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
     // The boolean added controls whether the screenshot widgets should update its `hovered` state.
-    void render(DrawContext context, int mouseX, int mouseY, float delta, boolean updateHoverState) {
-        context.fill(x, y, x + width, y + height, ColorHelper.getArgb((int) (0.7f * 255), 0, 0, 0));
+    void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, boolean updateHoverState) {
+        context.fill(x, y, x + width, y + height, ARGB.color((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
-            context.drawCenteredTextWithShadow(client.textRenderer, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
+            context.centeredText(client.font, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }
         for (ScreenshotWidget screenshotWidget : screenshotWidgets) {
             screenshotWidget.updateY(scrollY);
@@ -220,7 +225,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     }
 
     @Override
-    public List<? extends Element> children() {
+    public List<? extends GuiEventListener> children() {
         return elements;
     }
 
@@ -293,7 +298,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     }
 
     private int getTotalHeightOfChildren() {
-        int rows = MathHelper.ceil(screenshotWidgets.size() / (float) screenshotsPerRow);
+        int rows = Mth.ceil(screenshotWidgets.size() / (float) screenshotsPerRow);
         return rows * childHeight + spacing * (rows - 1);
     }
 
@@ -320,7 +325,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     private boolean scrollbarClicked;
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         scrollbarClicked = false;
         if(canScroll() && scrollbar.mouseClicked(click.x(), click.y(), click.button(), scrollY)) {
             scrollbarClicked = true;
@@ -330,13 +335,13 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     }
 
     @Override
-    public boolean mouseReleased(Click click) {
+    public boolean mouseReleased(MouseButtonEvent click) {
         scrollbarClicked = false;
         return super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+    public boolean mouseDragged(MouseButtonEvent click, double offsetX, double offsetY) {
         if(scrollbarClicked && canScroll()) {
             final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
             int scrollDelta = scrollbar.getScrollOffsetDelta(offsetY, totalHeightOfTheChildrens);
@@ -355,19 +360,19 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent input) {
         return screenshotWidgets.stream().anyMatch(widget -> widget.keyPressed(input));
     }
 
     /// Random implementation methods ///
 
     @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
+    public void updateNarration(NarrationElementOutput builder) {
     }
 
     @Override
-    public SelectionType getType() {
-        return SelectionType.NONE;
+    public NarrationPriority narrationPriority() {
+        return NarrationPriority.NONE;
     }
 
     private static class Scrollbar {
@@ -387,11 +392,11 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
             // Takes into account the fact that the scrollbar is offset from the track
             int scrollbarSpacedTrackHeight = trackHeight + 2 * spacing;
 
-            this.scrollbarYGetter = scrollOffset -> MathHelper.ceil(scrollOffset * scrollbarSpacedTrackHeight / (float) totalHeightOfTheChildrens) + listY + spacing;
+            this.scrollbarYGetter = scrollOffset -> Mth.ceil(scrollOffset * scrollbarSpacedTrackHeight / (float) totalHeightOfTheChildrens) + listY + spacing;
             this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
         }
 
-        void render(DrawContext context, double mouseX, double mouseY, int scrollOffset, boolean updateHoverState, boolean clicked) {
+        void render(GuiGraphicsExtractor context, double mouseX, double mouseY, int scrollOffset, boolean updateHoverState, boolean clicked) {
             int y = scrollbarYGetter.applyAsInt(scrollOffset);
             context.fill(trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
             context.fill(x, y, x + width, y + height, clicked ? 0xFFFFFFFF : (isHovered(mouseX, mouseY, y) && updateHoverState) ? 0xFF6D6D6D : 0xFF1E1E1E);
@@ -403,7 +408,7 @@ final class ScreenshotList extends AbstractParentElement implements Drawable, Se
 
         int getScrollOffsetDelta(double scrollbarDelta, double totalHeightOfTheChildrens) {
             int scrollbarSpacedTrackHeight = trackHeight + 2 * spacing;
-            return MathHelper.ceil(-scrollbarDelta * totalHeightOfTheChildrens / (float) scrollbarSpacedTrackHeight);
+            return Mth.ceil(-scrollbarDelta * totalHeightOfTheChildrens / (float) scrollbarSpacedTrackHeight);
         }
 
         private boolean isHovered(double mouseX, double mouseY, int y) {

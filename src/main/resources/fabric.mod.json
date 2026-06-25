@@ -40,7 +40,7 @@
   ],
   "accessWidener": "screenshot_viewer.accesswidener",
   "depends": {
-    "fabric": "*",
-    "minecraft": ">=1.21.11"
+    "fabricloader": "*",
+    "minecraft": ">=26.1"
   }
 }

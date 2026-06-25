@@ -1,32 +1,30 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.NativeImage;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.tooltip.TooltipComponent;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.client.util.InputUtil;
-import org.joml.Matrix3x2fStack;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
-import net.minecraft.text.OrderedText;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
 import org.lwjgl.glfw.GLFW;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -36,16 +34,16 @@ import java.util.concurrent.CompletableFuture;
 
 import static io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen.*;
 
-final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, ScreenshotImageHolder {
+final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, ScreenshotImageHolder {
     private final ManageScreenshotsScreen mainScreen;
-    private final MinecraftClient client;
+    private final Minecraft client;
     private final Context ctx;
 
     private VisibilityState textVisibility;
     private float backgroundOpacityPercentage;
     private int textColor;
     private boolean renderTextShadow, promptOnDelete;
-    private List<TooltipComponent> hintTooltip;
+    private List<ClientTooltipComponent> hintTooltip;
 
     private final ImageLoader screenshotImage = new ImageLoader("screenshot");
     private final ImageLoader thumbnailImage = new ImageLoader("thumbnail");
@@ -55,7 +53,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     private int baseY;
 
     public ScreenshotWidget(ManageScreenshotsScreen mainScreen, int x, int y, int width, int height, Context ctx, File screenshotFile) {
-        super(x, y, width, height, Text.literal(screenshotFile.getName()));
+        super(x, y, width, height, Component.literal(screenshotFile.getName()));
         this.mainScreen = mainScreen;
         this.client = mainScreen.client();
         this.baseY = y;
@@ -86,14 +84,14 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     void onConfigUpdate() {
         this.textVisibility = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY, VisibilityState.VISIBLE);
         this.backgroundOpacityPercentage = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_BACKGROUND_OPACITY, 100) / 100f;
-        this.textColor = CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR).map(TextColor::getRgb).orElse(0xFFFFFF);
+        this.textColor = CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR).map(TextColor::getValue).orElse(0xFFFFFF);
         this.renderTextShadow = CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW, true);
         this.promptOnDelete = CONFIG.getOrFallback(ScreenshotViewerOptions.PROMPT_WHEN_DELETING_SCREENSHOT, true);
-        this.hintTooltip = CONFIG.getOrFallback(ScreenshotViewerOptions.DISPLAY_HINT_TOOLTIP, false) ? ScreenshotViewerUtils.toColoredComponents(client, ScreenshotViewerTexts.translatable("tooltip", "menu_hint").formatted(Formatting.GRAY)) : List.of();
+        this.hintTooltip = CONFIG.getOrFallback(ScreenshotViewerOptions.DISPLAY_HINT_TOOLTIP, false) ? ScreenshotViewerUtils.toColoredComponents(client, ScreenshotViewerTexts.translatable("tooltip", "menu_hint").withStyle(ChatFormatting.GRAY)) : List.of();
     }
 
     void updateHoverState(int mouseX, int mouseY, int viewportY, int viewportBottom, boolean updateHoverState) {
-        this.hovered = updateHoverState && (mouseX >= this.getX() && mouseY >= Math.max(this.getY(), viewportY) && mouseX < this.getX() + this.width && mouseY < Math.min(this.getY() + this.height, viewportBottom));
+        this.isHovered = updateHoverState && (mouseX >= this.getX() && mouseY >= Math.max(this.getY(), viewportY) && mouseX < this.getX() + this.width && mouseY < Math.min(this.getY() + this.height, viewportBottom));
     }
 
     boolean isSelectedForDeletion() {
@@ -106,8 +104,8 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
     /// Rendering Methods ///
 
-    void render(DrawContext context, int mouseX, int mouseY, float partialTick, int viewportY, int viewportBottom) {
-        this.hoverTime = hovered ? (hoverTime + partialTick) : 0;
+    void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick, int viewportY, int viewportBottom) {
+        this.hoverTime = isHovered ? (hoverTime + partialTick) : 0;
         renderBackground(context, viewportY, viewportBottom);
         final int spacing = 2;
 
@@ -145,34 +143,34 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             }
         }
 
-        if(VisibilityState.VISIBLE.equals(textVisibility) || VisibilityState.SHOW_ON_HOVER.equals(textVisibility) && hovered) {
-            float scaleFactor = (float) (client.getWindow().getScaledHeight() / 96) / ctx.screenshotsPerRow();
+        if(VisibilityState.VISIBLE.equals(textVisibility) || VisibilityState.SHOW_ON_HOVER.equals(textVisibility) && isHovered) {
+            float scaleFactor = (float) (client.getWindow().getGuiScaledHeight() / 96) / ctx.screenshotsPerRow();
             int textY = getY() + (int) (height / 1.08) - spacing;
-            if (textY > viewportY && (float) textY + scaleFactor * (client.textRenderer.fontHeight) < viewportBottom) {
-                Matrix3x2fStack matrices = context.getMatrices();
+            if (textY > viewportY && (float) textY + scaleFactor * (client.font.lineHeight) < viewportBottom) {
+                Matrix3x2fStack matrices = context.pose();
                 matrices.pushMatrix();
                 matrices.translate(getX() + width / 2f, (float)textY);
                 matrices.scale(scaleFactor, scaleFactor);
-                Text message = getMessage();
-                float centerX = (float) (-client.textRenderer.getWidth(getMessage()) / 2);
-                context.drawText(client.textRenderer, message, (int) centerX, 0, 0xFF000000 | textColor, renderTextShadow);
+                Component message = getMessage();
+                float centerX = (float) (-client.font.width(getMessage()) / 2);
+                context.text(client.font, message, (int) centerX, 0, 0xFF000000 | textColor, renderTextShadow);
                 matrices.popMatrix();
             }
         }
 
         if(!mainScreen.isFastDeleteToggled() && !hintTooltip.isEmpty() && hoverTime > 20) {
-            ScreenshotViewerUtils.renderCustomTooltip(context, client.textRenderer, hintTooltip, mouseX, mouseY, ColorHelper.getWhite(Math.min(hoverTime - 20, 10) / 10 * 0.7f));
+            ScreenshotViewerUtils.renderCustomTooltip(context, client.font, hintTooltip, mouseX, mouseY, ARGB.white(Math.min(hoverTime - 20, 10) / 10 * 0.7f));
         }
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
-    private void renderBackground(DrawContext context, int viewportY, int viewportBottom) {
+    private void renderBackground(GuiGraphicsExtractor context, int viewportY, int viewportBottom) {
         int renderY = Math.max(getY(), viewportY);
         int renderHeight = Math.min(getY() + height, viewportBottom);
-        context.fill(getX(), renderY, getX() + width, renderHeight, ColorHelper.getWhite((Math.min(hoverTime, 10) / 10) * backgroundOpacityPercentage));
+        context.fill(getX(), renderY, getX() + width, renderHeight, ARGB.white((Math.min(hoverTime, 10) / 10) * backgroundOpacityPercentage));
     }
 
     /// Utility methods ///
@@ -217,7 +215,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
 
     @Override
     public void openFile() {
-        Util.getOperatingSystem().open(screenshotFile);
+        Util.getPlatform().openFile(screenshotFile);
     }
 
     @Override
@@ -236,7 +234,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         };
 
         if (promptOnDelete) {
-            mainScreen.setDialogScreen(new ConfirmDeletionScreen(deleteAction, Text.translatable("screen." + ScreenshotViewer.MODID + ".delete_prompt", screenshotFile.getName()), ScreenshotViewerTexts.DELETE_WARNING_MESSAGE));
+            mainScreen.setDialogScreen(new ConfirmDeletionScreen(deleteAction, Component.translatable("screen." + ScreenshotViewer.MODID + ".delete_prompt", screenshotFile.getName()), ScreenshotViewerTexts.DELETE_WARNING_MESSAGE));
             return;
         }
         deleteAction.accept(true);
@@ -274,8 +272,8 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     /// Common Widget implementations ///
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if(hovered && input.key() == InputUtil.GLFW_KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
+    public boolean keyPressed(KeyEvent input) {
+        if(isHovered && input.key() == InputConstants.KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
             this.copyScreenshot();
             return true;
         }
@@ -283,12 +281,12 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    public Text getMessage() {
-        return this.screenshotFile == null ? super.getMessage() : Text.literal(this.screenshotFile.getName());
+    public Component getMessage() {
+        return this.screenshotFile == null ? super.getMessage() : Component.literal(this.screenshotFile.getName());
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         if (isHovered()) {
             playDownSound(this.client.getSoundManager());
             if (click.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -308,7 +306,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput builder) {
     }
 
     @Override
@@ -347,7 +345,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             }
             this.file = file;
             if (textureId != null) {
-                client.getTextureManager().destroyTexture(textureId);
+                client.getTextureManager().release(textureId);
                 textureId = null;
             } else if (image != null) {
                 image.thenAcceptAsync(image -> {
@@ -379,7 +377,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
                     LOGGER.error("Failed to load {}: {}", imageType, file.getName(), e);
                 }
                 return null;
-            }, Util.getMainWorkerExecutor());
+            }, Util.backgroundExecutor());
         }
 
         @Nullable
@@ -394,8 +392,8 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
             if (image.isDone() && (nativeImage = image.join()) != null) {
                 File f = file.getNow(null);
                 int hash = f != null ? java.util.Objects.hash(f.getAbsolutePath(), f.lastModified(), f.length()) : System.identityHashCode(nativeImage);
-                textureId = Identifier.of(ScreenshotViewer.MODID, "dynamic/" + imageType.toLowerCase() + "/" + Integer.toHexString(hash));
-                client.getTextureManager().registerTexture(textureId, new NativeImageBackedTexture(textureId::toString, nativeImage));
+                textureId = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "dynamic/" + imageType.toLowerCase() + "/" + Integer.toHexString(hash));
+                client.getTextureManager().register(textureId, new DynamicTexture(textureId::toString, nativeImage));
                 return textureId;
             }
             return null;
@@ -412,7 +410,7 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
         @Override
         public void close() {
             if (textureId != null) {
-                client.getTextureManager().destroyTexture(textureId);
+                client.getTextureManager().release(textureId);
                 textureId = null;
             } else if(image != null) {
                 image.thenAcceptAsync(image -> {

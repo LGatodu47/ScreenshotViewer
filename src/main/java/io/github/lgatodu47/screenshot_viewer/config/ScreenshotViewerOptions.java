@@ -6,7 +6,7 @@ import io.github.lgatodu47.catconfig.ConfigOptionBuilder;
 import io.github.lgatodu47.catconfigmc.MinecraftConfigSides;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.WidgetPositionOption.WidgetPosition;
-import net.minecraft.text.TextColor;
+import net.minecraft.network.chat.TextColor;
 
 import java.io.File;
 

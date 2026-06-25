@@ -31,7 +31,7 @@ public class ScreenshotViewerMacOsUtils {
     SOFTWARE.
     */
     public static void doCopyMacOS(String path) {
-        if (Util.getOperatingSystem() != Util.OperatingSystem.OSX) {
+        if (Util.getPlatform() != Util.OS.OSX) {
             return;
         }
 

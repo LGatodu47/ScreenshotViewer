@@ -35,7 +35,7 @@ public class ScreenshotThumbnailManager implements ConfigListener {
 
     public ScreenshotThumbnailManager(CatConfig config) {
         this.config = config;
-        this.executor = Util.getMainWorkerExecutor();
+        this.executor = Util.backgroundExecutor();
         configUpdated();
     }
 

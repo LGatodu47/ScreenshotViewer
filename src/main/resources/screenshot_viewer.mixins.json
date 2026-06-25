@@ -7,7 +7,7 @@
     "MainMixin",
     "NativeImageMixin",
     "ScreenMixin",
-    "ScreenshotRecorderMixin",
+    "ScreenshotMixin",
     "WindowMixin"
   ],
   "injectors": {

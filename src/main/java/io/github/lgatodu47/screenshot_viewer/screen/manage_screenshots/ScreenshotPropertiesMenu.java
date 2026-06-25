@@ -1,49 +1,48 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import io.github.lgatodu47.screenshot_viewer.screen.IconButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.AbstractParentElement;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.ButtonTextures;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ColorHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.WidgetSprites;
+import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.gl.RenderPipelines;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable {
-    private static final Identifier BACKGROUND_TEXTURE_ATLAS = Identifier.of(ScreenshotViewer.MODID, "screenshot_properties_background");
-    static final Identifier OPEN_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/open_folder");
-    static final Identifier COPY_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/copy");
-    static final Identifier DELETE_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/delete");
-    static final Identifier RENAME_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/rename");
-    private static final Identifier CLOSE_ICON = Identifier.of(ScreenshotViewer.MODID, "widget/icons/close");
+class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements Renderable {
+    private static final Identifier BACKGROUND_TEXTURE_ATLAS = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "screenshot_properties_background");
+    static final Identifier OPEN_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/open_folder");
+    static final Identifier COPY_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/copy");
+    static final Identifier DELETE_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/delete");
+    static final Identifier RENAME_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/rename");
+    private static final Identifier CLOSE_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/close");
     private static final int BUTTON_SIZE = 19;
 
-    private final Supplier<MinecraftClient> mcSupplier;
-    private final List<ClickableWidget> buttons = new ArrayList<>();
+    private final Supplier<Minecraft> mcSupplier;
+    private final List<AbstractWidget> buttons = new ArrayList<>();
 
     private int x, y, width, height;
     private ScreenshotImageHolder targetScreenshot;
     private boolean shouldRender;
 
-    ScreenshotPropertiesMenu(Supplier<MinecraftClient> mcSupplier) {
+    ScreenshotPropertiesMenu(Supplier<Minecraft> mcSupplier) {
         this.mcSupplier = mcSupplier;
         addButton(OPEN_ICON, ScreenshotViewerTexts.OPEN_FILE, ScreenshotImageHolder::openFile);
         addButton(COPY_ICON, ScreenshotViewerTexts.COPY, ScreenshotImageHolder::copyScreenshot);
@@ -52,7 +51,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         addButton(CLOSE_ICON, ScreenshotViewerTexts.CLOSE_PROPERTIES, null);
     }
 
-    private void addButton(Identifier texture, Text description, @Nullable Consumer<ScreenshotImageHolder> action) {
+    private void addButton(Identifier texture, Component description, @Nullable Consumer<ScreenshotImageHolder> action) {
         this.buttons.add(new Button(texture, description, btn -> {
             if(action != null && targetScreenshot != null) {
                 action.accept(targetScreenshot);
@@ -65,10 +64,10 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         this.targetScreenshot = targetScreenshot;
         final int spacing = 2;
 
-        TextRenderer font = mcSupplier.get().textRenderer;
-        final int largestTextWidth = buttons.stream().map(ClickableWidget::getMessage).mapToInt(font::getWidth).max().orElse(0);
-        this.width = spacing * 2 + Math.max(font.getWidth(targetScreenshot.getScreenshotFile().getName()), BUTTON_SIZE + largestTextWidth + spacing * 2);
-        this.height = spacing * 3 + font.fontHeight + BUTTON_SIZE * buttons.size();
+        Font font = mcSupplier.get().font;
+        final int largestTextWidth = buttons.stream().map(AbstractWidget::getMessage).mapToInt(font::width).max().orElse(0);
+        this.width = spacing * 2 + Math.max(font.width(targetScreenshot.getScreenshotFile().getName()), BUTTON_SIZE + largestTextWidth + spacing * 2);
+        this.height = spacing * 3 + font.lineHeight + BUTTON_SIZE * buttons.size();
 
         // Offset the widget if it goes out of the screen
         if (x + width > parentWidth) {
@@ -83,7 +82,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         for (int i = 0; i < this.buttons.size(); i++) {
-            this.buttons.get(i).setDimensionsAndPosition(width - 2 * spacing, BUTTON_SIZE, this.x + spacing, this.y + spacing * 2 + font.fontHeight + BUTTON_SIZE * i);
+            this.buttons.get(i).setRectangle(width - 2 * spacing, BUTTON_SIZE, this.x + spacing, this.y + spacing * 2 + font.lineHeight + BUTTON_SIZE * i);
         }
 
         shouldRender = true;
@@ -99,27 +98,27 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (shouldRender) {
             final int spacing = 2;
 
-            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE_ATLAS, x, y, width, height);
+            context.blitSprite(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE_ATLAS, x, y, width, height);
 
-            context.drawTextWithShadow(mcSupplier.get().textRenderer, targetScreenshot.getScreenshotFile().getName(), x + spacing, y + spacing, 0xFFFFFFFF);
-            for (ClickableWidget widget : buttons) {
-                widget.render(context, mouseX, mouseY, delta);
-                context.drawTextWithShadow(mcSupplier.get().textRenderer, widget.getMessage(), widget.getX() + BUTTON_SIZE + spacing, (int) (widget.getY() + (widget.getHeight() - 9) / 2.f + spacing), 0xFFFFFFFF);
+            context.text(mcSupplier.get().font, targetScreenshot.getScreenshotFile().getName(), x + spacing, y + spacing, 0xFFFFFFFF);
+            for (AbstractWidget widget : buttons) {
+                widget.extractRenderState(context, mouseX, mouseY, delta);
+                context.text(mcSupplier.get().font, widget.getMessage(), widget.getX() + BUTTON_SIZE + spacing, (int) (widget.getY() + (widget.getHeight() - 9) / 2.f + spacing), 0xFFFFFFFF);
             }
         }
     }
 
     @Override
-    public List<? extends Element> children() {
+    public List<? extends GuiEventListener> children() {
         return List.copyOf(this.buttons);
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         if (click.x() < x || click.y() < y || click.x() > x + width || click.y() > y + height) {
             hide();
             return false;
@@ -128,8 +127,8 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if (input.key() == InputUtil.GLFW_KEY_ESCAPE) {
+    public boolean keyPressed(KeyEvent input) {
+        if (input.key() == InputConstants.KEY_ESCAPE) {
             hide();
             return true;
         }
@@ -137,54 +136,54 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
     }
 
     private static final class Button extends IconButtonWidget {
-        private static final ButtonTextures BUTTON_TEXTURES = new ButtonTextures(
-                Identifier.of(ScreenshotViewer.MODID, "widget/properties_button_enabled"),
-                Identifier.of(ScreenshotViewer.MODID, "widget/properties_button"),
-                Identifier.of(ScreenshotViewer.MODID, "widget/properties_button_hovered")
+        private static final WidgetSprites BUTTON_TEXTURES = new WidgetSprites(
+                Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/properties_button_enabled"),
+                Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/properties_button"),
+                Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/properties_button_hovered")
         );
-        private static final ButtonTextures TEXTURES_FOR_WIDE = new ButtonTextures(
-                Identifier.of(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_enabled.png"),
-                Identifier.of(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button.png"),
-                Identifier.of(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_hovered.png")
+        private static final WidgetSprites TEXTURES_FOR_WIDE = new WidgetSprites(
+                Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_enabled.png"),
+                Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button.png"),
+                Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/properties_button_hovered.png")
         );
 
         private boolean renderWide = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_WIDE_PROPERTIES_BUTTON, true);
 
-        public Button(Identifier texture, net.minecraft.text.Text title, PressAction pressAction) {
+        public Button(Identifier texture, net.minecraft.network.chat.Component title, OnPress pressAction) {
             super(0, 0, BUTTON_SIZE, BUTTON_SIZE, title, texture, pressAction);
         }
 
         @Override
-        public void setDimensionsAndPosition(int width, int height, int x, int y) {
+        public void setRectangle(int width, int height, int x, int y) {
             this.renderWide = ManageScreenshotsScreen.CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_WIDE_PROPERTIES_BUTTON, true);
             // provided width is for wide while current width is for squared.
-            super.setDimensionsAndPosition(renderWide ? width : getWidth(), height, x, y);
+            super.setRectangle(renderWide ? width : getWidth(), height, x, y);
         }
 
         @Override
-        protected void drawIcon(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-            Identifier backgroundTexture = getBackgroundTexture().get(this.active, isSelected());
+        protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
+            Identifier backgroundTexture = getBackgroundTexture().get(this.active, isHoveredOrFocused());
             if (renderWide) {
-                context.drawTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX(), getY(), 0, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
-                context.drawTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX() + 1, getY(), 1, 0, getWidth() - 2, getHeight(), BUTTON_SIZE - 2, BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
-                context.drawTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX() + getWidth() - 1, getY(), 18, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));
+                context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX(), getY(), 0, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ARGB.white(this.alpha));
+                context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX() + 1, getY(), 1, 0, getWidth() - 2, getHeight(), BUTTON_SIZE - 2, BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE, ARGB.white(this.alpha));
+                context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX() + getWidth() - 1, getY(), 18, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ARGB.white(this.alpha));
             } else {
-                context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX(), getY(), BUTTON_SIZE, getHeight(), ColorHelper.getWhite(this.alpha));
+                context.blitSprite(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX(), getY(), BUTTON_SIZE, getHeight(), ARGB.white(this.alpha));
             }
 
             Identifier icon = getIconTexture();
             if (icon != null) {
-                context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), BUTTON_SIZE, getHeight(), ColorHelper.getWhite(this.alpha));
+                context.blitSprite(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), BUTTON_SIZE, getHeight(), ARGB.white(this.alpha));
             }
         }
 
         @Override
-        public boolean isSelected() {
+        public boolean isHoveredOrFocused() {
             return isHovered();
         }
 
         @Override
-        public ButtonTextures getBackgroundTexture() {
+        public WidgetSprites getBackgroundTexture() {
             return renderWide ? TEXTURES_FOR_WIDE : BUTTON_TEXTURES;
         }
     }

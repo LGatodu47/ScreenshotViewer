@@ -1,43 +1,43 @@
 package io.github.lgatodu47.screenshot_viewer.screen;
 
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 
 public class ScreenshotViewerTexts {
-    public static final Text MANAGE_SCREENSHOTS = translatable("screen", "manage_screenshots");
-    public static final Text ZOOM_MODE = translatable("screen", "screenshot_manager.zoom");
-    public static final Text FAST_DELETE_MODE = translatable("screen", "screenshot_manager.fast_delete");
-    public static final Text NO_SCREENSHOTS = translatable("screen", "screenshot_manager.no_screenshots");
+    public static final Component MANAGE_SCREENSHOTS = translatable("screen", "manage_screenshots");
+    public static final Component ZOOM_MODE = translatable("screen", "screenshot_manager.zoom");
+    public static final Component FAST_DELETE_MODE = translatable("screen", "screenshot_manager.fast_delete");
+    public static final Component NO_SCREENSHOTS = translatable("screen", "screenshot_manager.no_screenshots");
 
-    public static final Text REFRESH = translatable("screen", "button.refresh");
-    public static final Text CONFIG = translatable("screen", "button.config");
-    public static final Text ORDER = translatable("screen", "button.order");
-    public static final Text ASCENDING_ORDER = translatable("screen", "button.order.ascending");
-    public static final Text DESCENDING_ORDER = translatable("screen", "button.order.descending");
-    public static final Text OPEN_FOLDER = translatable("screen", "button.screenshot_folder");
-    public static final Text FAST_DELETE = translatable("screen", "button.fast_delete");
-    public static final Text DELETE = translatable("screen", "button.delete_screenshot");
-    public static final Text OPEN_FILE = translatable("screen", "button.open_file");
-    public static final Text RENAME_FILE = translatable("screen", "button.rename_file");
-    public static final Text CLOSE_PROPERTIES = translatable("screen", "button.close_properties_menu");
-    public static final Text COPY = translatable("screen", "button.copy_screenshot");
+    public static final Component REFRESH = translatable("screen", "button.refresh");
+    public static final Component CONFIG = translatable("screen", "button.config");
+    public static final Component ORDER = translatable("screen", "button.order");
+    public static final Component ASCENDING_ORDER = translatable("screen", "button.order.ascending");
+    public static final Component DESCENDING_ORDER = translatable("screen", "button.order.descending");
+    public static final Component OPEN_FOLDER = translatable("screen", "button.screenshot_folder");
+    public static final Component FAST_DELETE = translatable("screen", "button.fast_delete");
+    public static final Component DELETE = translatable("screen", "button.delete_screenshot");
+    public static final Component OPEN_FILE = translatable("screen", "button.open_file");
+    public static final Component RENAME_FILE = translatable("screen", "button.rename_file");
+    public static final Component CLOSE_PROPERTIES = translatable("screen", "button.close_properties_menu");
+    public static final Component COPY = translatable("screen", "button.copy_screenshot");
 
-    public static final Text DELETE_WARNING_MESSAGE = translatable("screen", "delete_prompt.message");
-    public static final Text DELETE_MULTIPLE_WARNING_MESSAGE = translatable("screen", "delete_n_screenshots.message");
-    public static final Text RENAME_PROMPT = translatable("screen", "rename_screenshot");
-    public static final Text SCREENSHOT_NAME_INPUT = translatable("screen", "field.screenshot_name");
-    public static final Text REDIRECT_TO_SCREENSHOT_MANAGER = translatable("tooltip", "redirect_to_screenshot_manager");
+    public static final Component DELETE_WARNING_MESSAGE = translatable("screen", "delete_prompt.message");
+    public static final Component DELETE_MULTIPLE_WARNING_MESSAGE = translatable("screen", "delete_n_screenshots.message");
+    public static final Component RENAME_PROMPT = translatable("screen", "rename_screenshot");
+    public static final Component SCREENSHOT_NAME_INPUT = translatable("screen", "field.screenshot_name");
+    public static final Component REDIRECT_TO_SCREENSHOT_MANAGER = translatable("tooltip", "redirect_to_screenshot_manager");
 
-    public static final Text EDIT_WIDGET_PLACEMENT = translatable("screen", "button_placement.edit");
-    public static final Text BUTTON_PLACEMENT_MOVEMENT = translatable("screen", "button_placement.movement");
-    public static final Text BUTTON_PLACEMENT_CONFIRM = translatable("screen", "button_placement.confirm");
-    public static final Text BUTTON_PLACEMENT_SNAP_TO_GRID = translatable("screen", "button_placement.snap_to_grid");
+    public static final Component EDIT_WIDGET_PLACEMENT = translatable("screen", "button_placement.edit");
+    public static final Component BUTTON_PLACEMENT_MOVEMENT = translatable("screen", "button_placement.movement");
+    public static final Component BUTTON_PLACEMENT_CONFIRM = translatable("screen", "button_placement.confirm");
+    public static final Component BUTTON_PLACEMENT_SNAP_TO_GRID = translatable("screen", "button_placement.snap_to_grid");
 
-    public static final Text TOAST_COPY_SUCCESS = translatable("toast", "copy_success");
+    public static final Component TOAST_COPY_SUCCESS = translatable("toast", "copy_success");
 
-    public static MutableText translatable(String prefix, String suffix, Object... args) {
-        return Text.translatable(translation(prefix, suffix), args);
+    public static MutableComponent translatable(String prefix, String suffix, Object... args) {
+        return Component.translatable(translation(prefix, suffix), args);
     }
 
     public static String translation(String prefix, String suffix) {

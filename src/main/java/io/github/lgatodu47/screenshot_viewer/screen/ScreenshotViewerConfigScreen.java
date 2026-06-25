@@ -3,8 +3,7 @@ package io.github.lgatodu47.screenshot_viewer.screen;
 import io.github.lgatodu47.catconfigmc.screen.ModConfigScreen;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerRenderedOptions;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.screens.Screen;
 
 public class ScreenshotViewerConfigScreen extends ModConfigScreen {
     // used by WidgetPositionOption, temporary solution
@@ -21,8 +20,8 @@ public class ScreenshotViewerConfigScreen extends ModConfigScreen {
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         currentInstance = null;
     }
 }

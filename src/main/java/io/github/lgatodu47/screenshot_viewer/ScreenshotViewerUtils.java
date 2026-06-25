@@ -2,18 +2,25 @@ package io.github.lgatodu47.screenshot_viewer;
 
 import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.*;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.toast.SystemToast;
-import net.minecraft.text.*;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.contents.PlainTextContents;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,14 +48,14 @@ public class ScreenshotViewerUtils {
     private static final Logger LOGGER = LogUtils.getLogger();
     @Nullable
     private static final Clipboard AWT_CLIPBOARD = tryGetAWTClipboard();
-    private static final SystemToast.Type COPY_SCREENSHOT = new SystemToast.Type(3000);
+    private static final SystemToast.SystemToastId COPY_SCREENSHOT = new SystemToast.SystemToastId(3000);
 
     public static File getVanillaScreenshotsFolder() {
-        return new File(MinecraftClient.getInstance().runDirectory, "screenshots");
+        return new File(Minecraft.getInstance().gameDirectory, "screenshots");
     }
 
     public static File getDefaultThumbnailFolder() {
-        return new File(MinecraftClient.getInstance().runDirectory, "screenshots/thumbnails");
+        return new File(Minecraft.getInstance().gameDirectory, "screenshots/thumbnails");
     }
 
     public static List<File> getScreenshotFiles(File screenshotsFolder) {
@@ -59,12 +66,12 @@ public class ScreenshotViewerUtils {
         return Arrays.stream(files).filter(file -> file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))).collect(Collectors.toList());
     }
 
-    public static void drawTexture(DrawContext context, Identifier texture, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, (float)u, (float)v, width, height, regionWidth, regionHeight, textureWidth, textureHeight);
+    public static void drawTexture(GuiGraphicsExtractor context, Identifier texture, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
+        context.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, (float)u, (float)v, width, height, regionWidth, regionHeight, textureWidth, textureHeight);
     }
     @Nullable
     private static Clipboard tryGetAWTClipboard() {
-        if(Util.getOperatingSystem() == Util.OperatingSystem.OSX) {
+        if(Util.getPlatform() == Util.OS.OSX) {
             return null;
         }
         try {
@@ -76,13 +83,13 @@ public class ScreenshotViewerUtils {
     }
 
     public static void copyImageToClipboard(File screenshotFile) {
-        if(Util.getOperatingSystem() == Util.OperatingSystem.OSX) {
+        if(Util.getPlatform() == Util.OS.OSX) {
             ScreenshotViewerMacOsUtils.doCopyMacOS(screenshotFile.getAbsolutePath());
             return;
         }
         if(AWT_CLIPBOARD != null && screenshotFile.exists()) {
             CompletableFuture.runAsync(() -> {
-                Text toastText;
+                Component toastText;
                 try {
                     BufferedImage img = ImageIO.read(screenshotFile);
                     BufferedImage rgbImg = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -95,25 +102,22 @@ public class ScreenshotViewerUtils {
                     toastText = ScreenshotViewerTexts.translatable("toast", "copy_fail", t.getClass().getSimpleName());
                 }
 
-                MinecraftClient client = MinecraftClient.getInstance();
-                if(client != null) {
-                    SystemToast.show(client.getToastManager(), COPY_SCREENSHOT, toastText, Text.literal(screenshotFile.getName()));
-                }
-            }, Util.getMainWorkerExecutor());
+                Minecraft client = Minecraft.getInstance();
+                SystemToast.addOrUpdate(client.getToastManager(), COPY_SCREENSHOT, toastText, Component.literal(screenshotFile.getName()));
+            }, Util.backgroundExecutor());
         }
     }
 
-    public static List<TooltipComponent> toColoredComponents(MinecraftClient client, Text text) {
-        return Tooltip.wrapLines(client, text).stream().map(ColoredTooltipComponents::new).collect(Collectors.toList());
+    public static List<ClientTooltipComponent> toColoredComponents(Minecraft client, Component text) {
+        return Tooltip.splitTooltip(client, text).stream().map(ColoredTooltipComponents::new).collect(Collectors.toList());
     }
 
     private static Field TOOLTIP_DRAWER_FIELD;
 
-    public static void renderCustomTooltip(DrawContext context, TextRenderer textRenderer, List<TooltipComponent> text, int posX, int posY, int color) {
+    public static void renderCustomTooltip(GuiGraphicsExtractor context, Font textRenderer, List<ClientTooltipComponent> text, int posX, int posY, int color) {
         if(TOOLTIP_DRAWER_FIELD == null) {
             try {
-                String fieldName = FabricLoader.getInstance().getMappingResolver().mapFieldName("intermediary", "net.minecraft.class_332", "field_60305", "Ljava/lang/Runnable;");
-                TOOLTIP_DRAWER_FIELD = DrawContext.class.getDeclaredField(fieldName);
+                TOOLTIP_DRAWER_FIELD = GuiGraphicsExtractor.class.getDeclaredField("deferredTooltip");
                 TOOLTIP_DRAWER_FIELD.setAccessible(true);
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException(e);
@@ -129,14 +133,14 @@ public class ScreenshotViewerUtils {
         }
     }
 
-    private static final Identifier DEFAULT_TOOLTIP_BACKGROUND_TEXTURE = Identifier.ofVanilla("tooltip/background");
-    private static final Identifier DEFAULT_TOOLTIP_FRAME_TEXTURE = Identifier.ofVanilla("tooltip/frame");
+    private static final Identifier DEFAULT_TOOLTIP_BACKGROUND_TEXTURE = Identifier.withDefaultNamespace("tooltip/background");
+    private static final Identifier DEFAULT_TOOLTIP_FRAME_TEXTURE = Identifier.withDefaultNamespace("tooltip/frame");
 
-    private static void drawCustomTooltip(DrawContext context, TextRenderer textRenderer, List<TooltipComponent> text, int posX, int posY, int color) {
+    private static void drawCustomTooltip(GuiGraphicsExtractor context, Font textRenderer, List<ClientTooltipComponent> text, int posX, int posY, int color) {
         int totWidth = 0;
         int totHeight = text.size() == 1 ? -2 : 0;
 
-        for (TooltipComponent comp : text) {
+        for (ClientTooltipComponent comp : text) {
             int compWidth = comp.getWidth(textRenderer);
             if (compWidth > totWidth) {
                 totWidth = compWidth;
@@ -145,27 +149,27 @@ public class ScreenshotViewerUtils {
             totHeight += comp.getHeight(textRenderer);
         }
 
-        TooltipPositioner positioner = HoveredTooltipPositioner.INSTANCE;
-        Vector2ic vector2ic = positioner.getPosition(context.getScaledWindowWidth(), context.getScaledWindowHeight(), posX, posY, totWidth, totHeight);
+        ClientTooltipPositioner positioner = DefaultTooltipPositioner.INSTANCE;
+        Vector2ic vector2ic = positioner.positionTooltip(context.guiWidth(), context.guiHeight(), posX, posY, totWidth, totHeight);
         int x = vector2ic.x();
         int y = vector2ic.y();
-        context.getMatrices().pushMatrix();
+        context.pose().pushMatrix();
 
         int bgX = x - 3 - 9;
         int bgY = y - 3 - 9;
         int bgWidth = totWidth + 3 + 3 + 18;
         int bgHeight = totHeight + 3 + 3 + 18;
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, DEFAULT_TOOLTIP_BACKGROUND_TEXTURE, bgX, bgY, bgWidth, bgHeight, color);
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, DEFAULT_TOOLTIP_FRAME_TEXTURE, bgX, bgY, bgWidth, bgHeight, color);
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, DEFAULT_TOOLTIP_BACKGROUND_TEXTURE, bgX, bgY, bgWidth, bgHeight, color);
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, DEFAULT_TOOLTIP_FRAME_TEXTURE, bgX, bgY, bgWidth, bgHeight, color);
 
         int drawY = y;
 
         for (int q = 0; q < text.size(); q++) {
-            TooltipComponent comp = text.get(q);
+            ClientTooltipComponent comp = text.get(q);
             if(comp instanceof ColoredTooltipComponents alpha) {
                 alpha.drawColoredText(context, textRenderer, x, drawY, color);
             } else {
-                comp.drawText(context, textRenderer, x, drawY);
+                comp.extractText(context, textRenderer, x, drawY);
             }
             drawY += comp.getHeight(textRenderer) + (q == 0 ? 2 : 0);
         }
@@ -173,50 +177,50 @@ public class ScreenshotViewerUtils {
         drawY = y;
 
         for (int q = 0; q < text.size(); q++) {
-            TooltipComponent comp = text.get(q);
-            comp.drawItems(textRenderer, x, drawY, totWidth, totHeight, context);
+            ClientTooltipComponent comp = text.get(q);
+            comp.extractImage(textRenderer, x, drawY, totWidth, totHeight, context);
             drawY += comp.getHeight(textRenderer) + (q == 0 ? 2 : 0);
         }
 
-        context.getMatrices().popMatrix();
+        context.pose().popMatrix();
     }
 
-    public static void renderWidget(ClickableWidget widget, DrawContext context, int mouseX, int mouseY, float delta) {
-        widget.render(context, mouseX, mouseY, delta);
+    public static void renderWidget(AbstractWidget widget, GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        widget.extractRenderState(context, mouseX, mouseY, delta);
     }
 
-    public static void forEachDrawable(Screen screen, Consumer<Drawable> renderer) {
-        forEachOfType(screen, Drawable.class, renderer);
+    public static void forEachDrawable(Screen screen, Consumer<Renderable> renderer) {
+        forEachOfType(screen, Renderable.class, renderer);
     }
 
     public static <T> void forEachOfType(Screen screen, Class<T> type, Consumer<T> action) {
         screen.children().stream().filter(type::isInstance).map(type::cast).forEachOrdered(action);
     }
 
-    static class ColoredTooltipComponents implements TooltipComponent {
-        private final OrderedText text;
+    static class ColoredTooltipComponents implements ClientTooltipComponent {
+        private final FormattedCharSequence text;
 
-        public ColoredTooltipComponents(OrderedText text) {
+        public ColoredTooltipComponents(FormattedCharSequence text) {
             this.text = text;
         }
 
         @Override
-        public int getWidth(TextRenderer textRenderer) {
-            return textRenderer.getWidth(this.text);
+        public int getWidth(Font textRenderer) {
+            return textRenderer.width(this.text);
         }
 
         @Override
-        public int getHeight(TextRenderer textRenderer) {
+        public int getHeight(Font textRenderer) {
             return 10;
         }
 
         @Override
-        public void drawText(DrawContext context, TextRenderer textRenderer, int x, int y) {
-            context.drawText(textRenderer, this.text, x, y, -1, true);
+        public void extractText(GuiGraphicsExtractor context, Font textRenderer, int x, int y) {
+            context.text(textRenderer, this.text, x, y, -1, true);
         }
 
-        public void drawColoredText(DrawContext context, TextRenderer textRenderer, int x, int y, int color) {
-            context.drawText(textRenderer, this.text, x, y, color, true);
+        public void drawColoredText(GuiGraphicsExtractor context, Font textRenderer, int x, int y, int color) {
+            context.text(textRenderer, this.text, x, y, color, true);
         }
     }
 
@@ -241,25 +245,25 @@ public class ScreenshotViewerUtils {
         }
     }
 
-    public static Text ofSupplied(Supplier<Text> textSupplier) {
-        return MutableText.of(new ClientSideSuppliedTextContent(textSupplier));
+    public static Component ofSupplied(Supplier<Component> textSupplier) {
+        return MutableComponent.create(new ClientSideSuppliedTextContent(textSupplier));
     }
 
-    record ClientSideSuppliedTextContent(@NotNull Supplier<Text> s) implements PlainTextContent {
+    record ClientSideSuppliedTextContent(@NotNull Supplier<Component> s) implements PlainTextContents {
         @Override
-        public String string() {
+        public String text() {
             return "";
         }
 
         @Override
-        public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
-            Text r = s.get();
+        public <T> Optional<T> visit(FormattedText.ContentConsumer<T> visitor) {
+            Component r = s.get();
             return r == null ? Optional.empty() : r.visit(visitor);
         }
 
         @Override
-        public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
-            Text r = s.get();
+        public <T> Optional<T> visit(FormattedText.StyledContentConsumer<T> visitor, Style style) {
+            Component r = s.get();
             return r == null ? Optional.empty() : r.visit(visitor, style);
         }
 

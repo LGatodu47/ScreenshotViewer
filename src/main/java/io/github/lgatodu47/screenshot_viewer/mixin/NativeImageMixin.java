@@ -1,6 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.mixin;
 
-import net.minecraft.client.texture.NativeImage;
+import com.mojang.blaze3d.platform.NativeImage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 
 @Mixin(NativeImage.class)
 public class NativeImageMixin {
-    @Redirect(method = "read(Lnet/minecraft/client/texture/NativeImage$Format;Ljava/nio/ByteBuffer;)Lnet/minecraft/client/texture/NativeImage;", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/PngMetadata;validate(Ljava/nio/ByteBuffer;)V"))
+    @Redirect(method = "read(Lcom/mojang/blaze3d/platform/NativeImage$Format;Ljava/nio/ByteBuffer;)Lcom/mojang/blaze3d/platform/NativeImage;", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/PngInfo;validateHeader(Ljava/nio/ByteBuffer;)V"))
     private static void screenshot_viewer$redirect_validate(ByteBuffer buf) {
         // basically mojang decided that only png files could be read.
         // so redirecting this method allows other file types to pass the validation.

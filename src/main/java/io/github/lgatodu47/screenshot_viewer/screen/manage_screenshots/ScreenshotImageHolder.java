@@ -1,7 +1,7 @@
 package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
