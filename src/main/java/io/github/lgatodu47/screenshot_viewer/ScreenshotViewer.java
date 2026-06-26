@@ -55,42 +55,44 @@ public class ScreenshotViewer implements ClientModInitializer {
     }
 
     private static final Identifier DELAYED_PHASE = Identifier.fromNamespaceAndPath(MODID, "delayed");
-    private static final Identifier SCREENSHOT_VIEWER_ICON = Identifier.fromNamespaceAndPath(MODID, "widget/icons/screenshot_viewer");
+    public static final Identifier SCREENSHOT_VIEWER_ICON = Identifier.fromNamespaceAndPath(MODID, "widget/icons/screenshot_viewer");
 
     private void registerEvents() {
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if(client.level != null && client.screen == null && openScreenshotsScreenKey != null && !openScreenshotsScreenKey.isUnbound()) {
+            if(client.level != null && client.gui.screen() == null && openScreenshotsScreenKey != null && !openScreenshotsScreenKey.isUnbound()) {
                 if(openScreenshotsScreenKey.isDown()) {
-                    client.setScreen(new ManageScreenshotsScreen(null));
+                    client.gui.setScreen(new ManageScreenshotsScreen(null));
                 }
             }
         });
         ScreenEvents.AFTER_INIT.register(DELAYED_PHASE, (client, screen, scaledWidth, scaledHeight) -> {
-            if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && screen instanceof PauseScreen) {
+            if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_IN_GAME_PAUSE_MENU, true) && config.get(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_POSITION).isPresent() && screen instanceof PauseScreen) {
                 List<AbstractWidget> buttons = Screens.getWidgets(screen);
-                AbstractWidget topButton = buttons.getFirst();
 
-                Optional<WidgetPositionOption.WidgetPosition> optionalWidgetPos = config.get(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_POSITION);
-                int x = optionalWidgetPos.map(WidgetPositionOption.WidgetPosition::x).orElse(topButton.getX() + topButton.getWidth() + 4);
-                int y = optionalWidgetPos.map(WidgetPositionOption.WidgetPosition::y).orElse(topButton.getY());
-                buttons.add(Util.make(new IconButtonWidget(x, y, topButton.getHeight(), topButton.getHeight(), ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
-                    client.setScreen(new ManageScreenshotsScreen(screen));
+                WidgetPositionOption.WidgetPosition widgetPos = config.get(ScreenshotViewerOptions.PAUSE_MENU_BUTTON_POSITION).get();
+                int x = widgetPos.x(), y = widgetPos.y();
+                if(!buttons.isEmpty()) {
+                    AbstractWidget referenceWidget = buttons.getFirst();
+                    x += referenceWidget.getX();
+                    y += referenceWidget.getY();
+                }
+
+                buttons.add(Util.make(new IconButtonWidget(x, y, 20, 20, ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
+                    client.gui.setScreen(new ManageScreenshotsScreen(screen));
                 }), btn -> btn.setTooltip(Tooltip.create(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
             }
-            if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_ON_TITLE_SCREEN, true) && screen instanceof TitleScreen) {
+            if(config.getOrFallback(ScreenshotViewerOptions.SHOW_BUTTON_ON_TITLE_SCREEN, true) && config.get(ScreenshotViewerOptions.TITLE_SCREEN_BUTTON_POSITION).isPresent() && screen instanceof TitleScreen) {
                 List<AbstractWidget> buttons = Screens.getWidgets(screen);
-                Optional<AbstractWidget> accessibilityWidgetOpt = buttons.stream()
-                        .filter(SpriteIconButton.class::isInstance)
-                        .filter(widget -> widget.getMessage().equals(Component.translatable("options.accessibility")))
-                        .findFirst();
 
-                Optional<WidgetPositionOption.WidgetPosition> optionalWidgetPos = config.get(ScreenshotViewerOptions.TITLE_SCREEN_BUTTON_POSITION);
-                int width = accessibilityWidgetOpt.map(AbstractWidget::getWidth).orElse(20);
-                int height = accessibilityWidgetOpt.map(AbstractWidget::getHeight).orElse(20);
-                int x = optionalWidgetPos.map(WidgetPositionOption.WidgetPosition::x).or(() -> accessibilityWidgetOpt.map(AbstractWidget::getX).map(v -> v + width + 4)).orElse(screen.width / 2 + 104 + width + 4);
-                int y = optionalWidgetPos.map(WidgetPositionOption.WidgetPosition::y).or(() -> accessibilityWidgetOpt.map(AbstractWidget::getY)).orElse(screen.height / 4 + 132);
-                buttons.add(Util.make(new IconButtonWidget(x, y, width, height, ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
-                    client.setScreen(new ManageScreenshotsScreen(screen));
+                WidgetPositionOption.WidgetPosition widgetPos = config.get(ScreenshotViewerOptions.TITLE_SCREEN_BUTTON_POSITION).get();
+                int x = widgetPos.x(), y = widgetPos.y();
+                if(!buttons.isEmpty()) {
+                    AbstractWidget referenceWidget = buttons.getFirst();
+                    x += referenceWidget.getX();
+                    y += referenceWidget.getY();
+                }
+                buttons.add(Util.make(new IconButtonWidget(x, y, 20, 20, ScreenshotViewerTexts.MANAGE_SCREENSHOTS, SCREENSHOT_VIEWER_ICON, button -> {
+                    client.gui.setScreen(new ManageScreenshotsScreen(screen));
                 }), btn -> btn.setTooltip(Tooltip.create(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));
             }
         });

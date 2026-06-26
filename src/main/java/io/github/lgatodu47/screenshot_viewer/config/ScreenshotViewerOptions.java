@@ -6,7 +6,6 @@ import io.github.lgatodu47.catconfig.ConfigOptionBuilder;
 import io.github.lgatodu47.catconfigmc.MinecraftConfigSides;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.WidgetPositionOption.WidgetPosition;
-import net.minecraft.network.chat.TextColor;
 
 import java.io.File;
 
@@ -36,9 +35,9 @@ public class ScreenshotViewerOptions {
     public static final ConfigOption<Boolean> INVERT_ZOOM_DIRECTION = BUILDER.createBool("invert_zoom_direction", false);
     public static final ConfigOption<Integer> INITIAL_SCREENSHOT_AMOUNT_PER_ROW = BUILDER.createInt("initial_screenshot_amount_per_row", 4, 2, 8);
     public static final ConfigOption<Integer> SCREEN_SCROLL_SPEED = BUILDER.createInt("screen_scroll_speed", 10, 1, 50);
-    public static final ConfigOption<Integer> SCREENSHOT_ELEMENT_BACKGROUND_OPACITY = BUILDER.createInt("screenshot_element_background_opacity", 100, 0, 100);
+    public static final ConfigOption<ARGBColor> SCREENSHOT_ELEMENT_BACKGROUND_COLOR = BUILDER.put(new ARGBColor.Option("screenshot_element_background_color", ARGBColor.WHITE, "ingui"));
     public static final ConfigOption<VisibilityState> SCREENSHOT_ELEMENT_TEXT_VISIBILITY = BUILDER.createEnum("screenshot_element_text_visibility", VisibilityState.class, VisibilityState.VISIBLE);
-    public static final ConfigOption<TextColor> SCREENSHOT_ELEMENT_TEXT_COLOR = BUILDER.put(new ColorOption("screenshot_element_text_color", TextColor.fromRgb(0xFFFFFF), "ingui"));
+    public static final ConfigOption<ARGBColor> SCREENSHOT_ELEMENT_TEXT_COLOR = BUILDER.put(new ARGBColor.Option("screenshot_element_text_color", ARGBColor.WHITE, "ingui"));
     public static final ConfigOption<Boolean> RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW = BUILDER.createBool("render_screenshot_element_font_shadow", true);
 
     static {

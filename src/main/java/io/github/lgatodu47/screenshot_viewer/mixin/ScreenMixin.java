@@ -24,7 +24,7 @@ public abstract class ScreenMixin {
     private static void screenshot_viewer$inject_handleClickEvent(ClickEvent clickEvent, Minecraft client, @Nullable Screen screenAfterRun, CallbackInfo ci) {
         if (clickEvent instanceof ScreenshotClickEvent ce) {
             if(!client.hasShiftDown() && ScreenshotViewer.getInstance().getConfig().getOrFallback(ScreenshotViewerOptions.REDIRECT_SCREENSHOT_CHAT_LINKS, false)) {
-                client.setScreen(new ManageScreenshotsScreen(client.screen, ce.screenshotFile()));
+                client.gui.setScreen(new ManageScreenshotsScreen(client.gui.screen(), ce.screenshotFile()));
                 ci.cancel();
                 return;
             }

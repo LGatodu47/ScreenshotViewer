@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -25,6 +26,8 @@ public class ConfigureButtonPlacementScreen extends Screen {
     private final ConfigOption<WidgetPositionOption.WidgetPosition> option;
     private final Screen configuringScreen;
     private final WidgetRemover remover;
+    @Nullable
+    private AbstractWidget referenceWidget;
     @Nullable
     private AbstractWidget elementToPlace;
     @Nullable
@@ -55,13 +58,20 @@ public class ConfigureButtonPlacementScreen extends Screen {
     }
 
     private void initElementToPlace() {
+        this.previousPosition = null;
         this.elementToPlace = remover.removeWidget(configuringScreen);
+        Optional<WidgetPositionOption.WidgetPosition> optPos = config.get(option);
         if(elementToPlace != null) {
-            this.previousPosition = makeWidgetPosition(elementToPlace);
+            this.previousPosition = optPos.orElseGet(() -> makeWidgetPosition(elementToPlace));
+        }
+        List<AbstractWidget> screenWidgets = Screens.getWidgets(configuringScreen);
+        this.referenceWidget = screenWidgets.isEmpty() ? null : screenWidgets.getFirst();
+        if(optPos.isPresent() && previousPosition != null) {
+            int x = previousPosition.x() + (referenceWidget == null ? 0 : referenceWidget.getX());
+            int y = previousPosition.y() + (referenceWidget == null ? 0 : referenceWidget.getY());
+            this.elementToPlace.setPosition(x, y);
         }
     }
-
-
 
     @Override
     public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
@@ -77,13 +87,10 @@ public class ConfigureButtonPlacementScreen extends Screen {
         renderTipTexts(context);
     }
 
-    private final Component warningText = Component.literal("/!\\ Warning: this will not work if you change the gui scale or window size.");
-
     protected void renderTipTexts(GuiGraphicsExtractor context) {
         context.text(font, ScreenshotViewerTexts.BUTTON_PLACEMENT_MOVEMENT, 0, 0, 0xFFFFFFFF, false);
         context.textWithWordWrap(font, ScreenshotViewerTexts.BUTTON_PLACEMENT_CONFIRM, 0, 10, 250, 0xFF15FFFF, false);
 //        context.drawText(textRenderer, ScreenshotViewerTexts.BUTTON_PLACEMENT_SNAP_TO_GRID, 0, 20, 0xFFFFFFFF, false);
-        context.textWithWordWrap(font, warningText, this.width - 150, 0, 150, 0xFFFFFF15, false);
     }
 
     @Override
@@ -115,6 +122,7 @@ public class ConfigureButtonPlacementScreen extends Screen {
                 this.elementToPlace.setPosition(previousPosition.x(), previousPosition.y());
                 AbstractWidget.playButtonClickSound(minecraft.getSoundManager());
             } else if(input.key() == GLFW.GLFW_KEY_R) {
+                AbstractWidget.playButtonClickSound(minecraft.getSoundManager());
                 WidgetPositionOption.WidgetPosition defaultPos = option.defaultValue();
                 if(defaultPos == null) {
                     this.config.put(option, null);
@@ -122,9 +130,9 @@ public class ConfigureButtonPlacementScreen extends Screen {
                     return true;
                 }
                 this.elementToPlace.setPosition(defaultPos.x(), defaultPos.y());
-                AbstractWidget.playButtonClickSound(minecraft.getSoundManager());
             } else if(input.key() == GLFW.GLFW_KEY_ESCAPE) {
                 onClose();
+                AbstractWidget.playButtonClickSound(minecraft.getSoundManager());
             }
             return true;
         }
@@ -132,13 +140,16 @@ public class ConfigureButtonPlacementScreen extends Screen {
     }
 
     private WidgetPositionOption.WidgetPosition makeWidgetPosition(AbstractWidget elementToPlace) {
-        return new WidgetPositionOption.WidgetPosition(elementToPlace.getX(), elementToPlace.getY());
+        if(referenceWidget == null) {
+            return new WidgetPositionOption.WidgetPosition(elementToPlace.getX(), elementToPlace.getY());
+        }
+        return new WidgetPositionOption.WidgetPosition(elementToPlace.getX() - referenceWidget.getX(), elementToPlace.getY() - referenceWidget.getY());
     }
 
     @Override
     public void onClose() {
         super.onClose();
-        this.minecraft.setScreen(parent);
+        this.minecraft.gui.setScreen(parent);
     }
 
     @FunctionalInterface

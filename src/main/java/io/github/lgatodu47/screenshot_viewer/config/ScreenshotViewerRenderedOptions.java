@@ -44,9 +44,9 @@ public class ScreenshotViewerRenderedOptions {
         BUILDER.ofBoolean(INVERT_ZOOM_DIRECTION).setCommonTranslationKey(translation("config", "invert_zoom_direction")).build();
         BUILDER.ofInt(INITIAL_SCREENSHOT_AMOUNT_PER_ROW).setCommonTranslationKey(translation("config", "initial_screenshot_amount_per_row")).build();
         BUILDER.ofInt(SCREEN_SCROLL_SPEED).setCommonTranslationKey(translation("config", "screen_scroll_speed")).build();
-        BUILDER.ofInt(SCREENSHOT_ELEMENT_BACKGROUND_OPACITY).setCommonTranslationKey(translation("config", "screenshot_element_background_opacity")).build();
+        BUILDER.option(SCREENSHOT_ELEMENT_BACKGROUND_COLOR).setWidgetFactory(config -> ARGBColor.createWidget(config, SCREENSHOT_ELEMENT_BACKGROUND_COLOR)).setCommonTranslationKey(translation("config", "screenshot_element_background_color")).build();
         BUILDER.ofEnum(SCREENSHOT_ELEMENT_TEXT_VISIBILITY, VisibilityState.class).setCommonTranslationKey(translation("config", "screenshot_element_text_visibility")).build();
-        BUILDER.option(SCREENSHOT_ELEMENT_TEXT_COLOR).setWidgetFactory(config -> ColorOption.createWidget(config, SCREENSHOT_ELEMENT_TEXT_COLOR)).setCommonTranslationKey(translation("config", "screenshot_element_text_color")).build();
+        BUILDER.option(SCREENSHOT_ELEMENT_TEXT_COLOR).setWidgetFactory(config -> ARGBColor.createWidget(config, SCREENSHOT_ELEMENT_TEXT_COLOR)).setCommonTranslationKey(translation("config", "screenshot_element_text_color")).build();
         BUILDER.ofBoolean(RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW).setCommonTranslationKey(translation("config", "render_screenshot_element_font_shadow")).build();
         BUILDER.withCategoryName("ingui", translatable("config_category", "ingui"));
 

@@ -121,7 +121,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
 
         // Config Button
         addRenderableWidget(new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, CONFIG_ICON, button -> {
-            minecraft.setScreen(new ScreenshotViewerConfigScreen(this));
+            minecraft.gui.setScreen(new ScreenshotViewerConfigScreen(this));
         }, ScreenshotViewerTexts.CONFIG, ScreenshotViewerTexts.CONFIG).offsetTooltip());
         // Order Button
         addRenderableWidget(new ExtendedTexturedButtonWidget(spacing, btnY, btnSize, btnSize, null, button -> {
@@ -431,7 +431,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(parent);
+        this.minecraft.gui.setScreen(parent);
     }
 
     @Override

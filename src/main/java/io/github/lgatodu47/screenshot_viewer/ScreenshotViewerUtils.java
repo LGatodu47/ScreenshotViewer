@@ -103,7 +103,7 @@ public class ScreenshotViewerUtils {
                 }
 
                 Minecraft client = Minecraft.getInstance();
-                SystemToast.addOrUpdate(client.getToastManager(), COPY_SCREENSHOT, toastText, Component.literal(screenshotFile.getName()));
+                SystemToast.addOrUpdate(client.gui.toastManager(), COPY_SCREENSHOT, toastText, Component.literal(screenshotFile.getName()));
             }, Util.backgroundExecutor());
         }
     }

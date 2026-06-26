@@ -6,22 +6,8 @@ import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerRenderedOpti
 import net.minecraft.client.gui.screens.Screen;
 
 public class ScreenshotViewerConfigScreen extends ModConfigScreen {
-    // used by WidgetPositionOption, temporary solution
-    private static ScreenshotViewerConfigScreen currentInstance;
-
     public ScreenshotViewerConfigScreen(Screen parent) {
         super(ScreenshotViewerTexts.translatable("screen", "config"), parent, ScreenshotViewer.getInstance().getConfig(), ScreenshotViewerRenderedOptions.access());
         this.listeners = ScreenshotViewer.getInstance().getThumbnailManager();
-        currentInstance = this;
-    }
-
-    public static ScreenshotViewerConfigScreen getCurrentInstance() {
-        return currentInstance;
-    }
-
-    @Override
-    public void onClose() {
-        super.onClose();
-        currentInstance = null;
     }
 }

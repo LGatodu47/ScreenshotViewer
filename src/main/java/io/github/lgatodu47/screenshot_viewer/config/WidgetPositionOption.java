@@ -49,12 +49,14 @@ public record WidgetPositionOption(String name, @Nullable WidgetPosition default
     }
 
     public static AbstractWidget createWidget(ConfigAccess access, ConfigOption<WidgetPosition> option, Supplier<Screen> configuringScreenFactory, ConfigureButtonPlacementScreen.WidgetRemover remover, BooleanSupplier canEdit) {
+        Minecraft client = Minecraft.getInstance();
         Button btn = new Button.Builder(ScreenshotViewerTexts.EDIT_WIDGET_PLACEMENT, button -> {
-            Minecraft.getInstance().setScreen(new ConfigureButtonPlacementScreen(ScreenshotViewerConfigScreen.getCurrentInstance(), access, option, configuringScreenFactory, remover));
+            client.gui.setScreen(new ConfigureButtonPlacementScreen(client.gui.screen(), access, option, configuringScreenFactory, remover));
         }).width(100).build();
         btn.active = canEdit.getAsBoolean();
         return btn;
     }
 
+    // these are now relative to a specific widget called 'reference': for the pause menu, it is the "back to game" button, for the title screen, it is the "singleplayer" button
     public record WidgetPosition(int x, int y) {}
 }

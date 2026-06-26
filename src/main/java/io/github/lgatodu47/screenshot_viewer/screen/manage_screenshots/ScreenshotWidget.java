@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
+import io.github.lgatodu47.screenshot_viewer.config.ARGBColor;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerOptions;
 import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
@@ -18,7 +19,6 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Util;
@@ -40,8 +40,8 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     private final Context ctx;
 
     private VisibilityState textVisibility;
-    private float backgroundOpacityPercentage;
-    private int textColor;
+    private ARGBColor backgroundColor;
+    private ARGBColor textColor;
     private boolean renderTextShadow, promptOnDelete;
     private List<ClientTooltipComponent> hintTooltip;
 
@@ -83,8 +83,8 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
 
     void onConfigUpdate() {
         this.textVisibility = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_VISIBILITY, VisibilityState.VISIBLE);
-        this.backgroundOpacityPercentage = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_BACKGROUND_OPACITY, 100) / 100f;
-        this.textColor = CONFIG.get(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR).map(TextColor::getValue).orElse(0xFFFFFF);
+        this.backgroundColor = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_BACKGROUND_COLOR, ARGBColor.WHITE);
+        this.textColor = CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOT_ELEMENT_TEXT_COLOR, ARGBColor.WHITE);
         this.renderTextShadow = CONFIG.getOrFallback(ScreenshotViewerOptions.RENDER_SCREENSHOT_ELEMENT_FONT_SHADOW, true);
         this.promptOnDelete = CONFIG.getOrFallback(ScreenshotViewerOptions.PROMPT_WHEN_DELETING_SCREENSHOT, true);
         this.hintTooltip = CONFIG.getOrFallback(ScreenshotViewerOptions.DISPLAY_HINT_TOOLTIP, false) ? ScreenshotViewerUtils.toColoredComponents(client, ScreenshotViewerTexts.translatable("tooltip", "menu_hint").withStyle(ChatFormatting.GRAY)) : List.of();
@@ -153,7 +153,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
                 matrices.scale(scaleFactor, scaleFactor);
                 Component message = getMessage();
                 float centerX = (float) (-client.font.width(getMessage()) / 2);
-                context.text(client.font, message, (int) centerX, 0, 0xFF000000 | textColor, renderTextShadow);
+                context.text(client.font, message, (int) centerX, 0, textColor.value(), renderTextShadow);
                 matrices.popMatrix();
             }
         }
@@ -170,7 +170,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     private void renderBackground(GuiGraphicsExtractor context, int viewportY, int viewportBottom) {
         int renderY = Math.max(getY(), viewportY);
         int renderHeight = Math.min(getY() + height, viewportBottom);
-        context.fill(getX(), renderY, getX() + width, renderHeight, ARGB.white((Math.min(hoverTime, 10) / 10) * backgroundOpacityPercentage));
+        context.fill(getX(), renderY, getX() + width, renderHeight, ARGB.color((int) (Math.min(hoverTime, 10) / 10 * backgroundColor.alpha()), backgroundColor.red(), backgroundColor.green(), backgroundColor.blue()));
     }
 
     /// Utility methods ///

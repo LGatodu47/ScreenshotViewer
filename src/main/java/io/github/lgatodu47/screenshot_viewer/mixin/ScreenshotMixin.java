@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 @Mixin(Screenshot.class)
 public class ScreenshotMixin {
-    @Inject(method = "lambda$grab$1", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 0, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
+    @Inject(method = "lambda$grab$3", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 0, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
     private static void screenshot_viewer$inject_saveScreenshotInner$lambda(NativeImage nativeImage, File file, Consumer<Component> consumer, CallbackInfo ci, NativeImage var3, Component text) {
         if(!(text instanceof MutableComponent mutable) || text.getStyle().getClickEvent() == null) {
             if(FabricLoader.getInstance().isDevelopmentEnvironment()) {
