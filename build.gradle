@@ -47,7 +47,6 @@ repositories {
 dependencies {
     implementation "net.neoforged:neoforge:${project.neo_version}"
 
-    runtimeOnly "curse.maven:configured-457570:${project.configured_release_id}"
     implementation "ca.weblite:java-objc-bridge:1.0.0"
 }
 

@@ -4,10 +4,17 @@ import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NonNull;
 
 final class ConfirmDeletionScreen extends ConfirmScreen {
     public ConfirmDeletionScreen(BooleanConsumer callback, Component title, Component message) {
         super(callback, title, message);
+    }
+
+    @Override
+    public void render(@NonNull GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
+        renderBackground(context, mouseX, mouseY, deltaTicks);
+        super.render(context, mouseX, mouseY, deltaTicks);
     }
 
     @Override

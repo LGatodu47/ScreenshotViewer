@@ -1,11 +1,8 @@
 package io.github.lgatodu47.screenshot_viewer;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
 import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.screenshot_viewer.screens.CopyScreenshotToast;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,14 +12,19 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FastColor;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.contents.PlainTextContents;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
-import net.neoforged.fml.util.ObfuscationReflectionHelper;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
+import org.joml.Vector2ic;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 
 import javax.imageio.ImageIO;
@@ -33,11 +35,14 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.lang.reflect.Method;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ScreenshotViewerUtils {
@@ -45,12 +50,22 @@ public class ScreenshotViewerUtils {
     @Nullable
     private static final Clipboard AWT_CLIPBOARD = tryGetAWTClipboard();
 
-    public static File getVanillaScreenshotsFolder() {
-        return new File(Minecraft.getInstance().gameDirectory, "screenshots");
+    public static String getVanillaScreenshotsFolderPath() {
+        File f = new File(Minecraft.getInstance().gameDirectory, "screenshots");
+        try {
+            return f.getCanonicalPath();
+        } catch (IOException e) {
+            return f.getAbsolutePath();
+        }
     }
 
-    public static File getDefaultThumbnailFolder() {
-        return new File(Minecraft.getInstance().gameDirectory, "screenshots/thumbnails");
+    public static String getDefaultThumbnailFolderPath() {
+        File f = new File(Minecraft.getInstance().gameDirectory, "screenshots/thumbnails");
+        try {
+            return f.getCanonicalPath();
+        } catch (IOException e) {
+            return f.getAbsolutePath();
+        }
     }
 
     public static List<File> getScreenshotFiles(File screenshotsFolder) {
@@ -58,29 +73,16 @@ public class ScreenshotViewerUtils {
         if(files == null) {
             return List.of();
         }
-        return Arrays.stream(files).filter(file -> file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))).collect(Collectors.toList());
+        return Arrays.stream(files).filter(file -> file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))).map(file -> file.getAbsoluteFile()).collect(Collectors.toList());
     }
 
-    public static void drawTexture(GuiGraphics context, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-        int x2 = x + width;
-        int y2 = y + height;
-        float u1 = u / (float) textureWidth;
-        float u2 = (u + (float) regionWidth) / (float) textureWidth;
-        float v1 = v / (float) textureHeight;
-        float v2 = (v + (float) regionHeight) / (float) textureHeight;
-
-        Matrix4f matrix4f = context.pose().last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferBuilder.addVertex(matrix4f, x, y, 0).setUv(u1, v1);
-        bufferBuilder.addVertex(matrix4f, x, y2, 0).setUv(u1, v2);
-        bufferBuilder.addVertex(matrix4f, x2, y2, 0).setUv(u2, v2);
-        bufferBuilder.addVertex(matrix4f, x2, y, 0).setUv(u2, v1);
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+    public static void drawTexture(GuiGraphics context, Identifier texture, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
+        context.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, (float)u, (float)v, width, height, regionWidth, regionHeight, textureWidth, textureHeight);
     }
 
     @Nullable
     private static Clipboard tryGetAWTClipboard() {
-        if(Minecraft.ON_OSX) {
+        if(Util.getPlatform() == Util.OS.OSX) {
             return null;
         }
         try {
@@ -92,7 +94,7 @@ public class ScreenshotViewerUtils {
     }
 
     public static void copyImageToClipboard(File screenshotFile) {
-        if(Minecraft.ON_OSX) {
+        if(Util.getPlatform() == Util.OS.OSX) {
             ScreenshotViewerMacOsUtils.doCopyMacOS(screenshotFile.getAbsolutePath());
             return;
         }
@@ -112,7 +114,7 @@ public class ScreenshotViewerUtils {
                 }
 
                 Minecraft client = Minecraft.getInstance();
-                CopyScreenshotToast.show(client.getToasts(), toastText, Component.literal(screenshotFile.getName()), 3000L);
+                CopyScreenshotToast.show(client.getToastManager(), toastText, Component.literal(screenshotFile.getName()), 3000L);
             }, Util.backgroundExecutor());
         }
     }
@@ -121,23 +123,77 @@ public class ScreenshotViewerUtils {
         return Tooltip.splitTooltip(client, text).stream().map(ColoredTooltipComponent::new).collect(Collectors.toList());
     }
 
-    private static Method DRAW_TOOLTIP;
-    private static boolean errorLogged;
+    private static Field TOOLTIP_DRAWER_FIELD;
 
-    public static void renderTooltip(GuiGraphics context, Font textRenderer, List<ClientTooltipComponent> tooltipComponents, int posX, int posY) {
-        if(DRAW_TOOLTIP == null) {
-            // mods are no longer re-obfuscated when compiled, as neoforge runs by default in a de-obfuscated environment
-            DRAW_TOOLTIP = ObfuscationReflectionHelper.findMethod(GuiGraphics.class, "renderTooltipInternal", Font.class, List.class, int.class, int.class, ClientTooltipPositioner.class);
-            DRAW_TOOLTIP.setAccessible(true);
-        }
-        try {
-            DRAW_TOOLTIP.invoke(context, textRenderer, tooltipComponents, posX, posY, DefaultTooltipPositioner.INSTANCE);
-        } catch (Exception e) {
-            if(!errorLogged) {
-                LOGGER.error("Failed to render Screenshot Viewer tooltip", e);
-                errorLogged = true;
+    public static void renderCustomTooltip(GuiGraphics context, Font textRenderer, List<ClientTooltipComponent> text, int posX, int posY, int color) {
+        if(TOOLTIP_DRAWER_FIELD == null) {
+            try {
+                TOOLTIP_DRAWER_FIELD = GuiGraphics.class.getDeclaredField("deferredTooltip");
+                TOOLTIP_DRAWER_FIELD.setAccessible(true);
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
             }
         }
+        try {
+            Object tooltipDrawer = TOOLTIP_DRAWER_FIELD.get(context);
+            if(tooltipDrawer == null) {
+                TOOLTIP_DRAWER_FIELD.set(context, (Runnable) () -> drawCustomTooltip(context, textRenderer, text, posX, posY, color));
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final Identifier DEFAULT_TOOLTIP_BACKGROUND_TEXTURE = Identifier.withDefaultNamespace("tooltip/background");
+    private static final Identifier DEFAULT_TOOLTIP_FRAME_TEXTURE = Identifier.withDefaultNamespace("tooltip/frame");
+
+    private static void drawCustomTooltip(GuiGraphics context, Font textRenderer, List<ClientTooltipComponent> text, int posX, int posY, int color) {
+        int totWidth = 0;
+        int totHeight = text.size() == 1 ? -2 : 0;
+
+        for (ClientTooltipComponent comp : text) {
+            int compWidth = comp.getWidth(textRenderer);
+            if (compWidth > totWidth) {
+                totWidth = compWidth;
+            }
+
+            totHeight += comp.getHeight(textRenderer);
+        }
+
+        ClientTooltipPositioner positioner = DefaultTooltipPositioner.INSTANCE;
+        Vector2ic vector2ic = positioner.positionTooltip(context.guiWidth(), context.guiHeight(), posX, posY, totWidth, totHeight);
+        int x = vector2ic.x();
+        int y = vector2ic.y();
+        context.pose().pushMatrix();
+
+        int bgX = x - 3 - 9;
+        int bgY = y - 3 - 9;
+        int bgWidth = totWidth + 3 + 3 + 18;
+        int bgHeight = totHeight + 3 + 3 + 18;
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, DEFAULT_TOOLTIP_BACKGROUND_TEXTURE, bgX, bgY, bgWidth, bgHeight, color);
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, DEFAULT_TOOLTIP_FRAME_TEXTURE, bgX, bgY, bgWidth, bgHeight, color);
+
+        int drawY = y;
+
+        for (int q = 0; q < text.size(); q++) {
+            ClientTooltipComponent comp = text.get(q);
+            if(comp instanceof ColoredTooltipComponent alpha) {
+                alpha.drawColoredText(context, textRenderer, x, drawY, color);
+            } else {
+                comp.renderText(context, textRenderer, x, drawY);
+            }
+            drawY += comp.getHeight(textRenderer) + (q == 0 ? 2 : 0);
+        }
+
+        drawY = y;
+
+        for (int q = 0; q < text.size(); q++) {
+            ClientTooltipComponent comp = text.get(q);
+            comp.renderImage(textRenderer, x, drawY, totWidth, totHeight, context);
+            drawY += comp.getHeight(textRenderer) + (q == 0 ? 2 : 0);
+        }
+
+        context.pose().popMatrix();
     }
 
     public static void forEachDrawable(Screen screen, Consumer<Renderable> renderer) {
@@ -161,20 +217,17 @@ public class ScreenshotViewerUtils {
         }
 
         @Override
-        public int getHeight() {
+        public int getHeight(@NonNull Font textRenderer) {
             return 10;
         }
 
         @Override
-        public void renderText(@NotNull Font textRenderer, int x, int y, @NotNull Matrix4f matrix, MultiBufferSource.@NotNull BufferSource vertexConsumers) {
-            float[] colors = RenderSystem.getShaderColor();
-            if(colors.length != 4) {
-                colors = new float[]{0, 0, 0, 0};
-            }
-            // game tweaks the alpha value for some reason (see TextRenderer#tweakTransparency)
-            int alpha = Math.max((int) (colors[3] * 255), 5);
-            int textColor = FastColor.ARGB32.color(alpha, (int) (colors[0] * 255), (int) (colors[1] * 255), (int) (colors[2] * 255));
-            textRenderer.drawInBatch(this.text, x, y, textColor, true, matrix, vertexConsumers, Font.DisplayMode.NORMAL, 0, 0xF000F0);
+        public void renderText(GuiGraphics context, @NonNull Font textRenderer, int x, int y) {
+            context.drawString(textRenderer, this.text, x, y, -1, true);
+        }
+
+        public void drawColoredText(GuiGraphics context, Font textRenderer, int x, int y, int color) {
+            context.drawString(textRenderer, this.text, x, y, color, true);
         }
     }
 
@@ -196,6 +249,34 @@ public class ScreenshotViewerUtils {
                 throw new UnsupportedFlavorException(flavor);
             }
             return image();
+        }
+    }
+
+    public static Component ofSupplied(Supplier<Component> textSupplier) {
+        return MutableComponent.create(new ClientSideSuppliedTextContent(textSupplier));
+    }
+
+    record ClientSideSuppliedTextContent(@NotNull Supplier<Component> s) implements PlainTextContents {
+        @Override
+        public @NonNull String text() {
+            return "";
+        }
+
+        @Override
+        public <T> @NonNull Optional<T> visit(FormattedText.@NonNull ContentConsumer<T> visitor) {
+            Component r = s.get();
+            return r == null ? Optional.empty() : r.visit(visitor);
+        }
+
+        @Override
+        public <T> @NonNull Optional<T> visit(FormattedText.@NonNull StyledContentConsumer<T> visitor, @NonNull Style style) {
+            Component r = s.get();
+            return r == null ? Optional.empty() : r.visit(visitor, style);
+        }
+
+        @Override
+        public @NonNull String toString() {
+            return "clientsideSupplied{}";
         }
     }
 }

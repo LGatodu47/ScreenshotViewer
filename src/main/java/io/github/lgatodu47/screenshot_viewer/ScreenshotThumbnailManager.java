@@ -4,7 +4,7 @@ import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.screenshot_viewer.config.CompressionRatio;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfigListener;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 

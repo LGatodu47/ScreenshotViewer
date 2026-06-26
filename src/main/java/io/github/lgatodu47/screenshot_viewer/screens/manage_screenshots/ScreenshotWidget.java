@@ -2,27 +2,29 @@ package io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
+import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfig;
 import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.util.FastColor;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.*;
@@ -39,7 +41,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     private final Context ctx;
 
     private VisibilityState textVisibility;
-    private float backgroundOpacityPercentage;
+    private int backgroundColor;
     private int textColor;
     private boolean renderTextShadow, promptOnDelete;
     private List<ClientTooltipComponent> hintTooltip;
@@ -82,8 +84,8 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
 
     void onConfigUpdate() {
         this.textVisibility = CONFIG.screenshotElementTextVisibility.get();
-        this.backgroundOpacityPercentage = CONFIG.screenshotElementBackgroundOpacity.get() / 100f;
-        this.textColor = TextColor.parseColor(CONFIG.screenshotElementTextColor.get()).result().map(TextColor::getValue).orElse(0xFFFFFF);
+        this.backgroundColor = ScreenshotViewerConfig.colorFromHex(CONFIG.screenshotElementBackgroundColor.get()).orElse(0xFFFFFFFF);
+        this.textColor = ScreenshotViewerConfig.colorFromHex(CONFIG.screenshotElementTextColor.get()).orElse(0xFFFFFFFF);
         this.renderTextShadow = CONFIG.renderScreenshotElementFontShadow.get();
         this.promptOnDelete = CONFIG.promptWhenDeletingScreenshot.get();
         this.hintTooltip = CONFIG.displayHintTooltip.get() ? ScreenshotViewerUtils.toColoredComponents(client, ScreenshotViewerTexts.translatable("tooltip", "menu_hint").withStyle(ChatFormatting.GRAY)) : List.of();
@@ -108,57 +110,57 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
         renderBackground(context, viewportY, viewportBottom);
         final int spacing = 2;
 
-        DynamicTexture image = thumbnailTexture();
-        if (image != null && image.getPixels() != null) {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.setShaderColor(1, 1, 1, 1);
-            RenderSystem.setShaderTexture(0, image.getId());
-            RenderSystem.enableBlend();
+        NativeImage image = thumbnailImage.image();
+        if (image == null) {
+            image = screenshotImage.image();
+        }
+        if (image != null) {
             int renderY = Math.max(getY() + spacing, viewportY);
             int imgHeight = (int) (height / (VisibilityState.HIDDEN.equals(textVisibility) ? 1 : 1.08) - spacing * 3);
             int topOffset = Math.max(0, viewportY - getY() - spacing);
             int bottomOffset = Math.max(0, getY() + spacing + imgHeight - viewportBottom);
-            int topV = topOffset * image.getPixels().getHeight() / imgHeight;
-            int bottomV = bottomOffset * image.getPixels().getHeight() / imgHeight;
+            int topV = topOffset * image.getHeight() / imgHeight;
+            int bottomV = bottomOffset * image.getHeight() / imgHeight;
 
-            ScreenshotViewerUtils.drawTexture(
-                    context,
-                    getX() + spacing,
-                    renderY,
-                    width - spacing * 2,
-                    imgHeight - topOffset - bottomOffset,
-                    0,
-                    topV,
-                    image.getPixels().getWidth(),
-                    image.getPixels().getHeight() - topV - bottomV,
-                    image.getPixels().getWidth(),
-                    image.getPixels().getHeight()
-            );
+            Identifier texture = thumbnailTextureId();
+            if (texture != null) {
+                ScreenshotViewerUtils.drawTexture(
+                        context,
+                        texture,
+                        getX() + spacing,
+                        renderY,
+                        width - spacing * 2,
+                        imgHeight - topOffset - bottomOffset,
+                        0,
+                        topV,
+                        image.getWidth(),
+                        image.getHeight() - topV - bottomV,
+                        image.getWidth(),
+                        image.getHeight()
+                );
+            }
             if(mainScreen.isFastDeleteToggled() && selectedForDeletion) {
                 context.fill(getX() + spacing, renderY, getX() + width - spacing, renderY + imgHeight - topOffset - bottomOffset, 0x50FF0000);
             }
-            RenderSystem.disableBlend();
         }
 
         if(VisibilityState.VISIBLE.equals(textVisibility) || VisibilityState.SHOW_ON_HOVER.equals(textVisibility) && isHovered) {
             float scaleFactor = (float) (client.getWindow().getGuiScaledHeight() / 96) / ctx.screenshotsPerRow();
             int textY = getY() + (int) (height / 1.08) - spacing;
             if (textY > viewportY && (float) textY + scaleFactor * (client.font.lineHeight) < viewportBottom) {
-                PoseStack matrices = context.pose();
-                matrices.pushPose();
-                matrices.translate(getX() + width / 2f, textY, 0);
-                matrices.scale(scaleFactor, scaleFactor, scaleFactor);
+                Matrix3x2fStack matrices = context.pose();
+                matrices.pushMatrix();
+                matrices.translate(getX() + width / 2f, textY);
+                matrices.scale(scaleFactor, scaleFactor);
                 Component message = getMessage();
                 float centerX = (float) (-client.font.width(getMessage()) / 2);
                 context.drawString(client.font, message, (int) centerX, 0, textColor, renderTextShadow);
-                matrices.popPose();
+                matrices.popMatrix();
             }
         }
 
         if(!mainScreen.isFastDeleteToggled() && !hintTooltip.isEmpty() && hoverTime > 20) {
-            context.setColor(1, 1, 1, Math.min(hoverTime - 20, 10) / 10 * 0.7f);
-            ScreenshotViewerUtils.renderTooltip(context, client.font, hintTooltip, mouseX, mouseY);
-            context.setColor(1, 1, 1, 1);
+            ScreenshotViewerUtils.renderCustomTooltip(context, client.font, hintTooltip, mouseX, mouseY, ARGB.white(Math.min(hoverTime - 20, 10) / 10 * 0.7f));
         }
     }
 
@@ -169,7 +171,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     private void renderBackground(GuiGraphics graphics, int viewportY, int viewportBottom) {
         int renderY = Math.max(getY(), viewportY);
         int renderHeight = Math.min(getY() + height, viewportBottom);
-        graphics.fill(getX(), renderY, getX() + width, renderHeight, FastColor.ARGB32.color((int) ((Math.min(hoverTime, 10) / 10) * backgroundOpacityPercentage * 255), 255, 255, 255));
+        graphics.fill(getX(), renderY, getX() + width, renderHeight, ARGB.color((int) ((Math.min(hoverTime, 10) / 10) * ARGB.alpha(backgroundColor)), ARGB.red(backgroundColor), ARGB.green(backgroundColor), ARGB.blue(backgroundColor)));
     }
 
     /// Utility methods ///
@@ -197,12 +199,12 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Nullable
-    public DynamicTexture thumbnailTexture() {
+    private Identifier thumbnailTextureId() {
         if(!thumbnailImage.file.isDone()) {
-            return screenshotImage.texture();
+            return screenshotImage.textureId();
         }
-        DynamicTexture texture = thumbnailImage.texture();
-        return texture == null ? screenshotImage.texture() : texture;
+        Identifier texture = thumbnailImage.textureId();
+        return texture == null ? screenshotImage.textureId() : texture;
     }
 
     /// ScreenshotImageHolder implementations ///
@@ -247,7 +249,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
                 Path moved = Files.move(screenshotFile.toPath(), screenshotFile.toPath().resolveSibling(s));
                 updateScreenshotFile(moved.toFile());
             } catch (IOException e) {
-                LOGGER.error("Failed to rename 'screenshot' file at '" + screenshotFile.toPath().toAbsolutePath() + "' from '" + screenshotFile.getName() + "' to '" + s + "'" , e);
+                LOGGER.error("Failed to rename 'screenshot' file at '{}' from '{}' to '{}'", screenshotFile.toPath().toAbsolutePath(), screenshotFile.getName(), s, e);
             }
         }, () -> mainScreen.setDialogScreen(null)));
     }
@@ -258,9 +260,8 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public int imageId() {
-        DynamicTexture texture = screenshotImage.texture();
-        return texture != null ? texture.getId() : 0;
+    public @Nullable Identifier textureId() {
+        return screenshotImage.textureId();
     }
 
     @Nullable
@@ -272,12 +273,12 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     /// Common Widget implementations ///
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(isHovered && keyCode == InputConstants.KEY_C && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+    public boolean keyPressed(@NonNull KeyEvent input) {
+        if(isHovered && input.key() == InputConstants.KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
             this.copyScreenshot();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
@@ -286,22 +287,17 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (isHoveredOrFocused()) {
-            super.playDownSound(this.client.getSoundManager());
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
+        if (isHovered()) {
+            playDownSound(this.client.getSoundManager());
+            if (click.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                 onClick();
             }
-            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                onRightClick(mouseX, mouseY);
+            if (click.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
+                onRightClick(click.x(), click.y());
             }
             return true;
         }
-        return false;
-    }
-
-    @Override
-    protected boolean clicked(double mouseX, double mouseY) {
         return false;
     }
 
@@ -338,7 +334,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
         private CompletableFuture<File> file = new CompletableFuture<>();
         private CompletableFuture<NativeImage> image;
         @Nullable
-        private DynamicTexture texture;
+        private Identifier textureId;
 
         ImageLoader(String imageType) {
             this.imageType = imageType;
@@ -354,8 +350,9 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
                 this.file.cancel(true);
             }
             this.file = file;
-            if (texture != null) {
-                texture.close();
+            if (textureId != null) {
+                client.getTextureManager().release(textureId);
+                textureId = null;
             } else if (image != null) {
                 image.thenAcceptAsync(image -> {
                     if (image != null) {
@@ -363,7 +360,6 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
                     }
                 }, client);
             }
-            texture = null;
             image = getImage();
         }
 
@@ -391,16 +387,20 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
         }
 
         @Nullable
-        public DynamicTexture texture() {
-            if (texture != null) {
-                return texture;
+        public Identifier textureId() {
+            if (textureId != null) {
+                return textureId;
             }
             if (image == null) {
                 image = getImage();
             }
             NativeImage nativeImage;
             if (image.isDone() && (nativeImage = image.join()) != null) {
-                return texture = new DynamicTexture(nativeImage);
+                File f = file.getNow(null);
+                int hash = f != null ? java.util.Objects.hash(f.getAbsolutePath(), f.lastModified(), f.length()) : System.identityHashCode(nativeImage);
+                textureId = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "dynamic/" + imageType.toLowerCase() + "/" + Integer.toHexString(hash));
+                client.getTextureManager().register(textureId, new DynamicTexture(textureId::toString, nativeImage));
+                return textureId;
             }
             return null;
         }
@@ -415,8 +415,9 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
 
         @Override
         public void close() {
-            if (texture != null) {
-                texture.close(); // Also closes the image
+            if (textureId != null) {
+                client.getTextureManager().release(textureId);
+                textureId = null;
             } else if(image != null) {
                 image.thenAcceptAsync(image -> {
                     if (image != null) {
@@ -425,7 +426,6 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
                 }, client);
             }
             image = null;
-            texture = null;
         }
     }
 }

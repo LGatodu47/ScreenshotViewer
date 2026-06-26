@@ -2,19 +2,20 @@ package io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
@@ -41,7 +42,7 @@ class EnlargedScreenshotScreen extends Screen {
         this.renameBtn = makeIconWidget(RENAME_ICON, ScreenshotViewerTexts.RENAME_FILE, ScreenshotImageHolder::renameFile);
     }
 
-    private AbstractWidget makeIconWidget(ResourceLocation texture, Component description, Consumer<ScreenshotImageHolder> action) {
+    private AbstractWidget makeIconWidget(Identifier texture, Component description, Consumer<ScreenshotImageHolder> action) {
         return new ManageScreenshotsScreen.ExtendedTexturedButtonWidget(0, 0, 20, 20, texture, btn -> {
             if(showing != null) {
                 action.accept(showing);
@@ -142,15 +143,14 @@ class EnlargedScreenshotScreen extends Screen {
 
             NativeImage image = showing.image();
             if (image != null) {
-                RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                RenderSystem.setShaderTexture(0, showing.imageId());
-                RenderSystem.enableBlend();
                 float imgRatio = (float) image.getWidth() / image.getHeight();
                 int texHeight = height - spacing * 3 - 20;
                 int texWidth = (int) (texHeight * imgRatio);
-                ScreenshotViewerUtils.drawTexture(context, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
-                RenderSystem.disableBlend();
+
+                Identifier texture = showing.textureId();
+                if (texture != null) {
+                    ScreenshotViewerUtils.drawTexture(context, texture, (width - texWidth) / 2, spacing, texWidth, texHeight, 0, 0, image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight());
+                }
             }
         }
     }
@@ -167,29 +167,29 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == InputConstants.KEY_LEFT) {
+    public boolean keyPressed(KeyEvent input) {
+        if (input.key() == InputConstants.KEY_LEFT) {
             previousScreenshot();
             return true;
         }
-        if (keyCode == InputConstants.KEY_RIGHT) {
+        if (input.key() == InputConstants.KEY_RIGHT) {
             nextScreenshot();
             return true;
         }
-        if(showing != null && keyCode == InputConstants.KEY_C && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+        if(showing != null && input.key() == InputConstants.KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
             showing.copyScreenshot();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(showing != null && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            this.properties.showProperties(mouseX, mouseY, showing);
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
+        if(showing != null && click.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
+            this.properties.showProperties(click.x(), click.y(), showing);
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubled);
     }
 
     @Override

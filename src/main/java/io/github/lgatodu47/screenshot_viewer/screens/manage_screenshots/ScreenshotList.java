@@ -10,16 +10,21 @@ import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.util.FastColor;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.function.IntUnaryOperator;
 
-final class ScreenshotList extends AbstractContainerEventHandler implements Renderable, NarratableEntry, ScreenshotImageList, ScreenshotWidget.Context {
+final class ScreenshotList extends AbstractContainerEventHandler implements Renderable, NarratableEntry, ScreenshotImageList, ScreenshotWidget.Context, OldParentElementMethods {
     private final ManageScreenshotsScreen mainScreen;
     private final Minecraft client;
     private final int x, y;
@@ -201,7 +206,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
 
     // The boolean added controls whether the screenshot widgets should update its `hovered` state.
     void render(GuiGraphics graphics, int mouseX, int mouseY, float delta, boolean updateHoverState) {
-        graphics.fill(x, y, x + width, y + height, FastColor.ARGB32.color((int) (0.7f * 255), 0, 0, 0));
+        graphics.fill(x, y, x + width, y + height, ARGB.color((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
             graphics.drawCenteredString(client.font, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
         }
@@ -235,7 +240,13 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
 
     @Override
     public Optional<ScreenshotImageHolder> findByFileName(File file) {
-        return screenshotWidgets.stream().filter(screenshotWidget -> screenshotWidget.getScreenshotFile().equals(file)).map(ScreenshotImageHolder.class::cast).findFirst();
+        return screenshotWidgets.stream().filter(screenshotWidget -> {
+            try {
+                return Files.isSameFile(screenshotWidget.getScreenshotFile().toPath(), file.toPath());
+            } catch (IOException ignored) {
+                return false;
+            }
+        }).map(ScreenshotImageHolder.class::cast).findFirst();
     }
 
     @Override
@@ -322,26 +333,26 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     private boolean scrollbarClicked;
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
         scrollbarClicked = false;
-        if(canScroll() && scrollbar.mouseClicked(mouseX, mouseY, button, scrollY)) {
+        if(canScroll() && scrollbar.mouseClicked(click.x(), click.y(), click.button(), scrollY)) {
             scrollbarClicked = true;
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return OldParentElementMethods.super.mouseClicked(click, doubled);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(@NonNull MouseButtonEvent click) {
         scrollbarClicked = false;
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(@NonNull MouseButtonEvent click, double offsetX, double offsetY) {
         if(scrollbarClicked && canScroll()) {
             final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
-            int scrollDelta = scrollbar.getScrollOffsetDelta(deltaY, totalHeightOfTheChildrens);
+            int scrollDelta = scrollbar.getScrollOffsetDelta(offsetY, totalHeightOfTheChildrens);
             if (scrollY > 0 && scrollDelta > 0) {
                 scrollY = Math.max(0, scrollY - scrollDelta);
             }
@@ -353,12 +364,12 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
                 scrollY = Math.min(leftOver, scrollY - scrollDelta);
             }
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(click, offsetX, offsetY);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return screenshotWidgets.stream().anyMatch(widget -> widget.keyPressed(keyCode, scanCode, modifiers));
+    public boolean keyPressed(@NonNull KeyEvent input) {
+        return screenshotWidgets.stream().anyMatch(widget -> widget.keyPressed(input));
     }
 
     /// Random implementation methods ///

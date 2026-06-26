@@ -12,19 +12,22 @@ authors="LGatodu47"
 credits="Ocelot5836, Wudji, MeDustyy, mrlulu51, Amirhan-Taipovjan-Greatest-I, akkini1, Szedann"
 description="A mod that allows you to see and manage (through right-clicking) your screenshots in game!"
 
+[[mixins]]
+config="screenshot_viewer.mixins.json"
+
 [[accessTransformers]]
 file="META-INF/accesstransformer.cfg"
 
 [[dependencies.screenshot_viewer]]
 modId="neoforge"
 type="required"
-versionRange="[21.1,)"
+versionRange="[21.11,)"
 ordering="NONE"
 side="CLIENT"
 
 [[dependencies.screenshot_viewer]]
 modId="minecraft"
 type="required"
-versionRange="[1.21,1.22)"
+versionRange="[1.21.11,1.22)"
 ordering="NONE"
 side="CLIENT"

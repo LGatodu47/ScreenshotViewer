@@ -1,6 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotThumbnailManager;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewer;
@@ -10,7 +10,6 @@ import io.github.lgatodu47.screenshot_viewer.config.ScreenshotViewerConfigListen
 import io.github.lgatodu47.screenshot_viewer.screens.IconButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -19,13 +18,18 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
+import org.joml.Matrix3x2fStack;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -33,19 +37,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerConfigListener {
+public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerConfigListener, OldParentElementMethods {
     // Package-private config instance accessible in all the package classes
     static final ScreenshotViewerConfig CONFIG = ScreenshotViewer.getInstance().getConfig();
     static final ScreenshotThumbnailManager THUMBNAILS = ScreenshotViewer.getInstance().getThumbnailManager();
     static final Logger LOGGER = LogUtils.getLogger();
 
-    private static final ResourceLocation CONFIG_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/config.png");
-    private static final ResourceLocation REFRESH_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/refresh.png");
-    private static final ResourceLocation ASCENDING_ORDER_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/ascending_order.png");
-    private static final ResourceLocation DESCENDING_ORDER_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/descending_order.png");
-    private static final ResourceLocation OPEN_FOLDER_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/open_folder.png");
-    private static final ResourceLocation FAST_DELETE_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/delete.png");
-    private static final ResourceLocation FAST_DELETE_ENABLED_ICON = ResourceLocation.fromNamespaceAndPath(ScreenshotViewer.MODID, "textures/gui/sprites/widget/icons/fast_delete_enabled.png");
+    private static final Identifier CONFIG_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/config");
+    private static final Identifier REFRESH_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/refresh");
+    private static final Identifier ASCENDING_ORDER_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/ascending_order");
+    private static final Identifier DESCENDING_ORDER_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/descending_order");
+    private static final Identifier OPEN_FOLDER_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/open_folder");
+    private static final Identifier FAST_DELETE_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/delete");
+    private static final Identifier FAST_DELETE_ENABLED_ICON = Identifier.fromNamespaceAndPath(ScreenshotViewer.MODID, "widget/icons/fast_delete_enabled");
 
     private final Screen parent;
     private final EnlargedScreenshotScreen enlargedScreenshot;
@@ -91,14 +95,10 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
 
     @Override
     protected void init() {
-        if(minecraft == null) {
-            return;
-        }
-
         final int spacing = 8;
         final int btnHeight = 20;
 
-        this.enlargedScreenshot.init(minecraft, width, height);
+        this.enlargedScreenshot.init(width, height);
 
         //Main content
         int contentWidth = width - 24;
@@ -141,7 +141,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             }
 
             @Override
-            public @Nullable ResourceLocation getIconTexture() {
+            public @Nullable Identifier getIconTexture() {
                 return list == null ? null : list.isInvertedOrder() ? DESCENDING_ORDER_ICON : ASCENDING_ORDER_ICON;
             }
         });
@@ -190,7 +190,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             }
         }, ScreenshotViewerTexts.FAST_DELETE, ScreenshotViewerTexts.FAST_DELETE) {
             @Override
-            public ResourceLocation getIconTexture() {
+            public Identifier getIconTexture() {
                 return fastDelete ? FAST_DELETE_ENABLED_ICON : FAST_DELETE_ICON;
             }
         });
@@ -206,12 +206,12 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     }
 
     @Override
-    public void resize(@NotNull Minecraft client, int width, int height) {
-        super.resize(client, width, height);
+    public void resize(int width, int height) {
+        super.resize(width, height);
         // Adapts the size of the enlarged screenshot when resized
-        this.enlargedScreenshot.resize(client, width, height);
+        this.enlargedScreenshot.resize(width, height);
         if(dialogScreen != null) {
-            this.dialogScreen.resize(client, width, height);
+            this.dialogScreen.resize(width, height);
         }
         // Hides the screenshot properties menu
         this.screenshotProperties.hide();
@@ -221,14 +221,14 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        renderBackground(graphics, mouseX, mouseY, delta);
         if(list != null) {
             list.render(graphics, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()) && dialogScreen == null);
         }
         graphics.drawCenteredString(font, title,width / 2, 8, 0xFFFFFF);
         renderActionText(graphics);
         ScreenshotViewerUtils.forEachDrawable(this, drawable -> drawable.render(graphics, mouseX, mouseY, delta));
-        PoseStack pose = graphics.pose();
+
+        Matrix3x2fStack matrices = graphics.pose();
         if(enlargedScreenshot.renders()) {
             float animationTime = 1;
 
@@ -238,16 +238,13 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
                 }
             }
 
-            pose.pushPose();
-            pose.translate(0, 0, 1);
             enlargedScreenshot.renderBackground(graphics, mouseX, mouseY, delta);
-            pose.pushPose();
-            pose.translate((enlargedScreenshot.width / 2f) * (1 - animationTime), (enlargedScreenshot.height / 2f) * (1 - animationTime), 0);
-            pose.scale(animationTime, animationTime, animationTime);
+            matrices.pushMatrix();
+            matrices.translate((enlargedScreenshot.width / 2f) * (1 - animationTime), (enlargedScreenshot.height / 2f) * (1 - animationTime));
+            matrices.scale(animationTime, animationTime);
             enlargedScreenshot.renderImage(graphics);
-            pose.popPose();
+            matrices.popMatrix();
             enlargedScreenshot.render(graphics, mouseX, mouseY, delta, !screenshotProperties.renders() && dialogScreen == null);
-            pose.popPose();
         } else {
             if(screenshotScaleAnimation > 0) {
                 screenshotScaleAnimation = 0;
@@ -262,21 +259,15 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             }
         }
         if(dialogScreen != null) {
-            pose.pushPose();
-            pose.translate(0, 0, 5);
             dialogScreen.render(graphics, mouseX, mouseY, delta);
-            pose.popPose();
         } else {
-            pose.pushPose();
-            pose.translate(0, 0, 2);
             screenshotProperties.render(graphics, mouseX, mouseY, delta);
-            pose.popPose();
         }
     }
 
     private void renderActionText(GuiGraphics context) {
         Component text = fastDelete ? ScreenshotViewerTexts.FAST_DELETE_MODE : ScreenshotViewerTexts.ZOOM_MODE;
-        context.drawString(font, text, width - font.width(text) - 8, 8, fastDelete ? 0xEB4034 : isCtrlDown ? 0x18DE39 : 0xF0CA22);
+        context.drawString(font, text, width - font.width(text) - 8, 8, fastDelete ? 0xFFEB4034 : isCtrlDown ? 0xFF18DE39 : 0xFFF0CA22);
     }
 
     /// Methods shared between the classes of the package ///
@@ -296,12 +287,9 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     }
 
     void setDialogScreen(Screen screen) {
-        if(minecraft == null) {
-            return;
-        }
         this.dialogScreen = screen;
         if(dialogScreen != null) {
-            this.dialogScreen.init(minecraft, width, height);
+            this.dialogScreen.init(width, height);
         }
     }
 
@@ -310,58 +298,58 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     private boolean isCtrlDown;
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(@NonNull KeyEvent input) {
         if(dialogScreen != null) {
-            return dialogScreen.keyPressed(keyCode, scanCode, modifiers);
+            return dialogScreen.keyPressed(input);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.keyPressed(keyCode, scanCode, modifiers);
+            return screenshotProperties.keyPressed(input);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.keyPressed(keyCode, scanCode, modifiers);
+            return enlargedScreenshot.keyPressed(input);
         }
-        isCtrlDown = keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL;
-        if(keyCode == GLFW.GLFW_KEY_F5) {
+        isCtrlDown = input.key() == InputConstants.KEY_LCONTROL || input.key() == InputConstants.KEY_RCONTROL;
+        if (input.key() == InputConstants.KEY_F5) {
             list.init();
             return true;
         }
         if(list != null) {
-            if(list.keyPressed(keyCode, scanCode, modifiers)) {
+            if(list.keyPressed(input)) {
                 return true;
             }
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+    public boolean keyReleased(@NonNull KeyEvent input) {
         if(dialogScreen != null) {
-            return dialogScreen.keyReleased(keyCode, scanCode, modifiers);
+            return dialogScreen.keyReleased(input);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.keyReleased(keyCode, scanCode, modifiers);
+            return screenshotProperties.keyReleased(input);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.keyReleased(keyCode, scanCode, modifiers);
+            return enlargedScreenshot.keyReleased(input);
         }
         if(isCtrlDown) {
             isCtrlDown = false;
         }
-        return super.keyReleased(keyCode, scanCode, modifiers);
+        return super.keyReleased(input);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
+    public boolean charTyped(@NonNull CharacterEvent input) {
         if(dialogScreen != null) {
-            return dialogScreen.charTyped(chr, modifiers);
+            return dialogScreen.charTyped(input);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.charTyped(chr, modifiers);
+            return screenshotProperties.charTyped(input);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.charTyped(chr, modifiers);
+            return enlargedScreenshot.charTyped(input);
         }
-        return super.charTyped(chr, modifiers);
+        return super.charTyped(input);
     }
 
     @Override
@@ -387,48 +375,48 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
         if(dialogScreen != null) {
-            return dialogScreen.mouseClicked(mouseX, mouseY, button);
+            return dialogScreen.mouseClicked(click, doubled);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseClicked(mouseX, mouseY, button);
+            return screenshotProperties.mouseClicked(click, doubled);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseClicked(mouseX, mouseY, button);
+            return enlargedScreenshot.mouseClicked(click, doubled);
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return OldParentElementMethods.super.mouseClicked(click, doubled);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(@NonNull MouseButtonEvent click) {
         if(dialogScreen != null) {
-            return dialogScreen.mouseReleased(mouseX, mouseY, button);
+            return dialogScreen.mouseReleased(click);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseReleased(mouseX, mouseY, button);
+            return screenshotProperties.mouseReleased(click);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseReleased(mouseX, mouseY, button);
+            return enlargedScreenshot.mouseReleased(click);
         }
         if(list != null) {
-            return list.mouseReleased(mouseX, mouseY, button);
+            return list.mouseReleased(click);
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(@NonNull MouseButtonEvent click, double offsetX, double offsetY) {
         if(dialogScreen != null) {
-            return dialogScreen.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            return dialogScreen.mouseDragged(click, offsetX, offsetY);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            return screenshotProperties.mouseDragged(click, offsetX, offsetY);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            return enlargedScreenshot.mouseDragged(click, offsetX, offsetY);
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(click, offsetX, offsetY);
     }
 
     @Override
@@ -449,9 +437,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
 
     @Override
     public void onClose() {
-        if(minecraft != null) {
-            this.minecraft.setScreen(parent);
-        }
+        this.minecraft.setScreen(parent);
         ScreenshotViewer.getInstance().unregisterConfigListener(this);
     }
 
@@ -466,7 +452,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         this.enlargeAnimation = CONFIG.enableScreenshotEnlargementAnimation.get();
     }
 
-    public static class ExtendedButtonWidget extends Button implements CustomHoverState {
+    public static class ExtendedButtonWidget extends Button.Plain implements CustomHoverState {
         ExtendedButtonWidget(int x, int y, int width, int height, Component message, OnPress onPress) {
             super(x, y, width, height, message, onPress, Supplier::get);
         }
@@ -495,7 +481,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         private final Component tooltip;
         private boolean offsetTooltip;
 
-        public ExtendedTexturedButtonWidget(int x, int y, int width, int height, @Nullable ResourceLocation texture, OnPress pressAction, @Nullable Component tooltip, Component text) {
+        public ExtendedTexturedButtonWidget(int x, int y, int width, int height, @Nullable Identifier texture, OnPress pressAction, @Nullable Component tooltip, Component text) {
             super(x, y, width, height, text, texture, pressAction);
             this.tooltip = tooltip;
             if(tooltip != null) {
@@ -514,18 +500,13 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
                 return;
             }
             this.renderWidget(graphics, mouseX, mouseY, delta);
-            updateTooltip();
+            applyTooltip(graphics, mouseX, mouseY);
         }
 
-        private void updateTooltip() {
-            Component tooltip = getTooltipText();
-            if (tooltip != null) {
-                if (isHovered()) {
-                    Screen screen = Minecraft.getInstance().screen;
-                    if (screen != null) {
-                        screen.setTooltipForNextRenderPass(Tooltip.create(tooltip), this.createTooltipPositioner(), this.isFocused());
-                    }
-                }
+        private void applyTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+            Component tooltipText = getTooltipText();
+            if (tooltipText != null && isHovered()) {
+                graphics.setTooltipForNextFrame(Minecraft.getInstance().font, List.of(tooltipText.getVisualOrderText()), getTooltipPositioner(), mouseX, mouseY, isFocused());
             }
         }
 
@@ -534,7 +515,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             return tooltip;
         }
 
-        protected @NotNull ClientTooltipPositioner createTooltipPositioner() {
+        protected ClientTooltipPositioner getTooltipPositioner() {
             ClientTooltipPositioner positioner = DefaultTooltipPositioner.INSTANCE;
             return offsetTooltip ? (screen_width, screen_height, x, y, w, h) -> positioner.positionTooltip(screen_width, screen_height, x, y + height, w, h) : positioner;
         }

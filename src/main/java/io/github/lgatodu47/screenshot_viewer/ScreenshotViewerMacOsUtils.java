@@ -3,7 +3,7 @@ package io.github.lgatodu47.screenshot_viewer;
 import ca.weblite.objc.Client;
 import ca.weblite.objc.Proxy;
 import com.mojang.logging.LogUtils;
-import net.minecraft.client.Minecraft;
+import net.minecraft.util.Util;
 
 public class ScreenshotViewerMacOsUtils {
     // Code taken from ScreenshotToClipboard: https://github.com/comp500/ScreenshotToClipboard
@@ -27,7 +27,7 @@ public class ScreenshotViewerMacOsUtils {
     SOFTWARE.
     */
     public static void doCopyMacOS(String path) {
-        if (!Minecraft.ON_OSX) {
+        if (Util.getPlatform() != Util.OS.OSX) {
             return;
         }
 

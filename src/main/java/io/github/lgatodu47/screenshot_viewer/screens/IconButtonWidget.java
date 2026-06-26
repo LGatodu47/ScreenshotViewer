@@ -1,43 +1,38 @@
 package io.github.lgatodu47.screenshot_viewer.screens;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.WidgetSprites;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Vector2i;
 
 public class IconButtonWidget extends Button {
-    private static final Vector2i DEFAULT_SIZE = new Vector2i(20, 20);
     @Nullable
-    private final ResourceLocation iconTexture;
+    private final Identifier iconTexture;
 
-    public IconButtonWidget(int x, int y, int width, int height, Component message, @Nullable ResourceLocation iconTexture, OnPress pressAction) {
+    public IconButtonWidget(int x, int y, int width, int height, Component message, @Nullable Identifier iconTexture, OnPress pressAction) {
         super(x, y, width, height, message, pressAction, DEFAULT_NARRATION);
         this.iconTexture = iconTexture;
     }
 
     @Nullable
-    public ResourceLocation getIconTexture() {
+    public Identifier getIconTexture() {
         return iconTexture;
     }
 
-    public Vector2i getIconTextureSize() {
-        return DEFAULT_SIZE;
+    public WidgetSprites getBackgroundTexture() {
+        return AbstractButton.SPRITES;
     }
 
     @Override
-    public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        context.setColor(1, 1, 1, this.alpha);
-        RenderSystem.enableBlend();
-        RenderSystem.enableDepthTest();
-        context.blitSprite(SPRITES.get(this.active, isHoveredOrFocused()), getX(), getY(), getWidth(), getHeight());
-        ResourceLocation icon = getIconTexture();
-        Vector2i iconTexSize = getIconTextureSize();
+    public void renderContents(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, getBackgroundTexture().get(this.active, isHoveredOrFocused()), getX(), getY(), getWidth(), getHeight(), getAlpha());
+        Identifier icon = getIconTexture();
         if(icon != null) {
-            context.blit(icon, getX(), getY(), 0, 0, getWidth(), getHeight(), iconTexSize.x(), iconTexSize.y());
+            context.blitSprite(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), getWidth(), getHeight(), getAlpha());
         }
-        context.setColor(1, 1, 1, 1);
     }
 }
