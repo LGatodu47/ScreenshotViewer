@@ -11,7 +11,7 @@ import io.github.lgatodu47.screenshot_viewer.screens.IconButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -220,13 +220,13 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
     private float screenshotScaleAnimation;
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         if(list != null) {
             list.render(graphics, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()) && dialogScreen == null);
         }
-        graphics.drawCenteredString(font, title,width / 2, 8, 0xFFFFFF);
+        graphics.centeredText(font, title,width / 2, 8, 0xFFFFFFFF);
         renderActionText(graphics);
-        ScreenshotViewerUtils.forEachDrawable(this, drawable -> drawable.render(graphics, mouseX, mouseY, delta));
+        ScreenshotViewerUtils.forEachDrawable(this, drawable -> drawable.extractRenderState(graphics, mouseX, mouseY, delta));
 
         Matrix3x2fStack matrices = graphics.pose();
         if(enlargedScreenshot.renders()) {
@@ -238,7 +238,7 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
                 }
             }
 
-            enlargedScreenshot.renderBackground(graphics, mouseX, mouseY, delta);
+            enlargedScreenshot.extractBackground(graphics, mouseX, mouseY, delta);
             matrices.pushMatrix();
             matrices.translate((enlargedScreenshot.width / 2f) * (1 - animationTime), (enlargedScreenshot.height / 2f) * (1 - animationTime));
             matrices.scale(animationTime, animationTime);
@@ -259,15 +259,15 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
             }
         }
         if(dialogScreen != null) {
-            dialogScreen.render(graphics, mouseX, mouseY, delta);
+            dialogScreen.extractRenderState(graphics, mouseX, mouseY, delta);
         } else {
-            screenshotProperties.render(graphics, mouseX, mouseY, delta);
+            screenshotProperties.extractRenderState(graphics, mouseX, mouseY, delta);
         }
     }
 
-    private void renderActionText(GuiGraphics context) {
+    private void renderActionText(GuiGraphicsExtractor context) {
         Component text = fastDelete ? ScreenshotViewerTexts.FAST_DELETE_MODE : ScreenshotViewerTexts.ZOOM_MODE;
-        context.drawString(font, text, width - font.width(text) - 8, 8, fastDelete ? 0xFFEB4034 : isCtrlDown ? 0xFF18DE39 : 0xFFF0CA22);
+        context.text(font, text, width - font.width(text) - 8, 8, fastDelete ? 0xFFEB4034 : isCtrlDown ? 0xFF18DE39 : 0xFFF0CA22);
     }
 
     /// Methods shared between the classes of the package ///
@@ -458,11 +458,11 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
-            super.renderWidget(graphics, mouseX, mouseY, delta);
+            super.extractWidgetRenderState(graphics, mouseX, mouseY, delta);
         }
 
         @Override
@@ -495,15 +495,15 @@ public class ManageScreenshotsScreen extends Screen implements ScreenshotViewerC
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
-            this.renderWidget(graphics, mouseX, mouseY, delta);
+            this.extractWidgetRenderState(graphics, mouseX, mouseY, delta);
             applyTooltip(graphics, mouseX, mouseY);
         }
 
-        private void applyTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+        private void applyTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
             Component tooltipText = getTooltipText();
             if (tooltipText != null && isHovered()) {
                 graphics.setTooltipForNextFrame(Minecraft.getInstance().font, List.of(tooltipText.getVisualOrderText()), getTooltipPositioner(), mouseX, mouseY, isFocused());

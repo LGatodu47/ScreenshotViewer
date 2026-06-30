@@ -3,7 +3,7 @@ package io.github.lgatodu47.screenshot_viewer.screens.manage_screenshots;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,10 +44,10 @@ final class RenameScreenshotScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
-        context.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFFFF);
-        ScreenshotViewerUtils.forEachDrawable(this, drawable -> drawable.render(context, mouseX, mouseY, delta));
+        context.centeredText(this.font, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFFFF);
+        ScreenshotViewerUtils.forEachDrawable(this, drawable -> drawable.extractRenderState(context, mouseX, mouseY, delta));
     }
 
     @Override

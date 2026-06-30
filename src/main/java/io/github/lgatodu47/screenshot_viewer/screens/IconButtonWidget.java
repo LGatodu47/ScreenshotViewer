@@ -1,6 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.screens;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -28,7 +28,7 @@ public class IconButtonWidget extends Button {
     }
 
     @Override
-    public void renderContents(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         context.blitSprite(RenderPipelines.GUI_TEXTURED, getBackgroundTexture().get(this.active, isHoveredOrFocused()), getX(), getY(), getWidth(), getHeight(), getAlpha());
         Identifier icon = getIconTexture();
         if(icon != null) {

@@ -6,9 +6,9 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.ModConfigSpec.BooleanValue;
-import net.neoforged.neoforge.common.ModConfigSpec.IntValue;
 import net.neoforged.neoforge.common.ModConfigSpec.ConfigValue;
 import net.neoforged.neoforge.common.ModConfigSpec.EnumValue;
+import net.neoforged.neoforge.common.ModConfigSpec.IntValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
@@ -121,6 +121,7 @@ public final class ScreenshotViewerConfig {
         }
         s = s.substring(1);
         try {
+            //noinspection ResultOfMethodCallIgnored
             Integer.parseUnsignedInt(s.substring(0, Math.min(s.length(), 8)), 16);
             return true;
         } catch (NumberFormatException e) {
@@ -145,7 +146,7 @@ public final class ScreenshotViewerConfig {
             return false;
         }
         File file = new File(fileName);
-        return file.exists() && file.isAbsolute() && file.isDirectory() && file.canRead();
+        return file.exists() && file.isDirectory() && file.canRead();
     }
 
     public static ScreenshotViewerConfig registerConfig(ModContainer container) {

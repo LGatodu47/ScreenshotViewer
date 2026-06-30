@@ -1,10 +1,7 @@
-import java.nio.file.Paths
-
 plugins {
-    id 'eclipse'
+    id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.190'
-    id 'net.neoforged.gradle.mixin' version '7.0.190'
+    id 'net.neoforged.gradle.userdev' version '7.1.38'
 }
 
 version = project.mod_version
@@ -12,18 +9,14 @@ group = project.maven_group
 
 base {
     archivesName = project.modid
+    libsDirectory = layout.buildDirectory.dir("libs/${project.compatible_mc_version}")
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 
 minecraft {
-    mappings {
-        channel = official()
-        version.put "minecraft", "${project.minecraft_version}"
-    }
-
     accessTransformers {
         file('src/main/resources/META-INF/accesstransformer.cfg')
     }
@@ -39,9 +32,7 @@ runs {
 }
 
 repositories {
-    maven {
-        url = "https://www.cursemaven.com"
-    }
+
 }
 
 dependencies {
@@ -51,8 +42,6 @@ dependencies {
 }
 
 java {
-    libsDirName = Paths.get(libsDirName).resolve("${project.compatible_mc_version}").toString()
-    archivesBaseName = project.modid
     version = version.concat("-${project.mod_loader}-mc${project.compatible_mc_version}")
     withSourcesJar()
 }
@@ -82,14 +71,10 @@ jar {
         ])
     }
 
-    String modid = project.archivesBaseName
+    String modid = base.archivesName
     from("LICENSE") {
         rename { "${it}_${modid}" }
     }
-}
-
-mixin {
-    config "${project.modid}.mixins.json"
 }
 
 tasks.withType(JavaCompile).configureEach {

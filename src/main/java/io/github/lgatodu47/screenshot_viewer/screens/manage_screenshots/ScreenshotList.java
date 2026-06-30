@@ -4,7 +4,7 @@ import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.VisibilityState;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -201,14 +201,14 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     /// Common Methods ///
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
     }
 
     // The boolean added controls whether the screenshot widgets should update its `hovered` state.
-    void render(GuiGraphics graphics, int mouseX, int mouseY, float delta, boolean updateHoverState) {
+    void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, boolean updateHoverState) {
         graphics.fill(x, y, x + width, y + height, ARGB.color((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
-            graphics.drawCenteredString(client.font, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
+            graphics.centeredText(client.font, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFFFF);
         }
         for (ScreenshotWidget screenshotWidget : screenshotWidgets) {
             screenshotWidget.updateY(scrollY);
@@ -404,7 +404,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
         }
 
-        void render(GuiGraphics graphics, double mouseX, double mouseY, int scrollOffset, boolean updateHoverState, boolean clicked) {
+        void render(GuiGraphicsExtractor graphics, double mouseX, double mouseY, int scrollOffset, boolean updateHoverState, boolean clicked) {
             int y = scrollbarYGetter.applyAsInt(scrollOffset);
             graphics.fill(trackX, trackY, trackX + trackWidth, trackY + trackHeight, 0xFFFFFFFF);
             graphics.fill(x, y, x + width, y + height, clicked ? 0xFFFFFFFF : (isHovered(mouseX, mouseY, y) && updateHoverState) ? 0xFF6D6D6D : 0xFF1E1E1E);

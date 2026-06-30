@@ -5,7 +5,7 @@ import io.github.lgatodu47.screenshot_viewer.screens.CopyScreenshotToast;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -21,6 +21,7 @@ import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Util;
+import net.neoforged.fml.loading.FMLLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2ic;
@@ -35,7 +36,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
@@ -51,21 +51,11 @@ public class ScreenshotViewerUtils {
     private static final Clipboard AWT_CLIPBOARD = tryGetAWTClipboard();
 
     public static String getVanillaScreenshotsFolderPath() {
-        File f = new File(Minecraft.getInstance().gameDirectory, "screenshots");
-        try {
-            return f.getCanonicalPath();
-        } catch (IOException e) {
-            return f.getAbsolutePath();
-        }
+        return FMLLoader.getCurrent().getGameDir().resolve("screenshots").toString();
     }
 
     public static String getDefaultThumbnailFolderPath() {
-        File f = new File(Minecraft.getInstance().gameDirectory, "screenshots/thumbnails");
-        try {
-            return f.getCanonicalPath();
-        } catch (IOException e) {
-            return f.getAbsolutePath();
-        }
+        return FMLLoader.getCurrent().getGameDir().resolve("screenshots/thumbnails").toString();
     }
 
     public static List<File> getScreenshotFiles(File screenshotsFolder) {
@@ -73,10 +63,10 @@ public class ScreenshotViewerUtils {
         if(files == null) {
             return List.of();
         }
-        return Arrays.stream(files).filter(file -> file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))).map(file -> file.getAbsoluteFile()).collect(Collectors.toList());
+        return Arrays.stream(files).filter(file -> file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))).map(File::getAbsoluteFile).collect(Collectors.toList());
     }
 
-    public static void drawTexture(GuiGraphics context, Identifier texture, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
+    public static void drawTexture(GuiGraphicsExtractor context, Identifier texture, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
         context.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, (float)u, (float)v, width, height, regionWidth, regionHeight, textureWidth, textureHeight);
     }
 
@@ -125,10 +115,10 @@ public class ScreenshotViewerUtils {
 
     private static Field TOOLTIP_DRAWER_FIELD;
 
-    public static void renderCustomTooltip(GuiGraphics context, Font textRenderer, List<ClientTooltipComponent> text, int posX, int posY, int color) {
+    public static void renderCustomTooltip(GuiGraphicsExtractor context, Font textRenderer, List<ClientTooltipComponent> text, int posX, int posY, int color) {
         if(TOOLTIP_DRAWER_FIELD == null) {
             try {
-                TOOLTIP_DRAWER_FIELD = GuiGraphics.class.getDeclaredField("deferredTooltip");
+                TOOLTIP_DRAWER_FIELD = GuiGraphicsExtractor.class.getDeclaredField("deferredTooltip");
                 TOOLTIP_DRAWER_FIELD.setAccessible(true);
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException(e);
@@ -147,7 +137,7 @@ public class ScreenshotViewerUtils {
     private static final Identifier DEFAULT_TOOLTIP_BACKGROUND_TEXTURE = Identifier.withDefaultNamespace("tooltip/background");
     private static final Identifier DEFAULT_TOOLTIP_FRAME_TEXTURE = Identifier.withDefaultNamespace("tooltip/frame");
 
-    private static void drawCustomTooltip(GuiGraphics context, Font textRenderer, List<ClientTooltipComponent> text, int posX, int posY, int color) {
+    private static void drawCustomTooltip(GuiGraphicsExtractor context, Font textRenderer, List<ClientTooltipComponent> text, int posX, int posY, int color) {
         int totWidth = 0;
         int totHeight = text.size() == 1 ? -2 : 0;
 
@@ -180,7 +170,7 @@ public class ScreenshotViewerUtils {
             if(comp instanceof ColoredTooltipComponent alpha) {
                 alpha.drawColoredText(context, textRenderer, x, drawY, color);
             } else {
-                comp.renderText(context, textRenderer, x, drawY);
+                comp.extractText(context, textRenderer, x, drawY);
             }
             drawY += comp.getHeight(textRenderer) + (q == 0 ? 2 : 0);
         }
@@ -189,7 +179,7 @@ public class ScreenshotViewerUtils {
 
         for (int q = 0; q < text.size(); q++) {
             ClientTooltipComponent comp = text.get(q);
-            comp.renderImage(textRenderer, x, drawY, totWidth, totHeight, context);
+            comp.extractImage(textRenderer, x, drawY, totWidth, totHeight, context);
             drawY += comp.getHeight(textRenderer) + (q == 0 ? 2 : 0);
         }
 
@@ -222,12 +212,12 @@ public class ScreenshotViewerUtils {
         }
 
         @Override
-        public void renderText(GuiGraphics context, @NonNull Font textRenderer, int x, int y) {
-            context.drawString(textRenderer, this.text, x, y, -1, true);
+        public void extractText(GuiGraphicsExtractor context, @NonNull Font textRenderer, int x, int y) {
+            context.text(textRenderer, this.text, x, y, -1, true);
         }
 
-        public void drawColoredText(GuiGraphics context, Font textRenderer, int x, int y, int color) {
-            context.drawString(textRenderer, this.text, x, y, color, true);
+        public void drawColoredText(GuiGraphicsExtractor context, Font textRenderer, int x, int y, int color) {
+            context.text(textRenderer, this.text, x, y, color, true);
         }
     }
 

@@ -6,7 +6,7 @@ import io.github.lgatodu47.screenshot_viewer.screens.IconButtonWidget;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -98,16 +98,16 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (shouldRender) {
             final int spacing = 2;
 
             context.blitSprite(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE_ATLAS, x, y, width, height);
 
-            context.drawString(mcSupplier.get().font, targetScreenshot.getScreenshotFile().getName(), x + spacing, y + spacing, 0xFFFFFFFF);
+            context.text(mcSupplier.get().font, targetScreenshot.getScreenshotFile().getName(), x + spacing, y + spacing, 0xFFFFFFFF);
             for (AbstractWidget widget : buttons) {
-                widget.render(context, mouseX, mouseY, delta);
-                context.drawString(mcSupplier.get().font, widget.getMessage(), widget.getX() + BUTTON_SIZE + spacing, (int) (widget.getY() + (widget.getHeight() - 9) / 2.f + spacing), 0xFFFFFFFF);
+                widget.extractRenderState(context, mouseX, mouseY, delta);
+                context.text(mcSupplier.get().font, widget.getMessage(), widget.getX() + BUTTON_SIZE + spacing, (int) (widget.getY() + (widget.getHeight() - 9) / 2.f + spacing), 0xFFFFFFFF);
             }
         }
     }
@@ -159,7 +159,7 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
         }
 
         @Override
-        public void renderContents(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+        public void extractContents(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
             Identifier backgroundTexture = getBackgroundTexture().get(this.active, isHoveredOrFocused());
             if (renderWide) {
                 context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX(), getY(), 0, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ARGB.white(this.alpha));

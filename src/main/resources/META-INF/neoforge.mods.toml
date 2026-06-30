@@ -9,7 +9,7 @@ version="${mod_version}"
 displayName="Screenshot Viewer"
 logoFile="icon.png"
 authors="LGatodu47"
-credits="Ocelot5836, Wudji, MeDustyy, mrlulu51, Amirhan-Taipovjan-Greatest-I, akkini1, Szedann"
+credits="Ocelot5836, Wudji, MeDustyy, mrlulu51, Amirhan-Taipovjan-Greatest-I, akkini1, Szedann, TheLegendofSaram, blryface, Redls07, CloverGit"
 description="A mod that allows you to see and manage (through right-clicking) your screenshots in game!"
 
 [[mixins]]
@@ -21,13 +21,13 @@ file="META-INF/accesstransformer.cfg"
 [[dependencies.screenshot_viewer]]
 modId="neoforge"
 type="required"
-versionRange="[21.11,)"
+versionRange="[26.1,)"
 ordering="NONE"
 side="CLIENT"
 
 [[dependencies.screenshot_viewer]]
 modId="minecraft"
 type="required"
-versionRange="[1.21.11,1.22)"
+versionRange="[26.1,26.2)"
 ordering="NONE"
 side="CLIENT"

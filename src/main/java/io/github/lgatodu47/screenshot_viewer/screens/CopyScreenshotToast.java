@@ -2,7 +2,7 @@ package io.github.lgatodu47.screenshot_viewer.screens;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -46,7 +46,7 @@ public class CopyScreenshotToast implements Toast {
     }
 
     @Override
-    public void render(@NonNull GuiGraphics context, @NonNull Font font, long visibilityTime) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, @NonNull Font font, long visibilityTime) {
         int width = this.width();
         if (width == 160) {
             context.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE, 0, 0, width, this.height());
@@ -57,10 +57,10 @@ public class CopyScreenshotToast implements Toast {
         }
 
         if (description == null) {
-            context.drawString(font, title, 18, 12, -256, false);
+            context.text(font, title, 18, 12, -256, false);
         } else {
-            context.drawString(font, title, 18, 7, -256, false);
-            context.drawString(font, description, 18, 18, -1, false);
+            context.text(font, title, 18, 7, -256, false);
+            context.text(font, description, 18, 18, -1, false);
         }
     }
 
@@ -69,7 +69,7 @@ public class CopyScreenshotToast implements Toast {
         return width;
     }
 
-    private void drawPart(GuiGraphics context, int width, int textureV, int y, int height) {
+    private void drawPart(GuiGraphicsExtractor context, int width, int textureV, int y, int height) {
         int i = textureV == 0 ? 20 : 5;
         int j = Math.min(60, width - i);
         context.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE, 160, 32, 0, textureV, 0, y, i, height);

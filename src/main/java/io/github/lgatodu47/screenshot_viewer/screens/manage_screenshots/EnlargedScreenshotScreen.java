@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
@@ -115,18 +115,18 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         graphics.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
     }
 
-    public void render(GuiGraphics context, int mouseX, int mouseY, float partialTicks, boolean updateHoverState) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks, boolean updateHoverState) {
         this.children().forEach(element -> {
             if(element instanceof Renderable drawable) {
-                drawable.render(context, mouseX, mouseY, partialTicks);
+                drawable.extractRenderState(context, mouseX, mouseY, partialTicks);
             }
             if(element instanceof ManageScreenshotsScreen.CustomHoverState state) {
                 // feeding negative values updates the state by tricking it into thinking that it isn't hovered.
@@ -137,7 +137,7 @@ class EnlargedScreenshotScreen extends Screen {
         });
     }
 
-    public void renderImage(GuiGraphics context) {
+    public void renderImage(GuiGraphicsExtractor context) {
         if (showing != null) {
             final int spacing = 8;
 

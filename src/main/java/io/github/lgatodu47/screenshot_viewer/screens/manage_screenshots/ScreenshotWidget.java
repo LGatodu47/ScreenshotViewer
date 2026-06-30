@@ -10,7 +10,7 @@ import io.github.lgatodu47.screenshot_viewer.screens.ScreenshotViewerTexts;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -105,7 +105,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
 
     /// Rendering Methods ///
 
-    void render(GuiGraphics context, int mouseX, int mouseY, float partialTick, int viewportY, int viewportBottom) {
+    void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick, int viewportY, int viewportBottom) {
         this.hoverTime = isHovered ? (hoverTime + partialTick) : 0;
         renderBackground(context, viewportY, viewportBottom);
         final int spacing = 2;
@@ -154,7 +154,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
                 matrices.scale(scaleFactor, scaleFactor);
                 Component message = getMessage();
                 float centerX = (float) (-client.font.width(getMessage()) / 2);
-                context.drawString(client.font, message, (int) centerX, 0, textColor, renderTextShadow);
+                context.text(client.font, message, (int) centerX, 0, textColor, renderTextShadow);
                 matrices.popMatrix();
             }
         }
@@ -165,10 +165,10 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
     }
 
-    private void renderBackground(GuiGraphics graphics, int viewportY, int viewportBottom) {
+    private void renderBackground(GuiGraphicsExtractor graphics, int viewportY, int viewportBottom) {
         int renderY = Math.max(getY(), viewportY);
         int renderHeight = Math.min(getY() + height, viewportBottom);
         graphics.fill(getX(), renderY, getX() + width, renderHeight, ARGB.color((int) ((Math.min(hoverTime, 10) / 10) * ARGB.alpha(backgroundColor)), ARGB.red(backgroundColor), ARGB.green(backgroundColor), ARGB.blue(backgroundColor)));
