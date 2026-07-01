@@ -20,6 +20,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +53,7 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
     }
 
     private void addButton(Identifier texture, Component description, @Nullable Consumer<ScreenshotImageHolder> action) {
-        this.buttons.add(new Button(texture, description, btn -> {
+        this.buttons.add(new Button(texture, description, _ -> {
             if(action != null && targetScreenshot != null) {
                 action.accept(targetScreenshot);
             }
@@ -98,7 +99,7 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (shouldRender) {
             final int spacing = 2;
 
@@ -113,7 +114,7 @@ class ScreenshotPropertiesMenu extends AbstractContainerEventHandler implements 
     }
 
     @Override
-    public List<? extends GuiEventListener> children() {
+    public @NonNull List<? extends GuiEventListener> children() {
         return List.copyOf(this.buttons);
     }
 

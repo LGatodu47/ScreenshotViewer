@@ -9,11 +9,11 @@
   "client": [
     "MainMixin",
     "NativeImageMixin",
+    "PauseScreenMixin",
     "ScreenMixin",
     "ScreenshotMixin",
-    "WindowMixin",
     "TitleScreenMixin",
-    "PauseScreenMixin"
+    "WindowMixin"
   ],
   "injectors": {
     "defaultRequire": 1

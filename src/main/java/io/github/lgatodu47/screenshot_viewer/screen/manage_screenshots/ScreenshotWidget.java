@@ -24,6 +24,7 @@ import net.minecraft.util.ARGB;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2fStack;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.*;
@@ -164,7 +165,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public void extractWidgetRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void extractWidgetRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
     private void renderBackground(GuiGraphicsExtractor context, int viewportY, int viewportBottom) {
@@ -248,7 +249,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
                 Path moved = Files.move(screenshotFile.toPath(), screenshotFile.toPath().resolveSibling(s));
                 updateScreenshotFile(moved.toFile());
             } catch (IOException e) {
-                LOGGER.error("Failed to rename 'screenshot' file at '" + screenshotFile.toPath().toAbsolutePath() + "' from '" + screenshotFile.getName() + "' to '" + s + "'" , e);
+                LOGGER.error("Failed to rename 'screenshot' file at '{}' from '{}' to '{}'", screenshotFile.toPath().toAbsolutePath(), screenshotFile.getName(), s, e);
             }
         }, () -> mainScreen.setDialogScreen(null)));
     }
@@ -272,7 +273,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     /// Common Widget implementations ///
 
     @Override
-    public boolean keyPressed(KeyEvent input) {
+    public boolean keyPressed(@NonNull KeyEvent input) {
         if(isHovered && input.key() == InputConstants.KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
             this.copyScreenshot();
             return true;
@@ -281,12 +282,12 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    public Component getMessage() {
+    public @NonNull Component getMessage() {
         return this.screenshotFile == null ? super.getMessage() : Component.literal(this.screenshotFile.getName());
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
         if (isHovered()) {
             playDownSound(this.client.getSoundManager());
             if (click.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -306,7 +307,7 @@ final class ScreenshotWidget extends AbstractWidget implements AutoCloseable, Sc
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput builder) {
+    protected void updateWidgetNarration(@NonNull NarrationElementOutput builder) {
     }
 
     @Override

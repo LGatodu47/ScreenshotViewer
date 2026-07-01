@@ -14,21 +14,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.io.File;
+
 @Mixin(Screen.class)
 public abstract class ScreenMixin {
     @Shadow
-    protected static void defaultHandleClickEvent(ClickEvent clickEvent, Minecraft client, @org.jspecify.annotations.Nullable Screen screenAfterRun) {
+    protected static void defaultHandleClickEvent(ClickEvent event, Minecraft minecraft, @Nullable Screen activeScreen) {
     }
 
     @Inject(method = "defaultHandleGameClickEvent", at = @At("HEAD"), cancellable = true)
-    private static void screenshot_viewer$inject_handleClickEvent(ClickEvent clickEvent, Minecraft client, @Nullable Screen screenAfterRun, CallbackInfo ci) {
-        if (clickEvent instanceof ScreenshotClickEvent ce) {
-            if(!client.hasShiftDown() && ScreenshotViewer.getInstance().getConfig().getOrFallback(ScreenshotViewerOptions.REDIRECT_SCREENSHOT_CHAT_LINKS, false)) {
-                client.gui.setScreen(new ManageScreenshotsScreen(client.gui.screen(), ce.screenshotFile()));
+    private static void screenshot_viewer$inject_handleClickEvent(ClickEvent event, Minecraft minecraft, @Nullable Screen activeScreen, CallbackInfo ci) {
+        if (event instanceof ScreenshotClickEvent(File screenshotFile)) {
+            if(!minecraft.hasShiftDown() && ScreenshotViewer.getInstance().getConfig().getOrFallback(ScreenshotViewerOptions.REDIRECT_SCREENSHOT_CHAT_LINKS, false)) {
+                minecraft.gui.setScreen(new ManageScreenshotsScreen(minecraft.gui.screen(), screenshotFile));
                 ci.cancel();
                 return;
             }
-            defaultHandleClickEvent(new ClickEvent.OpenFile(ce.screenshotFile()), client, screenAfterRun);
+            defaultHandleClickEvent(new ClickEvent.OpenFile(screenshotFile), minecraft, activeScreen);
             ci.cancel();
         }
     }

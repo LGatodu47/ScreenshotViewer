@@ -64,7 +64,7 @@ public abstract class TitleScreenMixin {
                 20,
                 ScreenshotViewerTexts.MANAGE_SCREENSHOTS,
                 ScreenshotViewer.SCREENSHOT_VIEWER_ICON,
-                button -> {
+                _ -> {
                     Minecraft.getInstance().gui.setScreen(new ManageScreenshotsScreen(screen));
                 }
         ), btn -> btn.setTooltip(Tooltip.create(ScreenshotViewerTexts.MANAGE_SCREENSHOTS))));

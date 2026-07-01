@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 @Mixin(NativeImage.class)
 public class NativeImageMixin {
     @Redirect(method = "read(Lcom/mojang/blaze3d/platform/NativeImage$Format;Ljava/nio/ByteBuffer;)Lcom/mojang/blaze3d/platform/NativeImage;", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/PngInfo;validateHeader(Ljava/nio/ByteBuffer;)V"))
-    private static void screenshot_viewer$redirect_validate(ByteBuffer buf) {
+    private static void screenshot_viewer$redirect_validate(ByteBuffer buffer) {
         // basically mojang decided that only png files could be read.
         // so redirecting this method allows other file types to pass the validation.
         // I admit this can be dangerous but whatever if there's an error then the fantastic library STB_image will let us know.

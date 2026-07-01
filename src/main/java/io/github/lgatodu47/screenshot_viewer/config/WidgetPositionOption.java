@@ -6,12 +6,11 @@ import io.github.lgatodu47.catconfig.ConfigAccess;
 import io.github.lgatodu47.catconfig.ConfigOption;
 import io.github.lgatodu47.catconfig.ValueSerializationHelper;
 import io.github.lgatodu47.screenshot_viewer.screen.ConfigureButtonPlacementScreen;
-import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerConfigScreen;
 import io.github.lgatodu47.screenshot_viewer.screen.ScreenshotViewerTexts;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,7 +49,7 @@ public record WidgetPositionOption(String name, @Nullable WidgetPosition default
 
     public static AbstractWidget createWidget(ConfigAccess access, ConfigOption<WidgetPosition> option, Supplier<Screen> configuringScreenFactory, ConfigureButtonPlacementScreen.WidgetRemover remover, BooleanSupplier canEdit) {
         Minecraft client = Minecraft.getInstance();
-        Button btn = new Button.Builder(ScreenshotViewerTexts.EDIT_WIDGET_PLACEMENT, button -> {
+        Button btn = new Button.Builder(ScreenshotViewerTexts.EDIT_WIDGET_PLACEMENT, _ -> {
             client.gui.setScreen(new ConfigureButtonPlacementScreen(client.gui.screen(), access, option, configuringScreenFactory, remover));
         }).width(100).build();
         btn.active = canEdit.getAsBoolean();

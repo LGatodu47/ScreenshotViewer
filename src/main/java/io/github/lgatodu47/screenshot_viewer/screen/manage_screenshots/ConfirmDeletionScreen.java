@@ -3,6 +3,7 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NonNull;
 
 final class ConfirmDeletionScreen extends net.minecraft.client.gui.screens.ConfirmScreen {
     public ConfirmDeletionScreen(BooleanConsumer callback, Component title, Component message) {
@@ -10,7 +11,7 @@ final class ConfirmDeletionScreen extends net.minecraft.client.gui.screens.Confi
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
         extractBackground(context, mouseX, mouseY, deltaTicks);
         super.extractRenderState(context, mouseX, mouseY, deltaTicks);
     }

@@ -35,7 +35,9 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -51,11 +53,11 @@ public class ScreenshotViewerUtils {
     private static final SystemToast.SystemToastId COPY_SCREENSHOT = new SystemToast.SystemToastId(3000);
 
     public static File getVanillaScreenshotsFolder() {
-        return new File(Minecraft.getInstance().gameDirectory, "screenshots");
+        return new File("screenshots");
     }
 
     public static File getDefaultThumbnailFolder() {
-        return new File(Minecraft.getInstance().gameDirectory, "screenshots/thumbnails");
+        return new File("screenshots/thumbnails");
     }
 
     public static List<File> getScreenshotFiles(File screenshotsFolder) {
@@ -64,6 +66,14 @@ public class ScreenshotViewerUtils {
             return List.of();
         }
         return Arrays.stream(files).filter(file -> file.isFile() && (file.getName().endsWith(".png") || file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg"))).collect(Collectors.toList());
+    }
+
+    public static boolean isSameFileSafe(File a, File b) {
+        try {
+            return Files.isSameFile(a.toPath(), b.toPath());
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public static void drawTexture(GuiGraphicsExtractor context, Identifier texture, int x, int y, int width, int height, int u, int v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {

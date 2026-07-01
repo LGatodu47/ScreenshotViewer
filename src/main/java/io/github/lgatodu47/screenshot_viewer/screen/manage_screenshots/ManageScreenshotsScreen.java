@@ -25,6 +25,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -120,17 +121,17 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
         final int bigBtnWidth = 200;
 
         // Config Button
-        addRenderableWidget(new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, CONFIG_ICON, button -> {
+        addRenderableWidget(new ExtendedTexturedButtonWidget(2, 2, btnSize, btnSize, CONFIG_ICON, _ -> {
             minecraft.gui.setScreen(new ScreenshotViewerConfigScreen(this));
         }, ScreenshotViewerTexts.CONFIG, ScreenshotViewerTexts.CONFIG).offsetTooltip());
         // Order Button
-        addRenderableWidget(new ExtendedTexturedButtonWidget(spacing, btnY, btnSize, btnSize, null, button -> {
+        addRenderableWidget(new ExtendedTexturedButtonWidget(spacing, btnY, btnSize, btnSize, null, _ -> {
             if(list != null) {
                 list.invertOrder();
             }
         }, null, ScreenshotViewerTexts.ORDER) {
             @Override
-            protected @Nullable net.minecraft.network.chat.Component getTooltipText() {
+            protected @Nullable Component getTooltipText() {
                 return list == null ? null : list.isInvertedOrder() ? ScreenshotViewerTexts.DESCENDING_ORDER : ScreenshotViewerTexts.ASCENDING_ORDER;
             }
 
@@ -140,11 +141,11 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
             }
         });
         // Screenshot Folder Button
-        addRenderableWidget(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, OPEN_FOLDER_ICON, btn -> {
+        addRenderableWidget(new ExtendedTexturedButtonWidget(spacing * 2 + btnSize, btnY, btnSize, btnSize, OPEN_FOLDER_ICON, _ -> {
             Util.getPlatform().openFile(CONFIG.getOrFallback(ScreenshotViewerOptions.SCREENSHOTS_FOLDER, (Supplier<? extends File>) ScreenshotViewerUtils::getVanillaScreenshotsFolder));
         }, ScreenshotViewerTexts.OPEN_FOLDER, ScreenshotViewerTexts.OPEN_FOLDER));
         // Done/Delete n screenshots Button
-        addRenderableWidget(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, CommonComponents.GUI_DONE, button -> {
+        addRenderableWidget(new ExtendedButtonWidget((width - bigBtnWidth) / 2, btnY, bigBtnWidth, btnHeight, CommonComponents.GUI_DONE, _ -> {
             List<ScreenshotWidget> toDelete = list.deletionList();
             if(fastDelete && !toDelete.isEmpty()) {
                 if(CONFIG.getOrFallback(ScreenshotViewerOptions.PROMPT_WHEN_DELETING_SCREENSHOT, true)) {
@@ -167,16 +168,16 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
             onClose();
         }) {
             @Override
-            public net.minecraft.network.chat.Component getMessage() {
+            public @NonNull Component getMessage() {
                 List<ScreenshotWidget> toDelete = list.deletionList();
                 if(fastDelete && !toDelete.isEmpty()) {
-                    return net.minecraft.network.chat.Component.translatable("screen." + ScreenshotViewer.MODID + ".screenshot_manager.delete_n_screenshots", toDelete.size()).withStyle(ChatFormatting.RED);
+                    return Component.translatable("screen." + ScreenshotViewer.MODID + ".screenshot_manager.delete_n_screenshots", toDelete.size()).withStyle(ChatFormatting.RED);
                 }
                 return super.getMessage();
             }
         });
         // Fast Delete Button
-        addRenderableWidget(new ExtendedTexturedButtonWidget(width - spacing * 2 - btnSize * 2, btnY, btnSize, btnSize, null, button -> {
+        addRenderableWidget(new ExtendedTexturedButtonWidget(width - spacing * 2 - btnSize * 2, btnY, btnSize, btnSize, null, _ -> {
             this.fastDelete = !fastDelete;
             if(!fastDelete) {
                 list.resetDeleteSelection();
@@ -188,7 +189,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
             }
         });
         // Refresh Button
-        addRenderableWidget(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, REFRESH_ICON, button -> {
+        addRenderableWidget(new ExtendedTexturedButtonWidget(width - spacing - btnSize, btnY, btnSize, btnSize, REFRESH_ICON, _ -> {
             list.init();
         }, ScreenshotViewerTexts.REFRESH, ScreenshotViewerTexts.REFRESH));
 
@@ -213,11 +214,11 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     private float screenshotScaleAnimation;
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if(list != null) {
             list.render(context, mouseX, mouseY, delta, !(enlargedScreenshot.renders() || screenshotProperties.renders()) && dialogScreen == null);
         }
-        context.centeredText(font, title,width / 2, 8, 0xFFFFFF);
+        context.centeredText(font, title,width / 2, 8, 0xFFFFFFFF);
         renderActionText(context);
         ScreenshotViewerUtils.forEachDrawable(this, drawable -> drawable.extractRenderState(context, mouseX, mouseY, delta));
 
@@ -292,7 +293,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     private boolean isCtrlDown;
 
     @Override
-    public boolean keyPressed(KeyEvent input) {
+    public boolean keyPressed(@NonNull KeyEvent input) {
         if(dialogScreen != null) {
             return dialogScreen.keyPressed(input);
         }
@@ -316,7 +317,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     }
 
     @Override
-    public boolean keyReleased(KeyEvent input) {
+    public boolean keyReleased(@NonNull KeyEvent input) {
         if(dialogScreen != null) {
             return dialogScreen.keyReleased(input);
         }
@@ -333,7 +334,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     }
 
     @Override
-    public boolean charTyped(CharacterEvent input) {
+    public boolean charTyped(@NonNull CharacterEvent input) {
         if(dialogScreen != null) {
             return dialogScreen.charTyped(input);
         }
@@ -369,7 +370,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
         if(dialogScreen != null) {
             return dialogScreen.mouseClicked(click, doubled);
         }
@@ -383,7 +384,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent click) {
+    public boolean mouseReleased(@NonNull MouseButtonEvent click) {
         if(dialogScreen != null) {
             return dialogScreen.mouseReleased(click);
         }
@@ -400,7 +401,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent click, double offsetX, double offsetY) {
+    public boolean mouseDragged(@NonNull MouseButtonEvent click, double offsetX, double offsetY) {
         if(dialogScreen != null) {
             return dialogScreen.mouseDragged(click, offsetX, offsetY);
         }
@@ -414,7 +415,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     }
 
     @Override
-    public Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
+    public @NonNull Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
         if(dialogScreen != null) {
             return dialogScreen.getChildAt(mouseX, mouseY);
         }
@@ -451,7 +452,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
@@ -484,7 +485,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }

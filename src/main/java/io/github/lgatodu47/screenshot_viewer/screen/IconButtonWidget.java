@@ -4,6 +4,7 @@ import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScr
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -12,7 +13,7 @@ public class IconButtonWidget extends Button {
     @Nullable
     private final Identifier iconTexture;
 
-    public IconButtonWidget(int x, int y, int width, int height, net.minecraft.network.chat.Component message, @Nullable Identifier iconTexture, OnPress pressAction) {
+    public IconButtonWidget(int x, int y, int width, int height, Component message, @Nullable Identifier iconTexture, OnPress pressAction) {
         super(x, y, width, height, message, pressAction, DEFAULT_NARRATION);
         this.iconTexture = iconTexture;
     }
@@ -28,7 +29,7 @@ public class IconButtonWidget extends Button {
 
     @Override
     protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
-        context.blitSprite(RenderPipelines.GUI_TEXTURED, getBackgroundTexture().get(this.active, isHoveredOrFocused()), getX(), getY(), getWidth(), getHeight(), getAlpha());
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, getBackgroundTexture().get(isActive(), isHoveredOrFocused()), getX(), getY(), getWidth(), getHeight(), getAlpha());
         Identifier icon = getIconTexture();
         if(icon != null) {
             context.blitSprite(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), getWidth(), getHeight(), getAlpha());

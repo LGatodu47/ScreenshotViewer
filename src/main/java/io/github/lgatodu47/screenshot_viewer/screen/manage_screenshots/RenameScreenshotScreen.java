@@ -31,7 +31,7 @@ final class RenameScreenshotScreen extends Screen {
         OldEditBox textField = new OldEditBox(this.font, (this.width - 150) / 2, (this.height - 20) / 2, 150, 20, ScreenshotViewerTexts.SCREENSHOT_NAME_INPUT);
         textField.setMaxLength(128);
         textField.setTextPredicate(RenameScreenshotScreen::checkInvalidCharacters);
-        this.doneBtn = Button.builder(CommonComponents.GUI_DONE, btn -> {
+        this.doneBtn = Button.builder(CommonComponents.GUI_DONE, _ -> {
             this.newNameConsumer.accept(textField.getValue().trim().concat(".png"));
             this.closeAction.run();
         }).pos(this.width / 2 - 4 - 150, this.height / 2 + 50).build();
@@ -40,7 +40,7 @@ final class RenameScreenshotScreen extends Screen {
         textField.setValue(previousName);
         this.addRenderableWidget(textField);
         this.addRenderableWidget(doneBtn);
-        this.addRenderableWidget(Button.builder(CommonComponents.GUI_BACK, btn -> closeAction.run()).pos(this.width / 2 + 4, this.height / 2 + 50).build());
+        this.addRenderableWidget(Button.builder(CommonComponents.GUI_BACK, _ -> closeAction.run()).pos(this.width / 2 + 4, this.height / 2 + 50).build());
     }
 
     @Override

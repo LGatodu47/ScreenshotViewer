@@ -16,6 +16,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
@@ -199,14 +200,14 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     /// Common Methods ///
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
     // The boolean added controls whether the screenshot widgets should update its `hovered` state.
     void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, boolean updateHoverState) {
         context.fill(x, y, x + width, y + height, ARGB.color((int) (0.7f * 255), 0, 0, 0));
         if (screenshotWidgets.isEmpty()) {
-            context.centeredText(client.font, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFF);
+            context.centeredText(client.font, ScreenshotViewerTexts.NO_SCREENSHOTS, (x + width) / 2, (y + height + 8) / 2, 0xFFFFFFFF);
         }
         for (ScreenshotWidget screenshotWidget : screenshotWidgets) {
             screenshotWidget.updateY(scrollY);
@@ -225,7 +226,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     }
 
     @Override
-    public List<? extends GuiEventListener> children() {
+    public @NonNull List<? extends GuiEventListener> children() {
         return elements;
     }
 
@@ -238,7 +239,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
 
     @Override
     public Optional<ScreenshotImageHolder> findByFileName(File file) {
-        return screenshotWidgets.stream().filter(screenshotWidget -> screenshotWidget.getScreenshotFile().equals(file)).map(ScreenshotImageHolder.class::cast).findFirst();
+        return screenshotWidgets.stream().filter(screenshotWidget -> ScreenshotViewerUtils.isSameFileSafe(screenshotWidget.getScreenshotFile(), file)).map(ScreenshotImageHolder.class::cast).findFirst();
     }
 
     @Override
@@ -282,17 +283,17 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     /// Scrolling and Scrollbar ///
 
     private boolean canScroll() {
-        final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
+        final int totalHeightOfTheChildren = getTotalHeightOfChildren();
         final int viewHeight = height - 2 * spacing;
 
-        return totalHeightOfTheChildrens > viewHeight;
+        return totalHeightOfTheChildren > viewHeight;
     }
 
     private boolean canScrollDown() {
-        final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
+        final int totalHeightOfTheChildren = getTotalHeightOfChildren();
         final int viewHeight = height - 2 * spacing;
         // Maximum offset from the top
-        final int leftOver = totalHeightOfTheChildrens - viewHeight;
+        final int leftOver = totalHeightOfTheChildren - viewHeight;
 
         return scrollY < leftOver;
     }
@@ -310,10 +311,10 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
                 scrollY = Math.max(0, scrollY - scrollSpeed);
             }
             if (canScrollDown() && verticalAmount < 0) {
-                final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
+                final int totalHeightOfTheChildren = getTotalHeightOfChildren();
                 final int viewHeight = height - 2 * spacing;
                 // Maximum offset from the top
-                final int leftOver = totalHeightOfTheChildrens - viewHeight;
+                final int leftOver = totalHeightOfTheChildren - viewHeight;
 
                 scrollY = Math.min(leftOver, scrollY + scrollSpeed);
             }
@@ -325,7 +326,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     private boolean scrollbarClicked;
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
         scrollbarClicked = false;
         if(canScroll() && scrollbar.mouseClicked(click.x(), click.y(), click.button(), scrollY)) {
             scrollbarClicked = true;
@@ -335,23 +336,23 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent click) {
+    public boolean mouseReleased(@NonNull MouseButtonEvent click) {
         scrollbarClicked = false;
         return super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent click, double offsetX, double offsetY) {
+    public boolean mouseDragged(@NonNull MouseButtonEvent click, double offsetX, double offsetY) {
         if(scrollbarClicked && canScroll()) {
-            final int totalHeightOfTheChildrens = getTotalHeightOfChildren();
-            int scrollDelta = scrollbar.getScrollOffsetDelta(offsetY, totalHeightOfTheChildrens);
+            final int totalHeightOfTheChildren = getTotalHeightOfChildren();
+            int scrollDelta = scrollbar.getScrollOffsetDelta(offsetY, totalHeightOfTheChildren);
             if (scrollY > 0 && scrollDelta > 0) {
                 scrollY = Math.max(0, scrollY - scrollDelta);
             }
             if (canScrollDown() && scrollDelta < 0) {
                 final int viewHeight = height - 2 * spacing;
                 // Maximum offset from the top
-                final int leftOver = totalHeightOfTheChildrens - viewHeight;
+                final int leftOver = totalHeightOfTheChildren - viewHeight;
 
                 scrollY = Math.min(leftOver, scrollY - scrollDelta);
             }
@@ -360,18 +361,18 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
     }
 
     @Override
-    public boolean keyPressed(KeyEvent input) {
+    public boolean keyPressed(@NonNull KeyEvent input) {
         return screenshotWidgets.stream().anyMatch(widget -> widget.keyPressed(input));
     }
 
     /// Random implementation methods ///
 
     @Override
-    public void updateNarration(NarrationElementOutput builder) {
+    public void updateNarration(@NonNull NarrationElementOutput builder) {
     }
 
     @Override
-    public NarrationPriority narrationPriority() {
+    public @NonNull NarrationPriority narrationPriority() {
         return NarrationPriority.NONE;
     }
 
@@ -384,7 +385,7 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
         private int trackX, trackY, trackHeight;
         private IntUnaryOperator scrollbarYGetter;
 
-        void repositionScrollbar(int listX, int listY, int listWith, int listHeight, int listSpacing, int totalHeightOfTheChildrens) {
+        void repositionScrollbar(int listX, int listY, int listWith, int listHeight, int listSpacing, int totalHeightOfTheChildren) {
             this.x = listX + listWith - spacing - width;
             this.trackX = x + spacing;
             this.trackY = listY + listSpacing;
@@ -392,8 +393,8 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             // Takes into account the fact that the scrollbar is offset from the track
             int scrollbarSpacedTrackHeight = trackHeight + 2 * spacing;
 
-            this.scrollbarYGetter = scrollOffset -> Mth.ceil(scrollOffset * scrollbarSpacedTrackHeight / (float) totalHeightOfTheChildrens) + listY + spacing;
-            this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildrens;
+            this.scrollbarYGetter = scrollOffset -> Mth.ceil(scrollOffset * scrollbarSpacedTrackHeight / (float) totalHeightOfTheChildren) + listY + spacing;
+            this.height = (trackHeight * scrollbarSpacedTrackHeight) / totalHeightOfTheChildren;
         }
 
         void render(GuiGraphicsExtractor context, double mouseX, double mouseY, int scrollOffset, boolean updateHoverState, boolean clicked) {
@@ -406,9 +407,9 @@ final class ScreenshotList extends AbstractContainerEventHandler implements Rend
             return button == GLFW.GLFW_MOUSE_BUTTON_LEFT && isHovered(mouseX, mouseY, scrollbarYGetter.applyAsInt(scrollOffset));
         }
 
-        int getScrollOffsetDelta(double scrollbarDelta, double totalHeightOfTheChildrens) {
+        int getScrollOffsetDelta(double scrollbarDelta, double totalHeightOfTheChildren) {
             int scrollbarSpacedTrackHeight = trackHeight + 2 * spacing;
-            return Mth.ceil(-scrollbarDelta * totalHeightOfTheChildrens / (float) scrollbarSpacedTrackHeight);
+            return Mth.ceil(-scrollbarDelta * totalHeightOfTheChildren / (float) scrollbarSpacedTrackHeight);
         }
 
         private boolean isHovered(double mouseX, double mouseY, int y) {

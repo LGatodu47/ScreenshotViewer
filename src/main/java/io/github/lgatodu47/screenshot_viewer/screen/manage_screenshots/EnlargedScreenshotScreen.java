@@ -16,6 +16,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
@@ -33,9 +34,9 @@ class EnlargedScreenshotScreen extends Screen {
     EnlargedScreenshotScreen(PropertiesDisplay properties) {
         super(Component.empty());
         this.properties = properties;
-        this.doneBtn = new ExtendedButtonWidget(0, 0, 52, 20, CommonComponents.GUI_DONE, btn -> onClose());
-        this.prevBtn = new ExtendedButtonWidget(0, 0, 20, 20, Component.literal("<"), btn -> previousScreenshot());
-        this.nextBtn = new ExtendedButtonWidget(0, 0, 20, 20, Component.literal(">"), btn -> nextScreenshot());
+        this.doneBtn = new ExtendedButtonWidget(0, 0, 52, 20, CommonComponents.GUI_DONE, _ -> onClose());
+        this.prevBtn = new ExtendedButtonWidget(0, 0, 20, 20, Component.literal("<"), _ -> previousScreenshot());
+        this.nextBtn = new ExtendedButtonWidget(0, 0, 20, 20, Component.literal(">"), _ -> nextScreenshot());
         this.openBtn = makeIconWidget(OPEN_ICON, ScreenshotViewerTexts.OPEN_FILE, ScreenshotImageHolder::openFile);
         this.copyBtn = makeIconWidget(COPY_ICON, ScreenshotViewerTexts.COPY, ScreenshotImageHolder::copyScreenshot);
         this.deleteBtn = makeIconWidget(DELETE_ICON, ScreenshotViewerTexts.DELETE, ScreenshotImageHolder::requestFileDeletion);
@@ -43,7 +44,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     private AbstractWidget makeIconWidget(Identifier texture, Component description, Consumer<ScreenshotImageHolder> action) {
-        return new ExtendedTexturedButtonWidget(0, 0, 20, 20, texture, btn -> {
+        return new ExtendedTexturedButtonWidget(0, 0, 20, 20, texture, _ -> {
             if(showing != null) {
                 action.accept(showing);
             }
@@ -120,7 +121,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
     public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks, boolean updateHoverState) {
@@ -184,7 +185,7 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
         if(showing != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             this.properties.showProperties(click.x(), click.y(), showing);
             return true;

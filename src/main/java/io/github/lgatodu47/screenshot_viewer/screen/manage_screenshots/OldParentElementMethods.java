@@ -3,12 +3,13 @@ package io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Iterator;
 
 public interface OldParentElementMethods extends ContainerEventHandler {
     @Override
-    default boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
+    default boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
         Iterator<? extends GuiEventListener> iter = this.children().iterator();
 
         GuiEventListener element;

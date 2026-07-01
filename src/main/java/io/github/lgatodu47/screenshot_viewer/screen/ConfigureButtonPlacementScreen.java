@@ -13,6 +13,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -74,13 +75,13 @@ public class ConfigureButtonPlacementScreen extends Screen {
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
+    public void extractBackground(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
         configuringScreen.extractRenderState(context, 0, 0, deltaTicks);
         context.fillGradient(0, 0, width, height, -1072689136, -804253680);
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if(elementToPlace != null) {
             ScreenshotViewerUtils.renderWidget(elementToPlace, context, mouseX, mouseY, delta);
         }
@@ -94,7 +95,7 @@ public class ConfigureButtonPlacementScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent click, boolean doubled) {
         if(elementToPlace != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             elementToPlace.setPosition((int) click.x() - elementToPlace.getWidth() / 2, (int) click.y() - elementToPlace.getHeight() / 2);
             return true;
@@ -103,7 +104,7 @@ public class ConfigureButtonPlacementScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent click, double offsetX, double offsetY) {
+    public boolean mouseDragged(@NonNull MouseButtonEvent click, double offsetX, double offsetY) {
         if(elementToPlace != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             elementToPlace.setPosition((int) click.x() - elementToPlace.getWidth() / 2, (int) click.y() - elementToPlace.getHeight() / 2);
             return true;
@@ -112,7 +113,7 @@ public class ConfigureButtonPlacementScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent input) {
+    public boolean keyPressed(@NonNull KeyEvent input) {
         if(elementToPlace != null) {
             if(input.key() == GLFW.GLFW_KEY_ENTER) {
                 this.config.put(option, makeWidgetPosition(elementToPlace));
@@ -156,24 +157,6 @@ public class ConfigureButtonPlacementScreen extends Screen {
     public interface WidgetRemover {
         @Nullable
         AbstractWidget removeWidget(Screen screen);
-
-        static WidgetRemover ofIndex(int index) {
-            return screen -> {
-                try {
-                    List<AbstractWidget> widgets = Screens.getWidgets(screen);
-
-                    try {
-                        return widgets.remove(index);
-                    } catch (UnsupportedOperationException e) { // if the list is immutable, we just get a reference of the widget
-                        return widgets.get(index);
-                    } catch (Throwable t) { // other exceptions: index out of bound
-                        return null;
-                    }
-                } catch (Throwable t) {
-                    return null;
-                }
-            };
-        }
 
         static WidgetRemover ofPredicate(@NotNull Predicate<AbstractWidget> widgetPredicate) {
             return screen -> {
