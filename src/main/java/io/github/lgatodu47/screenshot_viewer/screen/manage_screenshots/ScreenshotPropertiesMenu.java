@@ -18,8 +18,6 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.gl.RenderPipelines;
 
 import java.util.ArrayList;
@@ -119,21 +117,21 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
-        if (click.x() < x || click.y() < y || click.x() > x + width || click.y() > y + height) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (mouseX < x || mouseY < y || mouseX > x + width || mouseY > y + height) {
             hide();
             return false;
         }
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if (input.key() == InputUtil.GLFW_KEY_ESCAPE) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == InputUtil.GLFW_KEY_ESCAPE) {
             hide();
             return true;
         }
-        return super.keyPressed(input);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private static final class Button extends IconButtonWidget {
@@ -162,7 +160,7 @@ class ScreenshotPropertiesMenu extends AbstractParentElement implements Drawable
         }
 
         @Override
-        protected void drawIcon(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
             Identifier backgroundTexture = getBackgroundTexture().get(this.active, isSelected());
             if (renderWide) {
                 context.drawTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getX(), getY(), 0, 0, 1, getHeight(), BUTTON_SIZE, BUTTON_SIZE, ColorHelper.getWhite(this.alpha));

@@ -1,15 +1,14 @@
 package io.github.lgatodu47.screenshot_viewer.screen;
 
+import net.minecraft.client.MinecraftClient;
 import io.github.lgatodu47.catconfig.ConfigAccess;
 import io.github.lgatodu47.catconfig.ConfigOption;
 import io.github.lgatodu47.screenshot_viewer.ScreenshotViewerUtils;
 import io.github.lgatodu47.screenshot_viewer.config.WidgetPositionOption;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
-import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,14 +42,14 @@ public class ConfigureButtonPlacementScreen extends Screen {
     protected void init() {
         super.init();
 
-        configuringScreen.init(width, height);
+        configuringScreen.init(client, width, height);
         initElementToPlace();
     }
 
     @Override
-    public void resize(int width, int height) {
-        super.resize(width, height);
-        this.configuringScreen.resize(width, height);
+    public void resize(MinecraftClient client, int width, int height) {
+        super.resize(client, width, height);
+        this.configuringScreen.resize(client, width, height);
         initElementToPlace();
     }
 
@@ -85,34 +84,34 @@ public class ConfigureButtonPlacementScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
-        if(elementToPlace != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            elementToPlace.setPosition((int) click.x() - elementToPlace.getWidth() / 2, (int) click.y() - elementToPlace.getHeight() / 2);
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if(elementToPlace != null && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            elementToPlace.setPosition((int) mouseX - elementToPlace.getWidth() / 2, (int) mouseY - elementToPlace.getHeight() / 2);
             return true;
         }
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
-        if(elementToPlace != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            elementToPlace.setPosition((int) click.x() - elementToPlace.getWidth() / 2, (int) click.y() - elementToPlace.getHeight() / 2);
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double offsetX, double offsetY) {
+        if(elementToPlace != null && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            elementToPlace.setPosition((int) mouseX - elementToPlace.getWidth() / 2, (int) mouseY - elementToPlace.getHeight() / 2);
             return true;
         }
-        return super.mouseDragged(click, offsetX, offsetY);
+        return super.mouseDragged(mouseX, mouseY, button, offsetX, offsetY);
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if(elementToPlace != null) {
-            if(input.key() == GLFW.GLFW_KEY_ENTER) {
+            if(keyCode == GLFW.GLFW_KEY_ENTER) {
                 this.config.put(option, makeWidgetPosition(elementToPlace));
                 close();
                 ClickableWidget.playClickSound(client.getSoundManager());
-            } else if(input.key() == GLFW.GLFW_KEY_C && previousPosition != null) {
+            } else if(keyCode == GLFW.GLFW_KEY_C && previousPosition != null) {
                 this.elementToPlace.setPosition(previousPosition.x(), previousPosition.y());
                 ClickableWidget.playClickSound(client.getSoundManager());
-            } else if(input.key() == GLFW.GLFW_KEY_R) {
+            } else if(keyCode == GLFW.GLFW_KEY_R) {
                 WidgetPositionOption.WidgetPosition defaultPos = option.defaultValue();
                 if(defaultPos == null) {
                     this.config.put(option, null);
@@ -121,12 +120,12 @@ public class ConfigureButtonPlacementScreen extends Screen {
                 }
                 this.elementToPlace.setPosition(defaultPos.x(), defaultPos.y());
                 ClickableWidget.playClickSound(client.getSoundManager());
-            } else if(input.key() == GLFW.GLFW_KEY_ESCAPE) {
+            } else if(keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 close();
             }
             return true;
         }
-        return super.keyPressed(input);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private WidgetPositionOption.WidgetPosition makeWidgetPosition(ClickableWidget elementToPlace) {

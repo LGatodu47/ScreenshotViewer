@@ -25,8 +25,6 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -274,12 +272,12 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     /// Common Widget implementations ///
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if(hovered && input.key() == InputUtil.GLFW_KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if(hovered && keyCode == InputUtil.GLFW_KEY_C && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
             this.copyScreenshot();
             return true;
         }
-        return super.keyPressed(input);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
@@ -288,14 +286,14 @@ final class ScreenshotWidget extends ClickableWidget implements AutoCloseable, S
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isHovered()) {
             playDownSound(this.client.getSoundManager());
-            if (click.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 onClick();
             }
-            if (click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                onRightClick(click.x(), click.y());
+            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                onRightClick(mouseX, mouseY);
             }
             return true;
         }

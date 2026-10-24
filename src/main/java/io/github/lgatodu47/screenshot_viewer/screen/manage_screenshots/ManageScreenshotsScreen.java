@@ -27,9 +27,6 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 
 import java.io.File;
 import java.util.List;
@@ -101,7 +98,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
         final int spacing = 8;
         final int btnHeight = 20;
 
-        this.enlargedScreenshot.init(width, height);
+        this.enlargedScreenshot.init(client, width, height);
 
         //Main content
         int contentWidth = width - 24;
@@ -203,12 +200,12 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     }
 
     @Override
-    public void resize(int width, int height) {
-        super.resize(width, height);
+    public void resize(MinecraftClient client, int width, int height) {
+        super.resize(client, width, height);
         // Adapts the size of the enlarged screenshot and the dialog screen when resized
-        this.enlargedScreenshot.resize(width, height);
+        this.enlargedScreenshot.resize(client, width, height);
         if(dialogScreen != null) {
-            this.dialogScreen.resize(width, height);
+            this.dialogScreen.resize(client, width, height);
         }
         // Hides the screenshot properties menu
         this.screenshotProperties.hide();
@@ -290,7 +287,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
         }
         this.dialogScreen = screen;
         if(dialogScreen != null) {
-            this.dialogScreen.init(width, height);
+            this.dialogScreen.init(client, width, height);
         }
     }
 
@@ -299,58 +296,58 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     private boolean isCtrlDown;
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if(dialogScreen != null) {
-            return dialogScreen.keyPressed(input);
+            return dialogScreen.keyPressed(keyCode, scanCode, modifiers);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.keyPressed(input);
+            return screenshotProperties.keyPressed(keyCode, scanCode, modifiers);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.keyPressed(input);
+            return enlargedScreenshot.keyPressed(keyCode, scanCode, modifiers);
         }
-        isCtrlDown = input.key() == GLFW.GLFW_KEY_LEFT_CONTROL || input.key() == GLFW.GLFW_KEY_RIGHT_CONTROL;
-        if (input.key() == GLFW.GLFW_KEY_F5) {
+        isCtrlDown = keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL;
+        if (keyCode == GLFW.GLFW_KEY_F5) {
             list.init();
             return true;
         }
         if(list != null) {
-            if(list.keyPressed(input)) {
+            if(list.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
             }
         }
-        return super.keyPressed(input);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean keyReleased(KeyInput input) {
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if(dialogScreen != null) {
-            return dialogScreen.keyReleased(input);
+            return dialogScreen.keyReleased(keyCode, scanCode, modifiers);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.keyReleased(input);
+            return screenshotProperties.keyReleased(keyCode, scanCode, modifiers);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.keyReleased(input);
+            return enlargedScreenshot.keyReleased(keyCode, scanCode, modifiers);
         }
         if(isCtrlDown) {
             isCtrlDown = false;
         }
-        return super.keyReleased(input);
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean charTyped(CharInput input) {
+    public boolean charTyped(char chr, int modifiers) {
         if(dialogScreen != null) {
-            return dialogScreen.charTyped(input);
+            return dialogScreen.charTyped(chr, modifiers);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.charTyped(input);
+            return screenshotProperties.charTyped(chr, modifiers);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.charTyped(input);
+            return enlargedScreenshot.charTyped(chr, modifiers);
         }
-        return super.charTyped(input);
+        return super.charTyped(chr, modifiers);
     }
 
     @Override
@@ -376,48 +373,48 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if(dialogScreen != null) {
-            return dialogScreen.mouseClicked(click, doubled);
+            return dialogScreen.mouseClicked(mouseX, mouseY, button);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseClicked(click, doubled);
+            return screenshotProperties.mouseClicked(mouseX, mouseY, button);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseClicked(click, doubled);
+            return enlargedScreenshot.mouseClicked(mouseX, mouseY, button);
         }
-        return OldParentElementMethods.super.mouseClicked(click, doubled);
+        return OldParentElementMethods.super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseReleased(Click click) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if(dialogScreen != null) {
-            return dialogScreen.mouseReleased(click);
+            return dialogScreen.mouseReleased(mouseX, mouseY, button);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseReleased(click);
+            return screenshotProperties.mouseReleased(mouseX, mouseY, button);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseReleased(click);
+            return enlargedScreenshot.mouseReleased(mouseX, mouseY, button);
         }
         if(list != null) {
-            return list.mouseReleased(click);
+            return list.mouseReleased(mouseX, mouseY, button);
         }
-        return super.mouseReleased(click);
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double offsetX, double offsetY) {
         if(dialogScreen != null) {
-            return dialogScreen.mouseDragged(click, offsetX, offsetY);
+            return dialogScreen.mouseDragged(mouseX, mouseY, button, offsetX, offsetY);
         }
         if(screenshotProperties.renders()) {
-            return screenshotProperties.mouseDragged(click, offsetX, offsetY);
+            return screenshotProperties.mouseDragged(mouseX, mouseY, button, offsetX, offsetY);
         }
         if(enlargedScreenshot.renders()) {
-            return enlargedScreenshot.mouseDragged(click, offsetX, offsetY);
+            return enlargedScreenshot.mouseDragged(mouseX, mouseY, button, offsetX, offsetY);
         }
-        return super.mouseDragged(click, offsetX, offsetY);
+        return super.mouseDragged(mouseX, mouseY, button, offsetX, offsetY);
     }
 
     @Override
@@ -454,7 +451,7 @@ public class ManageScreenshotsScreen extends Screen implements ConfigListener, O
         this.enlargeAnimation = CONFIG.getOrFallback(ScreenshotViewerOptions.ENABLE_SCREENSHOT_ENLARGEMENT_ANIMATION, true);
     }
 
-    public static class ExtendedButtonWidget extends ButtonWidget.Text implements CustomHoverState {
+    public static class ExtendedButtonWidget extends ButtonWidget implements CustomHoverState {
         public ExtendedButtonWidget(int x, int y, int width, int height, net.minecraft.text.Text message, PressAction onPress) {
             super(x, y, width, height, message, onPress, Supplier::get);
         }

@@ -13,8 +13,6 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -167,29 +165,29 @@ class EnlargedScreenshotScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if (input.key() == InputUtil.GLFW_KEY_LEFT) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == InputUtil.GLFW_KEY_LEFT) {
             previousScreenshot();
             return true;
         }
-        if (input.key() == InputUtil.GLFW_KEY_RIGHT) {
+        if (keyCode == InputUtil.GLFW_KEY_RIGHT) {
             nextScreenshot();
             return true;
         }
-        if(showing != null && input.key() == InputUtil.GLFW_KEY_C && (input.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
+        if(showing != null && keyCode == InputUtil.GLFW_KEY_C && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
             showing.copyScreenshot();
             return true;
         }
-        return super.keyPressed(input);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
-        if(showing != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            this.properties.showProperties(click.x(), click.y(), showing);
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if(showing != null && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            this.properties.showProperties(mouseX, mouseY, showing);
             return true;
         }
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override

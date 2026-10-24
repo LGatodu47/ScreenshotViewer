@@ -17,13 +17,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Screen.class)
 public abstract class ScreenMixin {
     @Shadow
-    protected static void handleBasicClickEvent(ClickEvent clickEvent, MinecraftClient client, @org.jspecify.annotations.Nullable Screen screenAfterRun) {
+    protected static void handleBasicClickEvent(ClickEvent clickEvent, MinecraftClient client, Screen screenAfterRun) {
     }
 
-    @Inject(method = "handleClickEvent", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "handleClickEvent(Lnet/minecraft/text/ClickEvent;Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"), cancellable = true)
     private static void screenshot_viewer$inject_handleClickEvent(ClickEvent clickEvent, MinecraftClient client, @Nullable Screen screenAfterRun, CallbackInfo ci) {
         if (clickEvent instanceof ScreenshotClickEvent ce) {
-            if(!client.isShiftPressed() && ScreenshotViewer.getInstance().getConfig().getOrFallback(ScreenshotViewerOptions.REDIRECT_SCREENSHOT_CHAT_LINKS, false)) {
+            if(!Screen.hasShiftDown() && ScreenshotViewer.getInstance().getConfig().getOrFallback(ScreenshotViewerOptions.REDIRECT_SCREENSHOT_CHAT_LINKS, false)) {
                 client.setScreen(new ManageScreenshotsScreen(client.currentScreen, ce.screenshotFile()));
                 ci.cancel();
                 return;

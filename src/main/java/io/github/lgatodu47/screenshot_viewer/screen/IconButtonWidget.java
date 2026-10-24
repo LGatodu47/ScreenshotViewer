@@ -1,5 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.screen;
 
+import net.minecraft.util.math.ColorHelper;
 import io.github.lgatodu47.screenshot_viewer.screen.manage_screenshots.ManageScreenshotsScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ButtonTextures;
@@ -27,11 +28,11 @@ public class IconButtonWidget extends ButtonWidget {
     }
 
     @Override
-    protected void drawIcon(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, getBackgroundTexture().get(this.active, isSelected()), getX(), getY(), getWidth(), getHeight(), getAlpha());
+    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, getBackgroundTexture().get(this.active, isSelected()), getX(), getY(), getWidth(), getHeight(), ColorHelper.getWhite(this.alpha));
         Identifier icon = getIconTexture();
         if(icon != null) {
-            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), getWidth(), getHeight(), getAlpha());
+            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, icon, getX(), getY(), getWidth(), getHeight(), ColorHelper.getWhite(this.alpha));
         }
     }
 }

@@ -1,5 +1,6 @@
 package io.github.lgatodu47.screenshot_viewer.config;
 
+import net.minecraft.client.gui.screen.Screen;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import io.github.lgatodu47.catconfig.ConfigAccess;
@@ -12,7 +13,6 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import org.jetbrains.annotations.NotNull;
@@ -79,8 +79,8 @@ public record ColorOption(String name, @Nullable TextColor defaultValue, @Nullab
         }
 
         @Override
-        public boolean keyPressed(KeyInput input) {
-            if (isActive() && input.isPaste()) {
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (isActive() && Screen.isPaste(keyCode)) {
                 String clipboard = MinecraftClient.getInstance().keyboard.getClipboard();
                 if(clipboard.startsWith("#") && clipboard.length() < 8) {
                     clipboard = clipboard.substring(1);
@@ -88,7 +88,7 @@ public record ColorOption(String name, @Nullable TextColor defaultValue, @Nullab
                 this.write(clipboard);
                 return true;
             }
-            return super.keyPressed(input);
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override

@@ -9,8 +9,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -58,7 +56,7 @@ public record FileOption(String name, @Nullable Supplier<File> defValue, @Nullab
         Supplier<File> defaultValue = () -> Objects.requireNonNull(option.defaultValue());
         widget.setText(config.get(option).orElseGet(defaultValue).getAbsolutePath());
         AtomicBoolean corrected = new AtomicBoolean(false);
-        widget.addFormatter((text, firstCharacterIndex) -> OrderedText.styledForwardsVisitedString(text, corrected.get() ? Style.EMPTY.withColor(Formatting.RED) : Style.EMPTY));
+        widget.setRenderTextProvider((text, firstCharacterIndex) -> OrderedText.styledForwardsVisitedString(text, corrected.get() ? Style.EMPTY.withColor(Formatting.RED) : Style.EMPTY));
         widget.setAcceptChangesListener(() -> {
             File target = new File(widget.getText());
             if(target.exists() && target.isAbsolute() && target.isDirectory() && target.canRead()) {
@@ -110,8 +108,8 @@ public record FileOption(String name, @Nullable Supplier<File> defValue, @Nullab
         }*/
 
         @Override
-        public boolean mouseClicked(Click click, boolean doubled) {
-            boolean res = super.mouseClicked(click, doubled);
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            boolean res = super.mouseClicked(mouseX, mouseY, button);
             if(res && acceptChangesListener != null) {
                 acceptChangesListener.run();
             }
@@ -119,15 +117,15 @@ public record FileOption(String name, @Nullable Supplier<File> defValue, @Nullab
         }
 
         @Override
-        public boolean keyPressed(KeyInput input) {
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
             if(!isActive()) {
                 return false;
             }
-            if(input.key() == GLFW.GLFW_KEY_ENTER && acceptChangesListener != null) {
+            if(keyCode == GLFW.GLFW_KEY_ENTER && acceptChangesListener != null) {
                 acceptChangesListener.run();
                 return true;
             }
-            return super.keyPressed(input);
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override

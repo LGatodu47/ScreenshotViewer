@@ -6,7 +6,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.screen.ScreenTexts;
 
@@ -51,12 +50,12 @@ final class RenameScreenshotScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if (input.key() == InputUtil.GLFW_KEY_ENTER && doneBtn != null && doneBtn.active) {
-            doneBtn.onPress(input);
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == InputUtil.GLFW_KEY_ENTER && doneBtn != null && doneBtn.active) {
+            doneBtn.onPress();
             return true;
         }
-        return super.keyPressed(input);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
